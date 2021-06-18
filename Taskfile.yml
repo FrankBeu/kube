@@ -1,0 +1,142 @@
+###
+##
+# * TASKFILE
+#   https://taskfile.dev
+#
+version: 3
+
+
+vars:
+
+  name:                     k8s
+
+  domain:                   "thesym.site"
+
+  message:                  tasks for {{.name}}
+
+
+tasks:
+
+  taskDebug:
+    desc: show all variables in Taskfile
+    cmds:
+      - |
+        echo -e \
+        "\n{{range $key, $value := .}} {{$key }}:  \e[92m{{$value}}\e[0m\n {{end}}\n"
+    silent: true
+
+
+  default:
+    desc: display info
+    cmds:
+      - |
+        echo -e \
+        "\n{{.message}}\n"
+      - |
+        go-task -l
+    silent: true
+
+
+###
+##
+# ** SEQUENCE
+#
+#
+  0:
+    desc: ( clusterCreate )
+    cmds:
+      - task: clusterCreate
+    silent: true
+
+
+  1:
+    desc: ( pulumiLogin )
+    cmds:
+      - task: pulumiLogin
+    silent: true
+
+
+  2:
+    desc: ( pulumiUp )
+    cmds:
+      - task: pulumiUp
+    silent: true
+  4:
+    desc: ( clusterDelete )
+    cmds:
+      - task: clusterDelete
+    silent: true
+
+
+###
+##
+# ** ALPHABETICAL
+#
+  # TASK:
+  #   desc: DESCRIPTION
+  #   cmds:
+  #     - |
+  #       SHELL-COMMAND WITH \
+  # 	  {{.VARIABLE}}
+  #   silent: true
+
+
+  clusterCreateDev:
+    desc: create a dev-k8s-cluster for {{.domain}}
+    cmds:
+      - |
+        k3d cluster create {{.name}}-dev --no-lb
+    silent: true
+
+
+  clusterDeleteDev:
+    desc: delete the dev-k8s-cluster
+    cmds:
+      - |
+        k3d cluster delete {{.name}}-dev
+    silent: true
+
+
+  pulumiLogin:
+    desc: make pulumi independent of pulumi.com
+    cmds:
+      - |
+        # pulumi login --local
+        pulumi login file://$XDG_STATE_HOME/pulumi
+    silent: true
+
+
+  pulumiNew:
+    desc: create a new pulumiProject
+    cmds:
+      - |
+        mkdir {{.nameSpace}}
+        cd {{.nameSpace}}
+        pulumi new kubernetes-go
+    silent: true
+
+
+  pulumiUp:
+    desc: apply main.go
+    cmds:
+      - |
+        summon --up bash -c 'PULUMI_CONFIG_PASSPHRASE=${PULUMI_CONFIG_PASSPHRASE} pulumi up'
+
+    silent: true
+
+
+  pulumiConfigExample:
+    desc: change pulumiConfig
+    cmds:
+      - |
+        cd test
+        pulumi config set isContaineredCluster true
+    silent: true
+
+
+  # TaskComposed:
+  #   desc: (TASK + TASK)
+  #   cmds:
+  #     - task: TASK
+  #     - task: TASK
+  #   silent: true

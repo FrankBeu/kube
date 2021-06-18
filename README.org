@@ -1,0 +1,21 @@
+* k8s
+k8s-cluster built with pulumi
+https://www.pulumi.com/
+** credentials
+*** pulumi-password
+can be found in gopass: =k8s/misc/pulumi=
+can be used with summon
+#+begin_src shell :results drawer
+summon --up bash -c 'PULUMI_CONFIG_PASSPHRASE=${PULUMI_CONFIG_PASSPHRASE} pulumi up'
+#+end_src
+** architecture
+*** STRUCTURAL
+**** ingressController
+***** nginx
+****** template
+https://kubernetes.github.io/ingress-nginx/deploy/
+#+begin_src shell :results drawer
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
+curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
+#+end_src
+
