@@ -1,46 +1,59 @@
+// Package petstore is a testApp for the glooEdge
 package petstore
 
 import (
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
-	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	p "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"thesym.site/k8s/lib"
 )
 
-func CreateGlooPetstore(ctx *pulumi.Context) error {
+func CreateGlooPetstore(ctx *p.Context) error {
 
-	_, err := appsv1.NewDeployment(ctx, "defaultPetstoreDeployment", &appsv1.DeploymentArgs{
-		ApiVersion: pulumi.String("apps/v1"),
-		Kind:       pulumi.String("Deployment"),
+	namespacePetstore := &lib.Namespace{
+		Name: "testing-petstore",
+		Tier: lib.NamespaceTierTesting,
+	}
+
+	err := lib.CreateNamespace(namespacePetstore, ctx)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = appsv1.NewDeployment(ctx, "defaultPetstoreDeployment", &appsv1.DeploymentArgs{
+		ApiVersion: p.String("apps/v1"),
+		Kind:       p.String("Deployment"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: pulumi.StringMap{
-				"app": pulumi.String("petstore"),
+			Labels: p.StringMap{
+				"app": p.String("petstore"),
 			},
-			Name:      pulumi.String("petstore"),
-			Namespace: pulumi.String("default"),
+			Name:      p.String("petstore"),
+			Namespace: p.String(namespacePetstore.Name),
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			Replicas: pulumi.Int(1),
+			Replicas: p.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
-				MatchLabels: pulumi.StringMap{
-					"app": pulumi.String("petstore"),
+				MatchLabels: p.StringMap{
+					"app": p.String("petstore"),
 				},
 			},
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
-					Labels: pulumi.StringMap{
-						"app": pulumi.String("petstore"),
+					Labels: p.StringMap{
+						"app": p.String("petstore"),
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Image: pulumi.String("soloio/petstore-example:latest"),
-							Name:  pulumi.String("petstore"),
+							Image: p.String("soloio/petstore-example:latest"),
+							Name:  p.String("petstore"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
-									ContainerPort: pulumi.Int(8080),
-									Name:          pulumi.String("http"),
+									ContainerPort: p.Int(8080),
+									Name:          p.String("http"),
 								},
 							},
 						},
@@ -49,33 +62,37 @@ func CreateGlooPetstore(ctx *pulumi.Context) error {
 			},
 		},
 	})
+
 	if err != nil {
 		return err
 	}
+
 	_, err = corev1.NewService(ctx, "defaultPetstoreService", &corev1.ServiceArgs{
-		ApiVersion: pulumi.String("v1"),
-		Kind:       pulumi.String("Service"),
+		ApiVersion: p.String("v1"),
+		Kind:       p.String("Service"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: pulumi.StringMap{
-				"service": pulumi.String("petstore"),
+			Labels: p.StringMap{
+				"service": p.String("petstore"),
 			},
-			Name:      pulumi.String("petstore"),
-			Namespace: pulumi.String("default"),
+			Name:      p.String("petstore"),
+			Namespace: p.String(namespacePetstore.Name),
 		},
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					Port:     pulumi.Int(8080),
-					Protocol: pulumi.String("TCP"),
+					Port:     p.Int(8080),
+					Protocol: p.String("TCP"),
 				},
 			},
-			Selector: pulumi.StringMap{
-				"app": pulumi.String("petstore"),
+			Selector: p.StringMap{
+				"app": p.String("petstore"),
 			},
 		},
 	})
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
