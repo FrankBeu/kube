@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/k8s/definition/structural/ingress/nginx"
+	"thesym.site/k8s/definition/testing/gloo/petstore"
 )
 
 func main() {
@@ -11,9 +11,14 @@ func main() {
 		////////////////////////
 		// STRUCTURAL
 		//
-		err := nginx.CreateNginxIngressController(ctx)
-		return err
+		// err := nginx.CreateNginxIngressController(ctx)
+		// return err
 
+		////////////////////////
+		// TESTING
+		//
+		err := petstore.CreateGlooPetstore(ctx)
+		return err
 
 		////////////////////////
 		// ALT
