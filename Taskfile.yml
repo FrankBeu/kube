@@ -43,9 +43,9 @@ tasks:
 #
 #
   0:
-    desc: ( clusterCreate )
+    desc: ( clusterCreateDev )
     cmds:
-      - task: clusterCreate
+      - task: clusterCreateDev
     silent: true
 
 
@@ -85,8 +85,45 @@ tasks:
     desc: create a dev-k8s-cluster for {{.domain}}
     cmds:
       - |
-        k3d cluster create {{.name}}-dev --no-lb
+        k3d cluster create \
+        {{.name}}-dev \
+        --no-lb \
+        --port 80:30080 \
+        --port 443:30443
+
+
     silent: true
+        ### OLD
+        # k3d cluster create \
+        #         {{.nodeName}} \
+        #   --api-port 64433 \
+        #         -p 80:80@server[0] \
+        #   -p 443:443@server[0] \
+        #   -p 22:22@server[0] \
+        #   -p 993:993@server[0] \
+        #   -p 25:25@server[0] \
+        #   -p 587:587@server[0] \
+        #   -p 30001:30001@server[0] \
+        #   -p 30002:30002@server[0] \
+        #   -p 30003:30003@server[0] \
+        #   -p 30004:30004@server[0] \
+        #   -p 30005:30005@server[0] \
+        #   -p 30053:30053/udp@server[0] \
+        #   -p 30054:30054@server[0] \
+        #   --k3s-server-arg --tls-san="${KUBE_HOST_EXTERNAL_IP}" \
+        #   --k3s-server-arg --tls-san="thesym.site" \
+        #   --k3s-server-arg --no-deploy="traefik" \
+        #   --volume /home/frank/k3s/PERSISTENCE:/PERSISTENCE \
+
+  clusterCreateStage:
+    desc: create a staging-k8s-cluster for {{.domain}} (Mind the portMappings -> reverseProxy required)
+    cmds:
+      - |
+        k3d cluster create \
+        {{.name}}-stage \
+        --no-lb \
+        --port 30080:30080 \
+        --port 30443:30443
 
 
   clusterDeleteDev:
@@ -94,6 +131,14 @@ tasks:
     cmds:
       - |
         k3d cluster delete {{.name}}-dev
+    silent: true
+
+
+  clusterDeleteStage:
+    desc: delete the staging-k8s-cluster
+    cmds:
+      - |
+        k3d cluster delete {{.name}}-stage
     silent: true
 
 
