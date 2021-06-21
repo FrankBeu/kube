@@ -1,5 +1,5 @@
 * k8s
-k8s-cluster built with pulumi
+k8s-cluster built with pulumi  on nixos
 https://www.pulumi.com/
 ** credentials
 *** pulumi-password
@@ -23,14 +23,14 @@ curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0
 #+begin_src shell :results drawer
   helm repo add gloo https://storage.googleapis.com/solo-public-helm
   helm repo update
-  cd FUNDUS/structural/apiGateway/gloo/RESOURCES
+  cd RESOURCES/structural/apiGateway/gloo/RESOURCES
 
   helm pull gloo/gloo -d CHART
 
 #+end_src
 ******* could be installed with helm
 #+begin_src shell :results drawer
-cd ./FUNDUS/structural/apiGateway/gloo/RESOURCES
+cd ./RESOURCES/structural/apiGateway/gloo/RESOURCES
 glooctl install gateway -f ./CHART/gloo-1.7.11.tgz
 ka ./SPLIT/service-gateway-proxy.yaml
 #+end_src
@@ -59,20 +59,32 @@ kubectl -n testing-petstore port-forward petstore-9d499b76f-2xjqz 8080:8080
 http://localhost:8080/swagger.json
 http://localhost:8080/api/pets
 ** DEPENDENCIES
-*** k3d
-*** proxy
+*** required
+**** *k3d*
+***** used to create k8s-cluster
+****** dev 
+****** stage
+******* a *proxy*
+if the Ingresscontroller is  used in  ~NodePort~ Mode
+a reverse Proxy on the host is needed.
+Gloo cannot open ports 80 and 443
+Ambassador can
+k3d-server-layer can map ports too
+*** convenience 
+**** *summon + gopass*
+for providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
 *** DEVEL
-**** Yaml-Splitting
+**** *Yaml-Splitting*
 ~kube2pulumi~ works better with single files.
 #+begin_example shell
 k8split -o SPLIT cert-manager.yaml
 #+end_example
-**** kube2pulumi
+**** *kube2pulumi*
 generate a =main.go= which must be processed further
 #+begin_example shell
   kube2pulumi go -d ./SPLIT
 #+end_example
-**** crd2pulumi
+**** *crd2pulumi*
 #+begin_example shell
   crd2pulumi -g ./SPLIT/customresourcedefinition*.yaml
 #+end_example

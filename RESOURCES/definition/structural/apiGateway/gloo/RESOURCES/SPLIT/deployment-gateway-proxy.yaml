@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: gloo
+        gateway-proxy-id: gateway-proxy
+        gloo: gateway-proxy
+    name: gateway-proxy
+    namespace: gloo-system
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            gateway-proxy-id: gateway-proxy
+            gloo: gateway-proxy
+    template:
+        metadata:
+            annotations:
+                prometheus.io/path: /metrics
+                prometheus.io/port: "8081"
+                prometheus.io/scrape: "true"
+            labels:
+                gateway-proxy: live
+                gateway-proxy-id: gateway-proxy
+                gloo: gateway-proxy
+        spec:
+            containers:
+                - args:
+                    - --disable-hot-restart
+                  env:
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: POD_NAME
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.name
+                  image: quay.io/solo-io/gloo-envoy-wrapper:1.7.11
+                  imagePullPolicy: IfNotPresent
+                  name: gateway-proxy
+                  ports:
+                    - containerPort: 8080
+                      name: http
+                      protocol: TCP
+                    - containerPort: 8443
+                      name: https
+                      protocol: TCP
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                        drop:
+                            - ALL
+                    readOnlyRootFilesystem: true
+                    runAsNonRoot: true
+                    runAsUser: 10101
+                  volumeMounts:
+                    - mountPath: /etc/envoy
+                      name: envoy-config
+            securityContext:
+                fsGroup: 10101
+                runAsUser: 10101
+            serviceAccountName: gateway-proxy
+            volumes:
+                - configMap:
+                    name: gateway-proxy-envoy-config
+                  name: envoy-config

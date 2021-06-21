@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: gloo
+        gloo: gloo
+    name: gloo
+    namespace: gloo-system
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            gloo: gloo
+    template:
+        metadata:
+            annotations:
+                prometheus.io/path: /metrics
+                prometheus.io/port: "9091"
+                prometheus.io/scrape: "true"
+            labels:
+                gloo: gloo
+        spec:
+            containers:
+                - env:
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: START_STATS_SERVER
+                      value: "true"
+                  image: quay.io/solo-io/gloo:1.7.11
+                  imagePullPolicy: IfNotPresent
+                  name: gloo
+                  ports:
+                    - containerPort: 9977
+                      name: grpc-xds
+                      protocol: TCP
+                    - containerPort: 9976
+                      name: rest-xds
+                      protocol: TCP
+                    - containerPort: 9988
+                      name: grpc-validation
+                      protocol: TCP
+                    - containerPort: 9979
+                      name: wasm-cache
+                      protocol: TCP
+                  readinessProbe:
+                    failureThreshold: 10
+                    initialDelaySeconds: 1
+                    periodSeconds: 2
+                    tcpSocket:
+                        port: 9977
+                  resources:
+                    requests:
+                        cpu: 500m
+                        memory: 256Mi
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                        drop:
+                            - ALL
+                    readOnlyRootFilesystem: true
+                    runAsNonRoot: true
+                    runAsUser: 10101
+                  volumeMounts:
+                    - mountPath: /etc/gloo
+                      name: labels-volume
+                      readOnly: true
+            serviceAccountName: gloo
+            volumes:
+                - downwardAPI:
+                    items:
+                        - fieldRef:
+                            fieldPath: metadata.labels
+                          path: labels
+                  name: labels-volume

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: gloo
+        gloo: gateway
+    name: gateway
+    namespace: gloo-system
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            gloo: gateway
+    template:
+        metadata:
+            annotations:
+                prometheus.io/path: /metrics
+                prometheus.io/port: "9091"
+                prometheus.io/scrape: "true"
+            labels:
+                gloo: gateway
+        spec:
+            containers:
+                - env:
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: START_STATS_SERVER
+                      value: "true"
+                    - name: VALIDATION_MUST_START
+                      value: "true"
+                  image: quay.io/solo-io/gateway:1.7.11
+                  imagePullPolicy: IfNotPresent
+                  name: gateway
+                  ports:
+                    - containerPort: 8443
+                      name: https
+                      protocol: TCP
+                  readinessProbe:
+                    failureThreshold: 10
+                    initialDelaySeconds: 1
+                    periodSeconds: 2
+                    tcpSocket:
+                        port: 8443
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                        drop:
+                            - ALL
+                    readOnlyRootFilesystem: true
+                    runAsNonRoot: true
+                    runAsUser: 10101
+                  volumeMounts:
+                    - mountPath: /etc/gateway/validation-certs
+                      name: validation-certs
+            serviceAccountName: gateway
+            volumes:
+                - name: validation-certs
+                  secret:
+                    defaultMode: 420
+                    secretName: gateway-validation-certs

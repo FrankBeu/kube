@@ -1,0 +1,32 @@
+apiVersion: gloo.solo.io/v1
+kind: Settings
+metadata:
+    labels:
+        app: gloo
+        gloo: settings
+    name: default
+    namespace: gloo-system
+spec:
+    discovery:
+        fdsMode: WHITELIST
+    discoveryNamespace: gloo-system
+    gateway:
+        readGatewaysFromAllNamespaces: false
+        validation:
+            allowWarnings: true
+            alwaysAccept: true
+            disableTransformationValidation: false
+            proxyValidationServerAddr: gloo:9988
+    gloo:
+        disableKubernetesDestinations: false
+        disableProxyGarbageCollection: false
+        enableRestEds: true
+        invalidConfigPolicy:
+            invalidRouteResponseBody: Gloo Gateway has invalid configuration. Administrators should run `glooctl check` to find and fix config errors.
+            invalidRouteResponseCode: 404
+        restXdsBindAddr: 0.0.0.0:9976
+        xdsBindAddr: 0.0.0.0:9977
+    kubernetesArtifactSource: {}
+    kubernetesConfigSource: {}
+    kubernetesSecretSource: {}
+    refreshRate: 60s
