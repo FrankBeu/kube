@@ -18,4 +18,62 @@ https://kubernetes.github.io/ingress-nginx/deploy/
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
 curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
 #+end_src
+***** gloo
+****** RESOURCES
+#+begin_src shell :results drawer
+  helm repo add gloo https://storage.googleapis.com/solo-public-helm
+  helm repo update
+  cd FUNDUS/structural/apiGateway/gloo/RESOURCES
+
+  helm pull gloo/gloo -d CHART
+
+#+end_src
+******* could be installed with helm
+#+begin_src shell :results drawer
+cd ./FUNDUS/structural/apiGateway/gloo/RESOURCES
+glooctl install gateway -f ./CHART/gloo-1.7.11.tgz
+ka ./SPLIT/service-gateway-proxy.yaml
+#+end_src
+******* create yaml-file
+#+begin_src shell :results drawer
+glooctl install gateway -f CHART/gloo-1.7.11.tgz --dry-run > gloo.yaml
+#+end_src
+******* split
+#+begin_src shell :results drawer
+k8split -o SPLIT gloo.yaml
+#+end_src
+******* use nodeport
+change  =gloo/templates/8-gateway-proxy-service.yaml=
+~spec.type: LoadBalancer~
+~spec.type: NodePort~
+******* convert
+#+begin_src shell :results drawer
+kube2pulumi go -d .
+#+end_src
+*** testing
+**** gloo
+***** petstore
+#+begin_src shell :results drawer
+kubectl -n testing-petstore port-forward petstore-9d499b76f-2xjqz 8080:8080
+#+end_src
+http://localhost:8080/swagger.json
+http://localhost:8080/api/pets
+** DEPENDENCIES
+*** k3d
+*** proxy
+*** DEVEL
+**** Yaml-Splitting
+~kube2pulumi~ works better with single files.
+#+begin_example shell
+k8split -o SPLIT cert-manager.yaml
+#+end_example
+**** kube2pulumi
+generate a =main.go= which must be processed further
+#+begin_example shell
+  kube2pulumi go -d ./SPLIT
+#+end_example
+**** crd2pulumi
+#+begin_example shell
+  crd2pulumi -g ./SPLIT/customresourcedefinition*.yaml
+#+end_example
 
