@@ -12,8 +12,9 @@ import (
 func CreateGlooPetstore(ctx *p.Context) error {
 
 	namespacePetstore := &lib.Namespace{
-		Name: "testing-petstore",
-		Tier: lib.NamespaceTierTesting,
+		Name:          "testing-petstore",
+		Tier:          lib.NamespaceTierTesting,
+		GlooDiscovery: true,
 	}
 
 	err := lib.CreateNamespace(namespacePetstore, ctx)

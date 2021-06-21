@@ -29,14 +29,19 @@ const (
 )
 
 type Namespace struct {
-	Name string
-	Tier NamespaceTier
+	Name          string
+	Tier          NamespaceTier
+	GlooDiscovery bool
 }
 
 func CreateNamespace(n *Namespace, ctx *p.Context) error {
 	labels := p.StringMap{
 		"name": p.String(n.Name),
 		"tier": p.String(n.Tier.String()),
+	}
+
+	if n.GlooDiscovery {
+		labels["discovery.solo.io/function_discovery"] = p.String("enabled")
 	}
 
 	_, err := corev1.NewNamespace(
