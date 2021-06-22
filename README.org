@@ -22,12 +22,67 @@ pulumi stack
     ├─ kubernetes:yaml:ConfigFile                                                     certmanager-certificate-definition
 *** STRUCTURAL
 **** ingress
-***** nginx
-****** template
-https://kubernetes.github.io/ingress-nginx/deploy/
+***** emmissary
+https://www.getambassador.io/docs/edge-stack/latest/topics/install/install-ambassador-oss/#kubernetes-yaml
+****** crds, rbac
 #+begin_src shell :results drawer
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
-curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
+curl https://www.getambassador.io/yaml/ambassador/ambassador-crds.yaml -Lo ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml
+curl https://www.getambassador.io/yaml/ambassador/ambassador-rbac.yaml -Lo ./RESOURCES/definition/structural/ingress/emmissary/ambassador-rbac.yaml
+#+end_src
+****** service
+#+begin_src yaml
+cat <<EOF > ./RESOURCES/definition/structural/ingress/emmissary/ambassador-service.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ambassador
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+   - port: 80
+     targetPort: 8080
+  selector:
+    service: ambassador
+EOF
+#+end_src
+****** DiagnosticService
+http://{{AMBASSADOR_HOST}}/ambassador/v0/diag/
+#+begin_src yaml
+cat <<EOF > ./RESOURCES/definition/structural/ingress/emmissary/ambassador-diagnostic-module.yaml
+---
+apiVersion: getambassador.io/v2
+kind: Module
+metadata:
+  name: ambassador
+spec:
+  config:
+    diagnostics:
+      enabled: true
+EOF
+#+end_src
+****** create CRDs
+#+begin_src shell :results drawer
+crd2pulumi --goPath ./KUBE/crds/emmissary ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml
+mkdir ./KUBE/crds/emmissary/cdrDefinitions
+cp ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml ./KUBE/crds/emmissary/cdrDefinitions/ambassador-crds.yaml
+
+kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-{rbac,service}.yaml
+#+end_src
+****** create source
+#+begin_src shell :results drawer
+  kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-{rbac,service}.yaml
+  mkdir -p ./KUBE/definition/structural/ingress/emmissary && cp ./RESOURCES/definition/structural/ingress/emmissary/main.go $_
+### adjust main.go
+#+end_src
+***** DEPRECATED edgeStack
+https://www.getambassador.io/docs/edge-stack/latest/tutorials/getting-started/
+#+begin_src shell :results drawer
+kubectl apply -f https://www.getambassador.io/yaml/aes-crds.yaml && \
+kubectl wait --for condition=established --timeout=90s crd -lproduct=aes && \
+kubectl apply -f https://www.getambassador.io/yaml/aes.yaml && \
+kubectl -n ambassador wait --for condition=available --timeout=90s deploy -lproduct=aes
 #+end_src
 ***** gloo
 ****** RESOURCES
@@ -63,6 +118,13 @@ kube2pulumi go -d .
 ****** STATUS
 not used
 token authentication only possible with enterprise-version
+***** nginx
+****** template
+https://kubernetes.github.io/ingress-nginx/deploy/
+#+begin_src shell :results drawer
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
+curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
+#+end_src
 ***** tyk
 no http2https
 ****** RESOURCES
@@ -73,7 +135,9 @@ no http2https
 **** certs
 ***** certmanager
 #+begin_src shell :results drawer
-curl -LO https://github.com/jetstack/cert-manager/releases/download/v1.4.0/cert-manager.yaml
+  curl -LO https://github.com/jetstack/cert-manager/releases/download/v1.4.0/cert-manager.yaml
+  crd2pulumi --goPath ./KUBE/crds/cert-manager ./RESOURCES/definition/structural/certs/certmanager/cdrDefinitions/customresourcedefinition-*.yaml
+
 #+end_src
 **** testing
 ***** gloo
