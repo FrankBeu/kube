@@ -1,3 +1,4 @@
+// Package nginx provides the default nginxIngressController-installation
 package nginx
 
 import (
