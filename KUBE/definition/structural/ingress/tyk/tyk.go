@@ -1,3 +1,4 @@
+// Package tyk provides the default tykGateway-installation
 package tyk
 
 import (
@@ -14,7 +15,7 @@ func CreateTykGateway(ctx *p.Context) error {
 
 	namespaceTykGateway := &lib.Namespace{
 		Name:          "tyk",
-		Tier:          lib.NamespaceTierAPI,
+		Tier:          lib.NamespaceTierEdge,
 		GlooDiscovery: true,
 	}
 
@@ -31,7 +32,8 @@ func CreateTykGateway(ctx *p.Context) error {
 		},
 		Kind: p.String("ConfigMap"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Name: p.String("tyk-gateway-conf"),
+			Name:      p.String("tyk-gateway-conf"),
+			Namespace: p.String(namespaceTykGateway.Name),
 		},
 	})
 	if err != nil {

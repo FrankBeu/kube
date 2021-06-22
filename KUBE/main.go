@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/k8s/definition/structural/certs/certmanager"
+	"thesym.site/k8s/definition/structural/ingress/tyk"
 	"thesym.site/k8s/definition/testing/gloo/petstore"
 )
 
@@ -23,7 +24,7 @@ func main() {
 
 			// NOTREADY gloo
 
-			// NOTREADY "tykGateway": tyk.CreateTykGateway,
+			"tykGateway": tyk.CreateTykGateway,
 
 			//////////////////////// ////////////////////////
 			//// certificates
