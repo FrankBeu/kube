@@ -3,58 +3,44 @@ package main
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/k8s/definition/structural/certs/certmanager"
-	"thesym.site/k8s/definition/structural/ingress/tyk"
 	"thesym.site/k8s/definition/testing/gloo/petstore"
 )
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 
-		//////////////////////// //////////////////////// ////////////////////////
-		// STRUCTURAL
-		//
+		//// config
+		kube := map[string]func(*pulumi.Context) error{
+			//////////////////////// //////////////////////// ////////////////////////
+			//// STRUCTURAL
+			////
+			//////////////////////// ////////////////////////
+			//// Ingress
+			////
+			// NOTREADY "nginxIngress": nginx.CreateNginxIngressController,
 
-		//////////////////////// ////////////////////////
-		// Ingress
+			// NOTREADY ambassador
 
-		////////////////////////
-		// nginx
-		// err := nginx.CreateNginxIngressController(ctx)
-		// if err != nil {
-		// return err
-		// }
+			// NOTREADY gloo
 
-		////////////////////////
-		// ambassador
+			// NOTREADY "tykGateway": tyk.CreateTykGateway,
 
-		////////////////////////
-		// gloo
+			//////////////////////// ////////////////////////
+			//// certificates
+			////
+			"certmanager": certmanager.CreateCertmanager,
 
-		////////////////////////
-		// tykGateway
-		err := tyk.CreateTykGateway(ctx)
-		if err != nil {
-			return err
+			//////////////////////// //////////////////////// ////////////////////////
+			//// TESTING
+			////
+			"glooPetstore": petstore.CreateGlooPetstore,
 		}
 
-		//////////////////////// ////////////////////////
-		// certificates
-		////////////////////////
-		// certManager
-		err = certmanager.CreateCertmanager(ctx)
-		if err != nil {
-			return err
-		}
-
-		//////////////////////// //////////////////////// ////////////////////////
-		// TESTING
-		//
-
-		////////////////////////
-		// glooPetstore
-		err = petstore.CreateGlooPetstore(ctx)
-		if err != nil {
-			return err
+		for _, creator := range kube {
+			err := creator(ctx)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
