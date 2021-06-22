@@ -21,7 +21,7 @@ pulumi stack
 #+end_example
     ├─ kubernetes:yaml:ConfigFile                                                     certmanager-certificate-definition
 *** STRUCTURAL
-**** ingressController
+**** ingress
 ***** nginx
 ****** template
 https://kubernetes.github.io/ingress-nginx/deploy/
@@ -37,7 +37,6 @@ curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0
   cd RESOURCES/structural/apiGateway/gloo/RESOURCES
 
   helm pull gloo/gloo -d CHART
-
 #+end_src
 ******* could be installed with helm
 #+begin_src shell :results drawer
@@ -61,6 +60,9 @@ change  =gloo/templates/8-gateway-proxy-service.yaml=
 #+begin_src shell :results drawer
 kube2pulumi go -d .
 #+end_src
+****** STATUS
+not used
+token authentication only possible with enterprise-version
 **** certs
 ***** certmanager
 #+begin_src shell :results drawer
