@@ -1,3 +1,4 @@
+// Package certmanager provides certmanager-crds and the default certmanager-installation
 package certmanager
 
 import (
@@ -11,20 +12,21 @@ import (
 	p "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 	certv1b1 "thesym.site/k8s/crds/cert-manager/certmanager/v1beta1"
+	"thesym.site/k8s/lib"
 )
 
 func CreateCertmanager(ctx *p.Context) error {
 
-	certManagerCrds := []Crd{
-		{"certmanager-order-definition", "./crds/cert-manager/cdrDefinitions/customresourcedefinition-orders.acme.cert-manager.io.yaml"},
-		{"certmanager-issuer-definition", "./crds/cert-manager/cdrDefinitions/customresourcedefinition-issuers.cert-manager.io.yaml"},
-		{"certmanager-challenge-definition", "./crds/cert-manager/cdrDefinitions/customresourcedefinition-challenges.acme.cert-manager.io.yaml"},
-		{"certmanager-certificate-definition", "./crds/cert-manager/cdrDefinitions/customresourcedefinition-certificates.cert-manager.io.yaml"},
-		{"certmanager-clusterIssuer-definition", "./crds/cert-manager/cdrDefinitions/customresourcedefinition-clusterissuers.cert-manager.io.yaml"},
-		{"certmanager-certificate-request-definition", "./crds/cert-manager/cdrDefinitions/customresourcedefinition-certificaterequests.cert-manager.io.yaml"},
+	certManagerCrds := []lib.Crd{
+		{Name: "certmanager-order-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-orders.acme.cert-manager.io.yaml"},
+		{Name: "certmanager-issuer-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-issuers.cert-manager.io.yaml"},
+		{Name: "certmanager-challenge-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-challenges.acme.cert-manager.io.yaml"},
+		{Name: "certmanager-certificate-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-certificates.cert-manager.io.yaml"},
+		{Name: "certmanager-clusterIssuer-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-clusterissuers.cert-manager.io.yaml"},
+		{Name: "certmanager-certificate-request-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-certificaterequests.cert-manager.io.yaml"},
 	}
 	//// Register the CRD.
-	err := registerCRDs(ctx, certManagerCrds)
+	err := lib.RegisterCRDs(ctx, certManagerCrds)
 	if err != nil {
 		return err
 	}
