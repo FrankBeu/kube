@@ -1,6 +1,5 @@
 * k8s
 k8s-cluster built with pulumi  on nixos
-https://www.pulumi.com/
 ** credentials
 *** pulumi-password
 can be found in gopass: =k8s/misc/pulumi=
@@ -9,6 +8,18 @@ can be used with summon
 summon --up bash -c 'PULUMI_CONFIG_PASSPHRASE=${PULUMI_CONFIG_PASSPHRASE} pulumi up'
 #+end_src
 ** architecture
+*** CRDS
+**** all ~crd2pulumi~ created crds
+**** yaml-definitions
+***** path
+****** !!! must be specified starting from moduleRoot.
+    ├─ kubernetes:yaml:ConfigFile                                                     certmanager-certificate-definition
+    │  └─ kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition                 certificates.cert-manager.io
+****** if yamls are specified relative, only the config files will be created
+#+begin_example shell
+pulumi stack
+#+end_example
+    ├─ kubernetes:yaml:ConfigFile                                                     certmanager-certificate-definition
 *** STRUCTURAL
 **** ingressController
 ***** nginx
@@ -50,9 +61,17 @@ change  =gloo/templates/8-gateway-proxy-service.yaml=
 #+begin_src shell :results drawer
 kube2pulumi go -d .
 #+end_src
-*** testing
-**** gloo
-***** petstore
+**** certs
+***** certmanager
+#+begin_src shell :results drawer
+curl -LO https://github.com/jetstack/cert-manager/releases/download/v1.4.0/cert-manager.yaml
+#+end_src
+**** testing
+***** gloo
+#+begin_src shell :results drawer
+curl -O https://raw.githubusercontent.com/solo-io/gloo/v1.2.9/example/petstore/petstore.yaml
+#+end_src
+****** petstore
 #+begin_src shell :results drawer
 kubectl -n testing-petstore port-forward petstore-9d499b76f-2xjqz 8080:8080
 #+end_src
@@ -60,9 +79,15 @@ http://localhost:8080/swagger.json
 http://localhost:8080/api/pets
 ** DEPENDENCIES
 *** required
+**** pulumi
+https://www.pulumi.com/
+*** convenience
+**** *summon + gopass*
+for providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
+*** DEVEL
 **** *k3d*
 ***** used to create k8s-cluster
-****** dev 
+****** dev
 ****** stage
 ******* a *proxy*
 if the Ingresscontroller is  used in  ~NodePort~ Mode
@@ -70,10 +95,6 @@ a reverse Proxy on the host is needed.
 Gloo cannot open ports 80 and 443
 Ambassador can
 k3d-server-layer can map ports too
-*** convenience 
-**** *summon + gopass*
-for providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
-*** DEVEL
 **** *Yaml-Splitting*
 ~kube2pulumi~ works better with single files.
 #+begin_example shell
@@ -85,7 +106,12 @@ generate a =main.go= which must be processed further
   kube2pulumi go -d ./SPLIT
 #+end_example
 **** *crd2pulumi*
+***** output to KUBE
 #+begin_example shell
-  crd2pulumi -g ./SPLIT/customresourcedefinition*.yaml
+  crd2pulumi --goPath "$(git root)/KUBE/crds"         ./SPLIT/customresourcedefinition*.yaml
+  crd2pulumi --goPath "$(git root)/KUBE/crds" --force ./SPLIT/customresourcedefinition*.yaml
 #+end_example
-
+***** output to ./crds
+#+begin_src shell :results drawer
+  crd2pulumi -g ./SPLIT/customresourcedefinition*.yaml
+#+end_src
