@@ -63,6 +63,13 @@ kube2pulumi go -d .
 ****** STATUS
 not used
 token authentication only possible with enterprise-version
+***** tyk
+no http2https
+****** RESOURCES
+#+begin_src shell :results drawer
+  git clone https://github.com/TykTechnologies/tyk-oss-k8s-deployment.git ./RESOURCES/definition/structural/ingress/tyk/tyk-oss-k8s-deployment2
+  kube2pulumi go -d ./RESOURCES/definition/structural/ingress/tyk/tyk-oss-k8s-deployment
+#+end_src
 **** certs
 ***** certmanager
 #+begin_src shell :results drawer

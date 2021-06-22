@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/k8s/definition/structural/certs/certmanager"
+	"thesym.site/k8s/definition/structural/ingress/tyk"
 	"thesym.site/k8s/definition/testing/gloo/petstore"
 )
 
@@ -14,7 +15,8 @@ func main() {
 		//
 
 		//////////////////////// ////////////////////////
-		// IngressController
+		// Ingress
+
 		////////////////////////
 		// nginx
 		// err := nginx.CreateNginxIngressController(ctx)
@@ -23,13 +25,23 @@ func main() {
 		// }
 
 		////////////////////////
+		// ambassador
+
+		////////////////////////
 		// gloo
+
+		////////////////////////
+		// tykGateway
+		err := tyk.CreateTykGateway(ctx)
+		if err != nil {
+			return err
+		}
 
 		//////////////////////// ////////////////////////
 		// certificates
 		////////////////////////
 		// certManager
-		err := certmanager.CreateCertmanager(ctx)
+		err = certmanager.CreateCertmanager(ctx)
 		if err != nil {
 			return err
 		}
@@ -37,6 +49,9 @@ func main() {
 		//////////////////////// //////////////////////// ////////////////////////
 		// TESTING
 		//
+
+		////////////////////////
+		// glooPetstore
 		err = petstore.CreateGlooPetstore(ctx)
 		if err != nil {
 			return err
