@@ -50,12 +50,14 @@ EOF
 ****** DiagnosticService
 http://{{AMBASSADOR_HOST}}/ambassador/v0/diag/
 #+begin_src yaml
+# cat <<EOF |kubectl apply -f
 cat <<EOF > ./RESOURCES/definition/structural/ingress/emmissary/ambassador-diagnostic-module.yaml
 ---
 apiVersion: getambassador.io/v2
 kind: Module
 metadata:
   name: ambassador
+  namespace: emmissary
 spec:
   config:
     diagnostics:

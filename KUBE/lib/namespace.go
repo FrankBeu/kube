@@ -34,7 +34,7 @@ type Namespace struct {
 	GlooDiscovery bool
 }
 
-func CreateNamespace(n *Namespace, ctx *p.Context) error {
+func CreateNamespace(ctx *p.Context, n *Namespace) error {
 	labels := p.StringMap{
 		"name": p.String(n.Name),
 		"tier": p.String(n.Tier.String()),

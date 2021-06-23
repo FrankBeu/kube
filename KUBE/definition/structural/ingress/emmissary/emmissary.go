@@ -13,15 +13,22 @@ import (
 func CreateEmmissary(ctx *p.Context) error {
 
 	namespaceEmmissary := &lib.Namespace{
-		Name:          "emmissary",
-		Tier:          lib.NamespaceTierEdge,
-		GlooDiscovery: true,
+		Name: "emmissary",
+		Tier: lib.NamespaceTierEdge,
 	}
 
-	err := lib.CreateNamespace(namespaceEmmissary, ctx)
+	namespaceEmmissaryHosts := &lib.Namespace{
+		Name: "emmissary-hosts",
+		Tier: lib.NamespaceTierEdge,
+	}
 
-	if err != nil {
-		return err
+	for _, ns := range []*lib.Namespace{namespaceEmmissary, namespaceEmmissaryHosts} {
+
+		err := lib.CreateNamespace(ctx, ns)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	// TODO: warning: apiextensions.k8s.io/v1beta1/CustomResourceDefinition is deprecated by apiextensions.k8s.io/v1/CustomResourceDefinition and not supported by Kubernetes v1.22+ clusters.
@@ -29,7 +36,7 @@ func CreateEmmissary(ctx *p.Context) error {
 		{Name: "emmissary-ambassador-definition", Location: "./crds/emmissary/cdrDefinitions/ambassador-crds.yaml"},
 	}
 	//// Register the CRD.
-	err = lib.RegisterCRDs(ctx, emmissaryCrds)
+	err := lib.RegisterCRDs(ctx, emmissaryCrds)
 	if err != nil {
 		return err
 	}

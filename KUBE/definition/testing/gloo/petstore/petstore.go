@@ -17,7 +17,7 @@ func CreateGlooPetstore(ctx *p.Context) error {
 		GlooDiscovery: true,
 	}
 
-	err := lib.CreateNamespace(namespacePetstore, ctx)
+	err := lib.CreateNamespace(ctx, namespacePetstore)
 
 	if err != nil {
 		return err
