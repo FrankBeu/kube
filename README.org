@@ -7,6 +7,24 @@ can be used with summon
 #+begin_src shell :results drawer
 summon --up bash -c 'PULUMI_CONFIG_PASSPHRASE=${PULUMI_CONFIG_PASSPHRASE} pulumi up'
 #+end_src
+** configuration
+*** changes to config must be applied with ~pulumi up~ in order to be affective
+*** think of ENV - not of config - *.go is your config now
+*** settings
+**** kubernetes provider
+https://www.pulumi.com/docs/intro/cloud-providers/kubernetes/#configuration
+***** do not show deprecation warnings
+#+begin_example shell
+pulumi config set kubernetes:suppressDeprecationWarnings true
+#+end_example
+***** constraint stack to cluster
+#+begin_example shell
+pulumi config set kubernetes:context "k3d-k8s-stage"
+#+end_example
+**** domain
+#+begin_example shell
+pulumi config set domain "stage.thesym.site"
+#+end_example
 ** architecture
 *** CRDS
 **** all ~crd2pulumi~ created crds
@@ -201,3 +219,35 @@ generate a =main.go= which must be processed further
 #+begin_src shell :results drawer
   crd2pulumi -g ./SPLIT/customresourcedefinition*.yaml
 #+end_src
+** TODO TODOS
+*** TODO create/automate update cycle
+**** pull changes
+**** transformations
+***** update namespace
+***** other valid changes??
+****** nodePort??
+**** import into ~execK2pGenerated()~
+function which is called by MODULE.CreateNAME()~C
+#+begin_src go
+  package PACKAGE
+
+  config = CONFIG
+
+  func CreatePACKAGE() {
+          lib.CreateNamespaces()
+          otherPackageSpecificFunc()
+          execK2pGenerated()
+  }
+
+  func otherPackageSpecificFunc () {
+  }
+
+  func execK2pGenerated() {
+          // exec generated code
+  }
+#+end_src
+
+***** should be solved upstream
+api-deprecations
+
+****** contribute
