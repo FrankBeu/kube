@@ -10,17 +10,19 @@ import (
 	"thesym.site/k8s/lib"
 )
 
-func CreateEmmissary(ctx *p.Context) error {
-
-	namespaceEmmissary := &lib.Namespace{
+var (
+	namespaceEmmissary = &lib.Namespace{
 		Name: "emmissary",
 		Tier: lib.NamespaceTierEdge,
 	}
 
-	namespaceEmmissaryHosts := &lib.Namespace{
+	namespaceEmmissaryHosts = &lib.Namespace{
 		Name: "emmissary-hosts",
 		Tier: lib.NamespaceTierEdge,
 	}
+)
+
+func CreateEmmissary(ctx *p.Context) error {
 
 	err := lib.CreateNamespaces(ctx, namespaceEmmissary, namespaceEmmissaryHosts)
 
@@ -28,17 +30,29 @@ func CreateEmmissary(ctx *p.Context) error {
 		return err
 	}
 
-	// TODO: warning: apiextensions.k8s.io/v1beta1/CustomResourceDefinition is deprecated by apiextensions.k8s.io/v1/CustomResourceDefinition and not supported by Kubernetes v1.22+ clusters.
+	// TODO: warning: apiextensions.k8s.io/v1beta1/CustomResourceDefinition is deprecated by
+	// apiextensions.k8s.io/v1/CustomResourceDefinition and not supported by Kubernetes v1.22+ clusters.
+	// has to be solved upstream - warnings are supprest
 	emmissaryCrds := []lib.Crd{
 		{Name: "emmissary-ambassador-definition", Location: "./crds/emmissary/cdrDefinitions/ambassador-crds.yaml"},
 	}
-	//// Register the CRD.
+
 	err = lib.RegisterCRDs(ctx, emmissaryCrds)
 	if err != nil {
 		return err
 	}
 
-	_, err = corev1.NewService(ctx, "defaultAmbassador_adminService", &corev1.ServiceArgs{
+	err = execGeneratedCode(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func execGeneratedCode(ctx *p.Context) error {
+	_, err := corev1.NewService(ctx, "defaultAmbassador_adminService", &corev1.ServiceArgs{
 		ApiVersion: p.String("v1"),
 		Kind:       p.String("Service"),
 		Metadata: &metav1.ObjectMetaArgs{
