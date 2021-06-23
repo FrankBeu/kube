@@ -24,12 +24,13 @@ pulumi stack
 **** ingress
 ***** emmissary
 https://www.getambassador.io/docs/edge-stack/latest/topics/install/install-ambassador-oss/#kubernetes-yaml
-****** crds, rbac
+****** RESOURCES
+******* crds, rbac
 #+begin_src shell :results drawer
 curl https://www.getambassador.io/yaml/ambassador/ambassador-crds.yaml -Lo ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml
 curl https://www.getambassador.io/yaml/ambassador/ambassador-rbac.yaml -Lo ./RESOURCES/definition/structural/ingress/emmissary/ambassador-rbac.yaml
 #+end_src
-****** service
+******* service
 #+begin_src yaml
 cat <<EOF > ./RESOURCES/definition/structural/ingress/emmissary/ambassador-service.yaml
 ---
@@ -47,8 +48,27 @@ spec:
     service: ambassador
 EOF
 #+end_src
+******* create CRDs
+#+begin_src shell :results drawer
+crd2pulumi --goPath ./KUBE/crds/emmissary ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml
+mkdir ./KUBE/crds/emmissary/cdrDefinitions
+cp ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml ./KUBE/crds/emmissary/cdrDefinitions/ambassador-crds.yaml
+
+kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-{rbac,service}.yaml
+#+end_src
+******* create source
+#+begin_src shell :results drawer
+  kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-{rbac,service}.yaml
+  mkdir -p ./KUBE/definition/structural/ingress/emmissary && cp ./RESOURCES/definition/structural/ingress/emmissary/main.go $_
+### adjust main.go
+#+end_src
 ****** DiagnosticService
-http://{{AMBASSADOR_HOST}}/ambassador/v0/diag/
+#+begin_src shell :results drawer
+kubectl port-forward service/ambassador-admin 8877
+#+end_src
+http://localhost:8877/ambassador/v0/diag/
+******* disabling
+if diagnostics overview would not be used
 #+begin_src yaml
 # cat <<EOF |kubectl apply -f
 cat <<EOF > ./RESOURCES/definition/structural/ingress/emmissary/ambassador-diagnostic-module.yaml
@@ -61,23 +81,14 @@ metadata:
 spec:
   config:
     diagnostics:
-      enabled: true
+      enabled: false
 EOF
 #+end_src
-****** create CRDs
+******** create pulumi
 #+begin_src shell :results drawer
-crd2pulumi --goPath ./KUBE/crds/emmissary ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml
-mkdir ./KUBE/crds/emmissary/cdrDefinitions
-cp ./RESOURCES/definition/structural/ingress/emmissary/ambassador-crds.yaml ./KUBE/crds/emmissary/cdrDefinitions/ambassador-crds.yaml
-
-kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-{rbac,service}.yaml
+  kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-diagnostic-module.yaml
 #+end_src
-****** create source
-#+begin_src shell :results drawer
-  kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-{rbac,service}.yaml
-  mkdir -p ./KUBE/definition/structural/ingress/emmissary && cp ./RESOURCES/definition/structural/ingress/emmissary/main.go $_
-### adjust main.go
-#+end_src
+******** add to =./KUBE/definition/structural/ingress/emmissary/emmissary.go=
 ***** DEPRECATED edgeStack
 https://www.getambassador.io/docs/edge-stack/latest/tutorials/getting-started/
 #+begin_src shell :results drawer
