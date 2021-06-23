@@ -19,7 +19,7 @@ func CreateTykGateway(ctx *p.Context) error {
 		GlooDiscovery: true,
 	}
 
-	err := lib.CreateNamespace(ctx, namespaceTykGateway)
+	err := lib.CreateNamespaces(ctx, namespaceTykGateway)
 
 	if err != nil {
 		return err

@@ -28,38 +28,44 @@ const (
 	NamespaceTierTesting                                // testing
 )
 
+// Namespace are used to configurate the pulumiNamespaces.
+// Mind that bools default to false if not set otherwise at instantiation
 type Namespace struct {
 	Name          string
 	Tier          NamespaceTier
 	GlooDiscovery bool
 }
 
-func CreateNamespace(ctx *p.Context, n *Namespace) error {
-	labels := p.StringMap{
-		"name": p.String(n.Name),
-		"tier": p.String(n.Tier.String()),
-	}
+// CreateNamespaces takes one or more namespaces
+func CreateNamespaces(ctx *p.Context, nameSpaces ...*Namespace) error {
+	for _, n := range nameSpaces {
 
-	if n.GlooDiscovery {
-		labels["discovery.solo.io/function_discovery"] = p.String("enabled")
-	}
+		labels := p.StringMap{
+			"name": p.String(n.Name),
+			"tier": p.String(n.Tier.String()),
+		}
 
-	_, err := corev1.NewNamespace(
-		ctx,
-		n.Name,
-		&corev1.NamespaceArgs{
-			ApiVersion: p.String("v1"),
-			Kind:       p.String("Namespace"),
-			Metadata: &metav1.ObjectMetaArgs{
-				Name:   p.String(n.Name),
-				Labels: labels,
+		if n.GlooDiscovery {
+			labels["discovery.solo.io/function_discovery"] = p.String("enabled")
+		}
+
+		_, err := corev1.NewNamespace(
+			ctx,
+			n.Name,
+			&corev1.NamespaceArgs{
+				ApiVersion: p.String("v1"),
+				Kind:       p.String("Namespace"),
+				Metadata: &metav1.ObjectMetaArgs{
+					Name:   p.String(n.Name),
+					Labels: labels,
+				},
+				Spec: nil,
 			},
-			Spec: nil,
-		},
-	)
+		)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
