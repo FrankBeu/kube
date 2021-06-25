@@ -4,6 +4,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/k8s/definition/structural/certs/certmanager"
 	"thesym.site/k8s/definition/structural/ingress/emmissary"
+	"thesym.site/k8s/definition/structural/ingress/nginx"
 	"thesym.site/k8s/definition/testing/gloo/petstore"
 )
 
@@ -18,7 +19,7 @@ func main() {
 			//////////////////////// ////////////////////////
 			//// Ingress
 			////
-			// NOTREADY "nginxIngress": nginx.CreateNginxIngressController,
+			"nginxIngress": nginx.CreateNginxIngressController,
 
 			"emmissary": emmissary.CreateEmmissary,
 
