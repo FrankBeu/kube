@@ -23,9 +23,7 @@ var (
 )
 
 func CreateEmmissary(ctx *p.Context) error {
-
 	err := lib.CreateNamespaces(ctx, namespaceEmmissary, namespaceEmmissaryHosts)
-
 	if err != nil {
 		return err
 	}
@@ -42,6 +40,8 @@ func CreateEmmissary(ctx *p.Context) error {
 		return err
 	}
 
+	// createResourcesForDiagnostics(ctx)
+
 	err = execGeneratedCode(ctx)
 	if err != nil {
 		return err
@@ -50,6 +50,61 @@ func CreateEmmissary(ctx *p.Context) error {
 	return nil
 
 }
+
+// createResourcesForDiagnostics provides all resources for the emmissaryDiagnosticsFrontend
+
+//  func createResourcesForDiagnostics(ctx *p.Context) error {
+//
+//  	_, err := getambassadorv2.NewHost(ctx, "emmissaryDiagnostic", &getambassadorv2.HostArgs{
+//  		// ApiVersion: p.String("getambassador.io/v2"),
+//  		// Kind:       p.String("Host"),
+//  		// // Metadata:   &getambassadorv2.HostMetadataArgs{},
+//  		// Metadata: &metav1.ObjectMetaArgs{
+//  		// 	Name:      p.String("emmissaryDiagnostic"),
+//  		// 	Namespace: p.String(namespaceEmmissaryHosts.Name),
+//  		// },
+//
+//  		// Spec: &getambassadorv2.HostSpecArgs{
+//  		// 	Hostname: p.String("emdia.stage.thesym.site"),
+//  		// },
+//  		// Status: nil,
+//  	})
+//
+//  	if err != nil {
+//  		return err
+//  	}
+//
+//  	////////////////////////////////////////////////////////////////////////
+//  	// apiVersion: getambassador.io/v2
+//  	// kind: Mapping
+//  	// metadata:
+//  	//   name: gitea
+//  	//   namespace: gitea
+//  	// spec:
+//  	//   prefix: /
+//  	//   #service: gitea-service.gitea:3000
+//  	//   service: gitea-http.gitea:3000
+//  	//   host: gitea.thesym.site
+//  	//   timeout_ms: 60000// apiVersion: getambassador.io/v2
+//  	// ---
+//  	// kind: Host
+//  	// metadata:
+//  	//   name: gitea
+//  	//   namespace: ambassador-hosts
+//  	// spec:
+//  	//   hostname: gitea.thesym.site
+//  	//   acmeProvider:
+//  	//     authority: https://acme-v02.api.letsencrypt.org/directory
+//  	//     email: fbeutelschiess@gmail.com
+//  	//     privateKeySecret:
+//  	//       name: gitea-key
+//  	//   tlsSecret:
+//  	//     name: gitea
+//  	//   requestPolicy:
+//  	//     insecure://       action: Redirect
+//
+//  	return nil
+//  }
 
 func execGeneratedCode(ctx *p.Context) error {
 	_, err := corev1.NewService(ctx, "defaultAmbassador_adminService", &corev1.ServiceArgs{

@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/k8s/definition/structural/certs/certmanager"
-	"thesym.site/k8s/definition/structural/ingress/emmissary"
 	"thesym.site/k8s/definition/structural/ingress/nginx"
 	"thesym.site/k8s/definition/testing/gloo/petstore"
 )
@@ -21,7 +20,8 @@ func main() {
 			////
 			"nginxIngress": nginx.CreateNginxIngressController,
 
-			"emmissary": emmissary.CreateEmmissary,
+			//// installation working crd-usage not
+			// "emmissary": emmissary.CreateEmmissary,
 
 			// NOTREADY gloo
 
