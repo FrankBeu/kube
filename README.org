@@ -158,11 +158,14 @@ curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0
 #+end_src
 ***** tyk
 no http2https
+needs proxy -> nginx -> use nginx as ingressController
 ****** RESOURCES
 #+begin_src shell :results drawer
   git clone https://github.com/TykTechnologies/tyk-oss-k8s-deployment.git ./RESOURCES/definition/structural/ingress/tyk/tyk-oss-k8s-deployment2
   kube2pulumi go -d ./RESOURCES/definition/structural/ingress/tyk/tyk-oss-k8s-deployment
 #+end_src
+**** operators
+https://github.com/pulumi/pulumi-kubernetes-crds
 **** certs
 ***** certmanager
 #+begin_src shell :results drawer
@@ -181,6 +184,15 @@ kubectl -n testing-petstore port-forward petstore-9d499b76f-2xjqz 8080:8080
 #+end_src
 http://localhost:8080/swagger.json
 http://localhost:8080/api/pets
+***** [[file:KUBE/definition/testing/pulumiexamples/README.org::*pulumiExamples][pulumiExamples]]
+*** APP
+**** gitea
+***** helm
+https://gitea.com/gitea/helm-chart/
+#+begin_src shell :results drawer
+helm repo add gitea-charts https://dl.gitea.io/charts/
+helm repo update
+#+end_src
 ** DEPENDENCIES
 *** required
 **** pulumi
@@ -251,3 +263,13 @@ function which is called by MODULE.CreateNAME()~C
 api-deprecations
 
 ****** contribute
+*** TODO repoStructure
+**** projectile needs git + gomod in same dir
+**** pulumi  needs git + gomod in same dir
+**** gopls should not read RESOURCES/*.go
+**** TODO try buildtags
+gopls respects them
+#+begin_src go
+ // +build never
+#+end_src
+
