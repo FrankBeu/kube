@@ -36,6 +36,11 @@ func main() {
 			//// TESTING
 			////
 			"glooPetstore": petstore.CreateGlooPetstore,
+
+			// "fileSingle": pulumiexamples.CreateFromFileSingle,
+			// "filesMulti": pulumiexamples.CreateFromFilesMulti,
+			// "helmChart": pulumiexamples.CreateFromHelmChart,
+			// "fileSingleWT": pulumiexamples.CreateFromFileSingleWithConfigurationTransformation,
 		}
 
 		for _, creator := range kube {

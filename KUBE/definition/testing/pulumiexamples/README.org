@@ -1,0 +1,27 @@
+* pulumiExamples
+** SOURCE
+https://www.pulumi.com/docs/guides/adopting/from_kubernetes/
+** fileSingle
+*** prerequisites
+#+begin_src shell :results drawer
+cd ./fileSingle
+curl -L --remote-name https://raw.githubusercontent.com/kubernetes/examples/master/guestbook/all-in-one/guestbook-all-in-one.yaml
+#+end_src
+** fileMultiple
+*** prerequisites
+#+begin_src shell :results drawer
+mkdir filesMulti && \
+pushd filesMulti && \
+curl -L --remote-name "https://raw.githubusercontent.com/kubernetes/examples/master/guestbook/{frontend-deployment,frontend-service,redis-master-deployment,redis-master-service,redis-slave-deployment,redis-slave-service}.yaml" && \
+popd
+#+end_src
+** helm
+*** prerequisites
+#+begin_src shell :results drawer
+helm repo add stable https://charts.helm.sh/stable
+#+end_src
+** renderYaml
+*** pulumi can be used to output yaml instead of provisioning a cube
+not for importable: just run it
+** Configuration Transformations
+
