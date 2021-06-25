@@ -4,7 +4,7 @@ package gitea
 import (
 	"strings"
 
-	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v2"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/k8s/lib"
 )
