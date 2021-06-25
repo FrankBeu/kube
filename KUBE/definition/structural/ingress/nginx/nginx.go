@@ -11,9 +11,37 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"thesym.site/k8s/lib"
+)
+
+var (
+	namespaceNginxIngress = &lib.Namespace{
+		Name: "ingress-nginx",
+		Tier: lib.NamespaceTierEdge,
+		AdditionalLabels: []lib.NamespaceLabel{
+			{Name: "app.kubernetes.io/name", Value: "ingress-nginx"},
+			{Name: "app.kubernetes.io/instance", Value: "ingress-nginx"},
+		},
+	}
 )
 
 func CreateNginxIngressController(ctx *pulumi.Context) error {
+
+	err := lib.CreateNamespaces(ctx, namespaceNginxIngress)
+	if err != nil {
+		return err
+	}
+
+	err = execGeneratedCode(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func execGeneratedCode(ctx *pulumi.Context) error {
+	// CHANGES: namespaceChange Resource Name; DefaultLabels
 
 	_, err := rbacv1.NewClusterRole(ctx, "ingress_nginxClusterRole", &rbacv1.ClusterRoleArgs{
 		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
@@ -167,7 +195,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				"app.kubernetes.io/component": pulumi.String("controller"),
 			},
 			Name:      pulumi.String("ingress-nginx-controller"),
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		Data: nil,
 	})
@@ -187,7 +215,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				"app.kubernetes.io/component": pulumi.String("controller"),
 			},
 			Name:      pulumi.String("ingress-nginx-controller"),
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
 			Selector: &metav1.LabelSelectorArgs{
@@ -355,7 +383,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				"app.kubernetes.io/component": pulumi.String("controller"),
 			},
 			Name:      pulumi.String("ingress-nginx"),
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
@@ -493,7 +521,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				"app.kubernetes.io/component": pulumi.String("controller"),
 			},
 			Name:      pulumi.String("ingress-nginx"),
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
 			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
@@ -504,7 +532,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 			&rbacv1.SubjectArgs{
 				Kind:      pulumi.String("ServiceAccount"),
 				Name:      pulumi.String("ingress-nginx"),
-				Namespace: pulumi.String("ingress-nginx"),
+				Namespace: pulumi.String(namespaceNginxIngress.Name),
 			},
 		},
 	})
@@ -524,7 +552,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				"app.kubernetes.io/component": pulumi.String("controller"),
 			},
 			Name:      pulumi.String("ingress-nginx-controller-admission"),
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		Spec: &corev1.ServiceSpecArgs{
 			Type: pulumi.String("ClusterIP"),
@@ -559,19 +587,21 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				"app.kubernetes.io/component": pulumi.String("controller"),
 			},
 			Name:      pulumi.String("ingress-nginx-controller"),
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		Spec: &corev1.ServiceSpecArgs{
 			Type: pulumi.String("NodePort"),
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
 					Name:       pulumi.String("http"),
+					NodePort:   pulumi.Int(30080),
 					Port:       pulumi.Int(80),
 					Protocol:   pulumi.String("TCP"),
 					TargetPort: pulumi.String("http"),
 				},
 				&corev1.ServicePortArgs{
 					Name:       pulumi.String("https"),
+					NodePort:   pulumi.Int(30443),
 					Port:       pulumi.Int(443),
 					Protocol:   pulumi.String("TCP"),
 					TargetPort: pulumi.String("https"),
@@ -600,23 +630,9 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				"app.kubernetes.io/component": pulumi.String("controller"),
 			},
 			Name:      pulumi.String("ingress-nginx"),
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		AutomountServiceAccountToken: pulumi.Bool(true),
-	})
-	if err != nil {
-		return err
-	}
-	_, err = corev1.NewNamespace(ctx, "ingress_nginxNamespace", &corev1.NamespaceArgs{
-		ApiVersion: pulumi.String("v1"),
-		Kind:       pulumi.String("Namespace"),
-		Metadata: &metav1.ObjectMetaArgs{
-			Name: pulumi.String("ingress-nginx"),
-			Labels: pulumi.StringMap{
-				"app.kubernetes.io/name":     pulumi.String("ingress-nginx"),
-				"app.kubernetes.io/instance": pulumi.String("ingress-nginx"),
-			},
-		},
 	})
 	if err != nil {
 		return err
@@ -638,7 +654,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				// "app.kubernetes.io/managed-by": pulumi.String("Helm"),
 				"app.kubernetes.io/component": pulumi.String("admission-webhook"),
 			},
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 	})
 	if err != nil {
@@ -687,7 +703,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				},
 				ClientConfig: &admissionregistrationv1.WebhookClientConfigArgs{
 					Service: &admissionregistrationv1.ServiceReferenceArgs{
-						Namespace: pulumi.String("ingress-nginx"),
+						Namespace: pulumi.String(namespaceNginxIngress.Name),
 						Name:      pulumi.String("ingress-nginx-controller-admission"),
 						Path:      pulumi.String("/networking/v1beta1/ingresses"),
 					},
@@ -761,7 +777,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 			&rbacv1.SubjectArgs{
 				Kind:      pulumi.String("ServiceAccount"),
 				Name:      pulumi.String("ingress-nginx-admission"),
-				Namespace: pulumi.String("ingress-nginx"),
+				Namespace: pulumi.String(namespaceNginxIngress.Name),
 			},
 		},
 	})
@@ -785,7 +801,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				// "app.kubernetes.io/managed-by": pulumi.String("Helm"),
 				"app.kubernetes.io/component": pulumi.String("admission-webhook"),
 			},
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		Spec: &batchv1.JobSpecArgs{
 			Template: &corev1.PodTemplateSpecArgs{
@@ -854,7 +870,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				// "app.kubernetes.io/managed-by": pulumi.String("Helm"),
 				"app.kubernetes.io/component": pulumi.String("admission-webhook"),
 			},
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		Spec: &batchv1.JobSpecArgs{
 			Template: &corev1.PodTemplateSpecArgs{
@@ -962,7 +978,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 				// "app.kubernetes.io/managed-by": pulumi.String("Helm"),
 				"app.kubernetes.io/component": pulumi.String("admission-webhook"),
 			},
-			Namespace: pulumi.String("ingress-nginx"),
+			Namespace: pulumi.String(namespaceNginxIngress.Name),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
 			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
