@@ -1,2 +1,8 @@
 ### pulumi stack export > stackFile
 /KUBE/stackFile
+
+### logging
+/KUBE/out.txt
+
+### tracing
+/KUBE/up.trace
