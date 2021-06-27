@@ -11,8 +11,8 @@ import (
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	p "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
-	certv1b1 "thesym.site/k8s/crds/cert-manager/certmanager/v1beta1"
-	"thesym.site/k8s/lib"
+	certv1b1 "thesym.site/kube/crds/cert-manager/certmanager/v1beta1"
+	"thesym.site/kube/lib"
 )
 
 func CreateCertmanager(ctx *p.Context) error {

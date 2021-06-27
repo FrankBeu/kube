@@ -8,7 +8,7 @@ version: 3
 
 vars:
 
-  name:                     k8s
+  name:                     kube
 
   domain:                   "thesym.site"
 
@@ -82,14 +82,15 @@ tasks:
 
 
   clusterCreateDev:
-    desc: create a dev-k8s-cluster for {{.domain}}
+    desc: create a dev-cluster for {{.domain}}
     cmds:
       - |
         k3d cluster create \
         {{.name}}-dev \
         --no-lb \
-        --port 80:30080 \
-        --port 443:30443
+        --k3s-server-arg '--no-deploy=traefik' \
+        --port 32080:30080 \
+        --port 32443:30443
 
 
     silent: true
@@ -116,18 +117,19 @@ tasks:
         #   --volume /home/frank/k3s/PERSISTENCE:/PERSISTENCE \
 
   clusterCreateStage:
-    desc: create a staging-k8s-cluster for {{.domain}} (Mind the portMappings -> reverseProxy required)
+    desc: create a staging-cluster for {{.domain}}
     cmds:
       - |
         k3d cluster create \
         {{.name}}-stage \
         --no-lb \
-        --port 30080:30080 \
-        --port 30443:30443
+        --k3s-server-arg '--no-deploy=traefik' \
+        --port 31080:30080 \
+        --port 31443:30443
 
 
   clusterDeleteDev:
-    desc: delete the dev-k8s-cluster
+    desc: delete the dev-cluster
     cmds:
       - |
         k3d cluster delete {{.name}}-dev

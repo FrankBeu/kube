@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	dev "thesym.site/k8s/env/development"
-	prod "thesym.site/k8s/env/production"
-	stage "thesym.site/k8s/env/staging"
-	"thesym.site/k8s/lib"
+	dev "thesym.site/kube/env/development"
+	prod "thesym.site/kube/env/production"
+	stage "thesym.site/kube/env/staging"
+	"thesym.site/kube/lib"
 )
 
 func main() {

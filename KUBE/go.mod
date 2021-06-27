@@ -1,4 +1,4 @@
-module thesym.site/k8s
+module thesym.site/kube
 
 go 1.14
 

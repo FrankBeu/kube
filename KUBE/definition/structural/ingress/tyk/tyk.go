@@ -8,7 +8,7 @@ import (
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	p "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/k8s/lib"
+	"thesym.site/kube/lib"
 )
 
 func CreateTykGateway(ctx *p.Context) error {

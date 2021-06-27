@@ -2,10 +2,10 @@
 package staging
 
 import (
-	"thesym.site/k8s/definition/app/vcs/gitea"
-	"thesym.site/k8s/definition/structural/certs/certmanager"
-	"thesym.site/k8s/definition/structural/ingress/nginx"
-	"thesym.site/k8s/lib"
+	"thesym.site/kube/definition/app/vcs/gitea"
+	"thesym.site/kube/definition/structural/certs/certmanager"
+	"thesym.site/kube/definition/structural/ingress/nginx"
+	"thesym.site/kube/lib"
 )
 
 // Kube is the configuration for the stagingEnvironment
