@@ -7,12 +7,14 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"thesym.site/k8s/lib"
 )
 
 var (
+	name              = "petstore"
 	namespacePetstore = &lib.Namespace{
-		Name:          "petstore",
+		Name:          name,
 		Tier:          lib.NamespaceTierTesting,
 		GlooDiscovery: true,
 	}
@@ -20,12 +22,15 @@ var (
 
 func CreateGlooPetstore(ctx *pulumi.Context) error {
 
+	conf := config.New(ctx, "")
+	domainName := name + "." + conf.Require("domain")
+
 	err := lib.CreateNamespaces(ctx, namespacePetstore)
 	if err != nil {
 		return err
 	}
 
-	err = addIngress(ctx)
+	err = addIngress(ctx, domainName)
 
 	if err != nil {
 		return err
@@ -41,15 +46,15 @@ func CreateGlooPetstore(ctx *pulumi.Context) error {
 }
 
 // TODO: extract
-func addIngress(ctx *pulumi.Context) error {
+func addIngress(ctx *pulumi.Context, domainName string) error {
 
 	_, err := networkingv1.NewIngress(ctx, namespacePetstore.Name, &networkingv1.IngressArgs{
 		ApiVersion: pulumi.String("networking.k8s.io/v1"),
 		Kind:       pulumi.String("Ingress"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels:    pulumi.StringMap{"app": pulumi.String("petstore")},
-			Name:      pulumi.String("petstore"),
-			Namespace: pulumi.String(namespacePetstore.Name),
+			Labels:      pulumi.StringMap{"app": pulumi.String("petstore")},
+			Name:        pulumi.String("petstore"),
+			Namespace:   pulumi.String(namespacePetstore.Name),
 			Annotations: pulumi.StringMap{
 				// "kubernetes.io/ingress.class": pulumi.String("nginx"),
 				// "nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("true"),
@@ -64,7 +69,7 @@ func addIngress(ctx *pulumi.Context) error {
 		Spec: &networkingv1.IngressSpecArgs{
 			Rules: networkingv1.IngressRuleArray{
 				&networkingv1.IngressRuleArgs{
-					Host: pulumi.String("pet.dev.thesym.site"),
+					Host: pulumi.String(domainName),
 					Http: &networkingv1.HTTPIngressRuleValueArgs{
 						Paths: networkingv1.HTTPIngressPathArray{
 							&networkingv1.HTTPIngressPathArgs{

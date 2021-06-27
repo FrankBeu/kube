@@ -7,22 +7,28 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	rbacv1beta1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1beta1"
 	p "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"thesym.site/k8s/lib"
 )
 
 var (
+	name               = "emmissary"
 	namespaceEmmissary = &lib.Namespace{
-		Name: "emmissary",
+		Name: name,
 		Tier: lib.NamespaceTierEdge,
 	}
 
 	namespaceEmmissaryHosts = &lib.Namespace{
-		Name: "emmissary-hosts",
+		Name: name + "-hosts",
 		Tier: lib.NamespaceTierEdge,
 	}
 )
 
 func CreateEmmissary(ctx *p.Context) error {
+
+	conf := config.New(ctx, "")
+	domainName := name + "." + conf.Require("domain")
+
 	err := lib.CreateNamespaces(ctx, namespaceEmmissary, namespaceEmmissaryHosts)
 	if err != nil {
 		return err
@@ -40,7 +46,7 @@ func CreateEmmissary(ctx *p.Context) error {
 		return err
 	}
 
-	// createResourcesForDiagnostics(ctx)
+	// createResourcesForDiagnostics(ctx, domainName)
 
 	err = execGeneratedCode(ctx)
 	if err != nil {
@@ -53,7 +59,7 @@ func CreateEmmissary(ctx *p.Context) error {
 
 // createResourcesForDiagnostics provides all resources for the emmissaryDiagnosticsFrontend
 
-//  func createResourcesForDiagnostics(ctx *p.Context) error {
+//  func createResourcesForDiagnostics(ctx *p.Context, domainName string) error {
 //
 //  	_, err := getambassadorv2.NewHost(ctx, "emmissaryDiagnostic", &getambassadorv2.HostArgs{
 //  		// ApiVersion: p.String("getambassador.io/v2"),
@@ -65,7 +71,8 @@ func CreateEmmissary(ctx *p.Context) error {
 //  		// },
 //
 //  		// Spec: &getambassadorv2.HostSpecArgs{
-//  		// 	Hostname: p.String("emdia.stage.thesym.site"),
+//  		// //	Hostname: p.String("emdia."stage.thesym.site"),
+//  		// 	Hostname: p.String(domainName),
 //  		// },
 //  		// Status: nil,
 //  	})
