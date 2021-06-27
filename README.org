@@ -1,15 +1,104 @@
-* k8s
+* kube
 k8s-cluster built with pulumi  on nixos
-** credentials
-*** pulumi-password
-can be found in gopass: =k8s/misc/pulumi=
-can be used with summon
+** INFO
+**** operators
+***** prebuild
+https://github.com/pulumi/pulumi-kubernetes-crds
+** dependencies
+*** required
+**** pulumi
+https://www.pulumi.com/
+**** kubectl
+*** convenience
+**** *summon + gopass*
+providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
+*** DEVEL
+**** *k3d*
+***** used to create k8s-cluster for
+****** dev
+****** stage
+**** *yaml-Splitting*
+~kube2pulumi~ works better with single files.
+#+begin_example shell
+k8split -o SPLIT cert-manager.yaml
+#+end_example
+**** *kube2pulumi*
+generate a =main.go= which must be processed further
+#+begin_example shell
+  kube2pulumi go -d ./SPLIT
+#+end_example
+**** *crd2pulumi*
+***** output to KUBE
+#+begin_example shell
+  crd2pulumi --goPath "$(git root)/KUBE/crds"         ./SPLIT/customresourcedefinition*.yaml
+  crd2pulumi --goPath "$(git root)/KUBE/crds" --force ./SPLIT/customresourcedefinition*.yaml
+#+end_example
+***** output to ./crds
 #+begin_src shell :results drawer
-summon --up bash -c 'PULUMI_CONFIG_PASSPHRASE=${PULUMI_CONFIG_PASSPHRASE} pulumi up'
+  crd2pulumi -g ./SPLIT/customresourcedefinition*.yaml
 #+end_src
+** cluster
+*** dev
+**** view =./KUBE/Taskfile.yml=
+~clusterCreateDev~
+*** staging 
+**** view =./KUBE/Taskfile.yml=
+~clusterCreateStage~
+**** TODO should match production
+use k3s
+*** production
+**** TODO k3s
+*** TODO persistence
+** environments
+*** choose via stack
+*** env
+**** dev
+[[dev.thesym.site]]
+**** stage
+[[stage.thesym.site]]
+**** prod
+[[thesym.site]]
+** proxy
+The Ingresscontroller is  used in  ~NodePort~ Mode.
+Only ports 30000 - 32767 can be use.
+So a reverse proxy on the host is needed.
+The k3d-server-layer must be traversed by  portMapping, too,
+*** TODO link to https://gitea.thesym.site...nginxConfig
+*** TODO link to https://gitea.thesym.site...dns/domain
+** safety / security
+in order to prevent an unauthorized or accidental deploy to the wrong cluster
+*gopass* and *summon* are used to wrapp calls to *pulumi*.
+*** shell-setup
+The ~pulumi~ command is only used via calls to stack-dependent aliases
+#+begin_example shell
+alias     p="summonPulumi dev"
+alias    pS="summonPulumi stage"
+alias pPROD="summonPulumi prod"
+#+end_example
+#+begin_example shell
+function summonPulumi() {
+    ENV=${1}
+    PULUMI_ARGS=${@:2}
+    summon --up -e ${ENV} zsh -c "pulumi ${PULUMI_ARGS}"
+}
+#+end_example
+*** summon
+chooses the env defined in [[./KUBE/secrets.yml]]
+calls gopass to retrieve the value
+and sets the PULUMI_CONFIG_PASSPHRASE accordingly
+*** gopass
+protects a password for each env
+=k8s/misc/pulumiDev=
+=k8s/misc/pulumiStage=
+=k8s/misc/pulumiProd=
 ** configuration
 *** changes to config must be applied with ~pulumi up~ in order to be affective
-*** think of ENV - not of config - *.go is your config now
+*** think of ENV - not of config - *.go is your config* now 
+*** RESIST
+**** the urge to write a config.yaml
+***** never import viper
+***** again: golang is the config
+pulumi the app
 *** settings
 **** kubernetes provider
 https://www.pulumi.com/docs/intro/cloud-providers/kubernetes/#configuration
@@ -19,11 +108,23 @@ pulumi config set kubernetes:suppressDeprecationWarnings true
 #+end_example
 ***** constraint stack to cluster
 #+begin_example shell
-pulumi config set kubernetes:context "k3d-k8s-stage"
+pulumi config set kubernetes:context "k3d-kube-dev"
 #+end_example
-**** domain
+#+begin_example shell
+pulumi config set kubernetes:context "k3d-kube-stage"
+#+end_example
+#+begin_example shell
+pulumi config set kubernetes:context "kube"
+#+begin_example shell
+pulumi config set kubernetes:context "k3d-kube-dev"
+#+end_example
+#+end_example
+**** environment
 #+begin_example shell
 pulumi config set domain "stage.thesym.site"
+#+end_example
+#+begin_example shell
+pulumi config set env "stage"
 #+end_example
 ** architecture
 *** CRDS
@@ -107,6 +208,8 @@ EOF
   kube2pulumi go -f ./RESOURCES/definition/structural/ingress/emmissary/ambassador-diagnostic-module.yaml
 #+end_src
 ******** add to =./KUBE/definition/structural/ingress/emmissary/emmissary.go=
+****** STATUS
+deployment possible, crd:host cannot be instanciated
 ***** DEPRECATED edgeStack
 https://www.getambassador.io/docs/edge-stack/latest/tutorials/getting-started/
 #+begin_src shell :results drawer
@@ -157,21 +260,21 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
 #+end_src
 ***** tyk
-no http2https
-needs proxy -> nginx -> use nginx as ingressController
 ****** RESOURCES
 #+begin_src shell :results drawer
   git clone https://github.com/TykTechnologies/tyk-oss-k8s-deployment.git ./RESOURCES/definition/structural/ingress/tyk/tyk-oss-k8s-deployment2
   kube2pulumi go -d ./RESOURCES/definition/structural/ingress/tyk/tyk-oss-k8s-deployment
 #+end_src
-**** operators
-https://github.com/pulumi/pulumi-kubernetes-crds
+****** STATUS
+******* useable
+******* unused
+no http2https
+needs proxy -> nginx -> use nginx as ingressController
 **** certs
 ***** certmanager
 #+begin_src shell :results drawer
   curl -LO https://github.com/jetstack/cert-manager/releases/download/v1.4.0/cert-manager.yaml
   crd2pulumi --goPath ./KUBE/crds/cert-manager ./RESOURCES/definition/structural/certs/certmanager/cdrDefinitions/customresourcedefinition-*.yaml
-
 #+end_src
 **** testing
 ***** gloo
@@ -192,44 +295,6 @@ https://gitea.com/gitea/helm-chart/
 #+begin_src shell :results drawer
 helm repo add gitea-charts https://dl.gitea.io/charts/
 helm repo update
-#+end_src
-** DEPENDENCIES
-*** required
-**** pulumi
-https://www.pulumi.com/
-*** convenience
-**** *summon + gopass*
-for providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
-*** DEVEL
-**** *k3d*
-***** used to create k8s-cluster
-****** dev
-****** stage
-******* a *proxy*
-if the Ingresscontroller is  used in  ~NodePort~ Mode
-a reverse Proxy on the host is needed.
-Gloo cannot open ports 80 and 443
-Ambassador can
-k3d-server-layer can map ports too
-**** *Yaml-Splitting*
-~kube2pulumi~ works better with single files.
-#+begin_example shell
-k8split -o SPLIT cert-manager.yaml
-#+end_example
-**** *kube2pulumi*
-generate a =main.go= which must be processed further
-#+begin_example shell
-  kube2pulumi go -d ./SPLIT
-#+end_example
-**** *crd2pulumi*
-***** output to KUBE
-#+begin_example shell
-  crd2pulumi --goPath "$(git root)/KUBE/crds"         ./SPLIT/customresourcedefinition*.yaml
-  crd2pulumi --goPath "$(git root)/KUBE/crds" --force ./SPLIT/customresourcedefinition*.yaml
-#+end_example
-***** output to ./crds
-#+begin_src shell :results drawer
-  crd2pulumi -g ./SPLIT/customresourcedefinition*.yaml
 #+end_src
 ** TODO TODOS
 *** TODO create/automate update cycle
@@ -272,4 +337,30 @@ gopls respects them
 #+begin_src go
  // +build never
 #+end_src
-
+**** Environments
+***** prod
+****** k3s
+******* on nuc
+***** stage
+should mimic prod as closly as possible
+****** TODO k3s
+******* on mac
+****** currently k3d
+***** dev
+****** k3d
+******* on mac
+******* on nuc
+for multi node experiments
+*** TODO create keynote
+*** TODO testing, testing, testing
+**** after coms + vcs
+**** !!!
+*** architecture
+**** all function should be pure
+***** except Create.....()
+***** TODO package config???
+****** package-local
+******* readable++
+****** Create...()-local
+******* forces pure lib~,package-functions
+***** implement with testing

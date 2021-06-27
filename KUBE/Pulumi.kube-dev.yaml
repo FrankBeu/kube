@@ -1,0 +1,6 @@
+encryptionsalt: v1:6Q+OXNtm8tc=:v1:4WfQu6szmhipdppg:E/Y4M5Aa78Z5dDKP9mg5n0BN2h5J1w==
+config:
+  kube:domain: dev.thesym.site
+  kube:env: dev
+  kubernetes:context: k3d-kube-dev
+  kubernetes:suppressDeprecationWarnings: "true"

@@ -1,0 +1,5 @@
+encryptionsalt: v1:u7lsOADMlBY=:v1:SDK11zQfFTwgYMNF:YA077B8TZwH/P2Qh7Z2nfjaIqBYdxQ==
+config:
+  kube:domain: stage.thesym.site
+  kube:env: stage
+  kubernetes:context: k3d-kube-stage

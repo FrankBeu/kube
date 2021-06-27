@@ -1,5 +1,0 @@
-encryptionsalt: v1:iqjuUTlVFYI=:v1:8kJRo53UkiU39jFZ:VfxMtVpK++8Kz3HYjBuRDLMCQoWPpw==
-config:
-  k8s:domain: stage.thesym.site
-  kubernetes:context: k3d-k8s-stage
-  kubernetes:suppressDeprecationWarnings: "true"

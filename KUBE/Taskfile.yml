@@ -135,7 +135,7 @@ tasks:
 
 
   clusterDeleteStage:
-    desc: delete the staging-k8s-cluster
+    desc: delete the staging-cluster
     cmds:
       - |
         k3d cluster delete {{.name}}-stage
