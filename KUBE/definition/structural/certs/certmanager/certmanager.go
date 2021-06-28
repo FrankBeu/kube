@@ -16,7 +16,7 @@ import (
 )
 
 func CreateCertmanager(ctx *pulumi.Context) error {
-
+	//nolint:lll
 	certManagerCrds := []lib.Crd{
 		{Name: "certmanager-order-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-orders.acme.cert-manager.io.yaml"},
 		{Name: "certmanager-issuer-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-issuers.cert-manager.io.yaml"},
@@ -31,6 +31,7 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 		return err
 	}
 
+	//nolint
 	//// exampleCert
 	err = CreateCert(ctx)
 	if err != nil {
@@ -38,7 +39,7 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 	}
 
 	//// APP
-	execGeneratedCode(ctx)
+	err = execGeneratedCode(ctx)
 	if err != nil {
 		return err
 	}
@@ -73,6 +74,7 @@ func CreateCert(ctx *pulumi.Context) error {
 	return nil
 }
 
+//nolint
 func execGeneratedCode(ctx *pulumi.Context) error {
 	_, err := rbacv1.NewClusterRole(ctx, "cert_manager_cainjectorClusterRole", &rbacv1.ClusterRoleArgs{
 		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),

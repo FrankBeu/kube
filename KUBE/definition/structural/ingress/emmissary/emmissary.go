@@ -7,7 +7,6 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	rbacv1beta1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1beta1"
 	p "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"thesym.site/kube/lib"
 )
 
@@ -25,10 +24,6 @@ var (
 )
 
 func CreateEmmissary(ctx *p.Context) error {
-
-	conf := config.New(ctx, "")
-	domainName := name + "." + conf.Require("domain")
-
 	err := lib.CreateNamespaces(ctx, namespaceEmmissary, namespaceEmmissaryHosts)
 	if err != nil {
 		return err
@@ -46,6 +41,7 @@ func CreateEmmissary(ctx *p.Context) error {
 		return err
 	}
 
+	//nolint:gocritic
 	// createResourcesForDiagnostics(ctx, domainName)
 
 	err = execGeneratedCode(ctx)
@@ -54,7 +50,6 @@ func CreateEmmissary(ctx *p.Context) error {
 	}
 
 	return nil
-
 }
 
 // createResourcesForDiagnostics provides all resources for the emmissaryDiagnosticsFrontend
@@ -113,6 +108,7 @@ func CreateEmmissary(ctx *p.Context) error {
 //  	return nil
 //  }
 
+//nolint // generatedCode
 func execGeneratedCode(ctx *p.Context) error {
 	_, err := corev1.NewService(ctx, "defaultAmbassador_adminService", &corev1.ServiceArgs{
 		ApiVersion: p.String("v1"),

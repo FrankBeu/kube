@@ -43,11 +43,13 @@ func CreateGitea(ctx *pulumi.Context) error {
 	}
 	// `helm repo add gitea-charts https://dl.gitea.io/charts/`
 	_, err = helm.NewChart(ctx, "gitea", helm.ChartArgs{
-		Repo:        pulumi.String("gitea-charts"),
-		Chart:       pulumi.String("gitea"),
-		Version:     pulumi.String("3.1.4"),
-		Namespace:   pulumi.String(namespaceGitea.Name),
-		APIVersions: pulumi.StringArray{pulumi.String("networking.k8s.io/v1")}, //// NOT working: https://github.com/pulumi/pulumi-kubernetes/issues/1034
+		Repo:      pulumi.String("gitea-charts"),
+		Chart:     pulumi.String("gitea"),
+		Version:   pulumi.String("3.1.4"),
+		Namespace: pulumi.String(namespaceGitea.Name),
+		//// APIVersion is NOT working: https://github.com/pulumi/pulumi-kubernetes/issues/1034
+		//// use Trasnformations instead
+		APIVersions: pulumi.StringArray{pulumi.String("networking.k8s.io/v1")},
 		// TODO: test if `helm repo add ...` is necessary
 		// FetchArgs: &helm.FetchArgs{
 		// Repo: pulumi.String("https://dl.gitea.io/charts/"),
@@ -59,6 +61,7 @@ func CreateGitea(ctx *pulumi.Context) error {
 					state["apiVersion"] = "networking.k8s.io/v1"
 
 					//// information{Retrieval,Setting}
+					//nolint:lll
 					paths := state["spec"].(map[string]interface{})["rules"].([]interface{})[0].(map[string]interface{})["http"].(map[string]interface{})["paths"]
 					path := paths.([]interface{})[0].(map[string]interface{})["path"]
 					backend := paths.([]interface{})[0].(map[string]interface{})["backend"]

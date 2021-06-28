@@ -2,8 +2,8 @@ linters-settings:
   depguard:
     list-type: blacklist
     packages:
-      # logging is allowed only by logutils.Log, logrus
-      # is allowed to use only in logutils package
+      ### logging is allowed only by logutils.Log, logrus
+      ### is allowed to use only in logutils package
       - github.com/sirupsen/logrus
     packages-with-error-message:
       - github.com/sirupsen/logrus: "logging is allowed only by logutils.Log"
@@ -25,11 +25,12 @@ linters-settings:
       - performance
       - style
     disabled-checks:
-      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - dupImport         ### https://github.com/go-critic/go-critic/issues/845
       - ifElseChain
       - octalLiteral
       - whyNoLint
       - wrapperFunc
+      - commentFormatting ### use //// for codeStructure
   gocyclo:
     min-complexity: 15
   goimports:
@@ -39,7 +40,7 @@ linters-settings:
   gomnd:
     settings:
       mnd:
-        # don't include the "operation" and "assign"
+        ### don't include the "operation" and "assign"
         checks:
           - argument
           - case
@@ -61,14 +62,14 @@ linters-settings:
   misspell:
     locale: US
   nolintlint:
-    allow-leading-space: true # don't require machine-readable nolint directives (i.e. with no leading space)
-    allow-unused: false # report any unused nolint directives
-    require-explanation: false # don't require an explanation for nolint directives
-    require-specific: false # don't require nolint directives to be specific about which linter is being skipped
+    allow-leading-space: true  ### don't require machine-readable nolint directives (i.e. with no leading space)
+    allow-unused: false        ### report any unused nolint directives
+    require-explanation: false ### don't require an explanation for nolint directives
+    require-specific: false    ### don't require nolint directives to be specific about which linter is being skipped
 
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  ### please, do not use `enable-all`: it's deprecated and will be removed soon.
+  ### inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
     - bodyclose
@@ -78,6 +79,7 @@ linters:
     - dupl
     - errcheck
     - exhaustive
+    - exportloopref     ### - replaces scopelint (deprecated)
     - funlen
     - gochecknoinits
     - goconst
@@ -92,14 +94,13 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    - interfacer
+    # - interfacer      ### deprecated
     - lll
     - misspell
     - nakedret
     - noctx
     - nolintlint
     - rowserrcheck
-    - scopelint
     - staticcheck
     - structcheck
     - stylecheck
@@ -110,7 +111,7 @@ linters:
     - varcheck
     - whitespace
 
-  # don't enable:
+  ### don't enable:
   # - asciicheck
   # - gochecknoglobals
   # - gocognit
@@ -124,21 +125,21 @@ linters:
   # - wsl
 
 issues:
-  # Excluding configuration per-path, per-linter, per-text and per-source
+  ### Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     - path: _test\.go
       linters:
         - gomnd
 
-    # https://github.com/go-critic/go-critic/issues/926
+    ### https://github.com/go-critic/go-critic/issues/926
     - linters:
         - gocritic
       text: "unnecessaryDefer:"
 
-    # TODO temporary rule, must be removed
-    # seems related to v0.34.1, but I was not able to reproduce locally,
-    # I was also not able to reproduce in the CI of a fork,
-    # only the golangci-lint CI seems to be affected by this invalid analysis.
+    ### TODO temporary rule, must be removed
+    ### seems related to v0.34.1, but I was not able to reproduce locally,
+    ### I was also not able to reproduce in the CI of a fork,
+    ### only the golangci-lint CI seems to be affected by this invalid analysis.
     - path: pkg/golinters/scopelint.go
       text: 'directive `//nolint:interfacer` is unused for linter interfacer'
 
@@ -150,9 +151,9 @@ run:
     - internal/robustio
     - crds
 
-# golangci.com configuration
-# https://github.com/golangci/golangci/wiki/Configuration
+### golangci.com configuration
+### https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.23.x # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.23.x ### use the fixed version to not introduce new linters unexpectedly
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"
