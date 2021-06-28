@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	name = "gitea"
+	name          = "gitea"
+	subDomainName = "git"
 
 	// pvNameData = name + "-data"
 
@@ -34,7 +35,7 @@ var (
 
 func CreateGitea(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
-	domainName := name + "." + conf.Require("domain")
+	domainName := subDomainName + "." + conf.Require("domain")
 
 	err := lib.CreateNamespaces(ctx, namespaceGitea)
 	if err != nil {
@@ -51,25 +52,20 @@ func CreateGitea(ctx *pulumi.Context) error {
 		// FetchArgs: &helm.FetchArgs{
 		// Repo: pulumi.String("https://dl.gitea.io/charts/"),
 		// },
-
-		//// DEBUG: Transformation act on the yaml-layer
-		//// DEBUG: ` helm template -s templates/gitea/ingress.yaml ./CHART/gitea --set ingress.enabled=true --set "ingress.hosts\.0.host"=git.thesym.site -a networking.k8s.io/v1/Ingress`
 		Transformations: []yaml.Transformation{
 			func(state map[string]interface{}, opts ...pulumi.ResourceOption) {
+				//// only act if the ingress is passed to this callback
 				if state["kind"] == "Ingress" {
 					state["apiVersion"] = "networking.k8s.io/v1"
 
-					// DEBUG: //////////////////////////////////////////////////////////////////
-					// rules := state["spec"].(map[string]interface{})["rules"].([]interface{})
-					// rules = []interface{}{
-					// 	0: "test",
-					// }
-					// state["spec"] = rules
+					//// information{Retrieval,Setting}
+					paths := state["spec"].(map[string]interface{})["rules"].([]interface{})[0].(map[string]interface{})["http"].(map[string]interface{})["paths"]
+					path := paths.([]interface{})[0].(map[string]interface{})["path"]
+					backend := paths.([]interface{})[0].(map[string]interface{})["backend"]
+					serviceName := backend.(map[string]interface{})["serviceName"]
+					servicePort := backend.(map[string]interface{})["servicePort"]
 
-					// host, _ := json.Marshal(state["spec"])
-					// fmt.Println(string(host))
-					////////////////////////////////////////////////////////////////////////////
-
+					//// specRebuild
 					spec := map[string]interface{}{
 						"rules": []interface{}{
 							map[string]interface{}{
@@ -77,13 +73,13 @@ func CreateGitea(ctx *pulumi.Context) error {
 								"http": map[string]interface{}{
 									"paths": []interface{}{
 										map[string]interface{}{
-											"path":     "/",
+											"path":     path,
 											"pathType": "Prefix",
 											"backend": map[string]interface{}{
 												"service": map[string]interface{}{
-													"name": name + "-http",
+													"name": serviceName,
 													"port": map[string]interface{}{
-														"number": 3000,
+														"number": servicePort,
 													},
 												},
 											},
@@ -93,22 +89,18 @@ func CreateGitea(ctx *pulumi.Context) error {
 							},
 						},
 					}
-
 					state["spec"] = spec
 				}
 			},
 		},
-		//// DEBUG: Values - act on the helmValuesLayer
-		//// DEBUG: `cat CHART/gitea/templates/gitea/ingress.yaml`
 		Values: pulumi.Map{
 			"gitea": pulumi.Map{
 				"config": pulumi.Map{
 					"APP_NAME": pulumi.String(strings.Title(name)),
 					"server": pulumi.Map{
-
 						"DOMAIN":     pulumi.String(domainName),
 						"ROOT_URL":   pulumi.String("https://" + domainName),
-						"SSH_DOMAIN": pulumi.String(domainName),
+						"SSH_DOMAIN": pulumi.String(domainName), // gitea.config.server.SSH_DOMAIN={{.domainName}}
 					},
 				},
 			},
@@ -120,18 +112,10 @@ func CreateGitea(ctx *pulumi.Context) error {
 				"hosts": pulumi.Array{ // ingress.hosts[0].host
 					pulumi.String(domainName),
 				},
-
-				// --set resources.requests.cpu=10m \
-				// --set persistence.existingClaim={{.pvName0}} \
-				// --set gitea.config.APP_NAME=Gitea \
-				// --set gitea.config.server.DOMAIN={{.domainName}} \
-				// --set gitea.config.server.ROOT_URL=https://{{.domainName}} \
-				// --set gitea.config.server.SSH_DOMAIN={{.domainName}} \
-
 			},
 			"resources": pulumi.Map{
 				"requests": pulumi.Map{
-					"cpu": pulumi.String("10m"),
+					"cpu": pulumi.String("10m"), // resources.requests.cpu=10m
 				},
 			},
 			// --set persistence.existingClaim={{.pvName0}} \
