@@ -33,10 +33,10 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 
 	//nolint
 	//// exampleCert
-	err = CreateCert(ctx)
-	if err != nil {
-		return err
-	}
+	// err = CreateCert(ctx)
+	// if err != nil {
+	// 	return err
+	// }
 
 	//// APP
 	err = execGeneratedCode(ctx)
