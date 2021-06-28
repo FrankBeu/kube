@@ -9,13 +9,13 @@ import (
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
-	p "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 	certv1b1 "thesym.site/kube/crds/cert-manager/certmanager/v1beta1"
 	"thesym.site/kube/lib"
 )
 
-func CreateCertmanager(ctx *p.Context) error {
+func CreateCertmanager(ctx *pulumi.Context) error {
 
 	certManagerCrds := []lib.Crd{
 		{Name: "certmanager-order-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-orders.acme.cert-manager.io.yaml"},
@@ -31,141 +31,159 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 
+	//// exampleCert
+	err = CreateCert(ctx)
+	if err != nil {
+		return err
+	}
+
+	//// APP
+	execGeneratedCode(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateCert creates a certificate
+func CreateCert(ctx *pulumi.Context) error {
 	//// Instantiate a Certificate resource.
-	_, err = certv1b1.NewCertificate(ctx, "example-cert", &certv1b1.CertificateArgs{
+	_, err := certv1b1.NewCertificate(ctx, "example-cert", &certv1b1.CertificateArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name: p.String("example-com"),
+			Name: pulumi.String("example-com"),
 		},
 		Spec: certv1b1.CertificateSpecArgs{
-			SecretName:  p.String("example-com-tls"),
-			Duration:    p.String("2160h"),
-			RenewBefore: p.String("360h"),
-			CommonName:  p.String("example.com"),
-			DnsNames: p.StringArray{
-				p.String("example.com"),
-				p.String("www.example.com"),
+			SecretName:  pulumi.String("example-com-tls"),
+			Duration:    pulumi.String("2160h"),
+			RenewBefore: pulumi.String("360h"),
+			CommonName:  pulumi.String("example.com"),
+			DnsNames: pulumi.StringArray{
+				pulumi.String("example.com"),
+				pulumi.String("www.example.com"),
 			},
 			IssuerRef: certv1b1.CertificateSpecIssuerRefArgs{
-				Name: p.String("ca-issuer"),
-				Kind: p.String("Issuer"),
+				Name: pulumi.String("ca-issuer"),
+				Kind: pulumi.String("Issuer"),
 			},
 		},
 	})
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
-	//// APP
-	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_cainjectorClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+func execGeneratedCode(ctx *pulumi.Context) error {
+	_, err := rbacv1.NewClusterRole(ctx, "cert_manager_cainjectorClusterRole", &rbacv1.ClusterRoleArgs{
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cainjector"),
-				"app.kubernetes.io/component":  p.String("cainjector"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cainjector"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cainjector"),
+				"app.kubernetes.io/component":  pulumi.String("cainjector"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cainjector"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-cainjector"),
+			Name: pulumi.String("cert-manager-cainjector"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("certificates"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
-				},
-				Resources: p.StringArray{
-					p.String("secrets"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("events"),
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("create"),
-					p.String("update"),
-					p.String("patch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("admissionregistration.k8s.io"),
-				},
-				Resources: p.StringArray{
-					p.String("validatingwebhookconfigurations"),
-					p.String("mutatingwebhookconfigurations"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("apiregistration.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("apiservices"),
+				Resources: pulumi.StringArray{
+					pulumi.String("events"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("apiextensions.k8s.io"),
-				},
-				Resources: p.StringArray{
-					p.String("customresourcedefinitions"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("create"),
+					pulumi.String("update"),
+					pulumi.String("patch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("auditregistration.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("admissionregistration.k8s.io"),
 				},
-				Resources: p.StringArray{
-					p.String("auditsinks"),
+				Resources: pulumi.StringArray{
+					pulumi.String("validatingwebhookconfigurations"),
+					pulumi.String("mutatingwebhookconfigurations"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("update"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("apiregistration.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("apiservices"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("update"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("apiextensions.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("customresourcedefinitions"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("update"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("auditregistration.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("auditsinks"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("update"),
 				},
 			},
 		},
@@ -174,33 +192,33 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_approve_cert_manager_ioClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("cert-manager"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("cert-manager"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-approve:cert-manager-io"),
+			Name: pulumi.String("cert-manager-controller-approve:cert-manager-io"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				ResourceNames: p.StringArray{
-					p.String("issuers.cert-manager.io/*"),
-					p.String("clusterissuers.cert-manager.io/*"),
+				ResourceNames: pulumi.StringArray{
+					pulumi.String("issuers.cert-manager.io/*"),
+					pulumi.String("clusterissuers.cert-manager.io/*"),
 				},
-				Resources: p.StringArray{
-					p.String("signers"),
+				Resources: pulumi.StringArray{
+					pulumi.String("signers"),
 				},
-				Verbs: p.StringArray{
-					p.String("approve"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("approve"),
 				},
 			},
 		},
@@ -209,103 +227,103 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_certificatesClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-certificates"),
+			Name: pulumi.String("cert-manager-controller-certificates"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("certificates"),
-					p.String("certificates/status"),
-					p.String("certificaterequests"),
-					p.String("certificaterequests/status"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates"),
+					pulumi.String("certificates/status"),
+					pulumi.String("certificaterequests"),
+					pulumi.String("certificaterequests/status"),
 				},
-				Verbs: p.StringArray{
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("certificates"),
-					p.String("certificaterequests"),
-					p.String("clusterissuers"),
-					p.String("issuers"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("certificates/finalizers"),
-					p.String("certificaterequests/finalizers"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates"),
+					pulumi.String("certificaterequests"),
+					pulumi.String("clusterissuers"),
+					pulumi.String("issuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("orders"),
-				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("delete"),
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("secrets"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates/finalizers"),
+					pulumi.String("certificaterequests/finalizers"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("create"),
-					p.String("update"),
-					p.String("delete"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("events"),
+				Resources: pulumi.StringArray{
+					pulumi.String("orders"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("patch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("delete"),
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("create"),
+					pulumi.String("update"),
+					pulumi.String("delete"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("events"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("patch"),
 				},
 			},
 		},
@@ -314,69 +332,69 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_certificatesigningrequestsClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("cert-manager"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("cert-manager"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-certificatesigningrequests"),
+			Name: pulumi.String("cert-manager-controller-certificatesigningrequests"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("certificates.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("certificates.k8s.io"),
 				},
-				Resources: p.StringArray{
-					p.String("certificatesigningrequests"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificatesigningrequests"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("certificates.k8s.io"),
-				},
-				Resources: p.StringArray{
-					p.String("certificatesigningrequests/status"),
-				},
-				Verbs: p.StringArray{
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("certificates.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("certificates.k8s.io"),
 				},
-				ResourceNames: p.StringArray{
-					p.String("issuers.cert-manager.io/*"),
-					p.String("clusterissuers.cert-manager.io/*"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificatesigningrequests/status"),
 				},
-				Resources: p.StringArray{
-					p.String("signers"),
-				},
-				Verbs: p.StringArray{
-					p.String("sign"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("authorization.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("certificates.k8s.io"),
 				},
-				Resources: p.StringArray{
-					p.String("subjectaccessreviews"),
+				ResourceNames: pulumi.StringArray{
+					pulumi.String("issuers.cert-manager.io/*"),
+					pulumi.String("clusterissuers.cert-manager.io/*"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
+				Resources: pulumi.StringArray{
+					pulumi.String("signers"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("sign"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("authorization.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("subjectaccessreviews"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
 				},
 			},
 		},
@@ -385,149 +403,149 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_challengesClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-challenges"),
+			Name: pulumi.String("cert-manager-controller-challenges"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("challenges"),
-					p.String("challenges/status"),
+				Resources: pulumi.StringArray{
+					pulumi.String("challenges"),
+					pulumi.String("challenges/status"),
 				},
-				Verbs: p.StringArray{
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("challenges"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("issuers"),
-					p.String("clusterissuers"),
+				Resources: pulumi.StringArray{
+					pulumi.String("challenges"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
-				},
-				Resources: p.StringArray{
-					p.String("secrets"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("events"),
+				Resources: pulumi.StringArray{
+					pulumi.String("issuers"),
+					pulumi.String("clusterissuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("patch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
-				},
-				Resources: p.StringArray{
-					p.String("pods"),
-					p.String("services"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("create"),
-					p.String("delete"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("networking.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("ingresses"),
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("create"),
-					p.String("delete"),
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("route.openshift.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("routes/custom-host"),
+				Resources: pulumi.StringArray{
+					pulumi.String("events"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("challenges/finalizers"),
-				},
-				Verbs: p.StringArray{
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("patch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("secrets"),
+				Resources: pulumi.StringArray{
+					pulumi.String("pods"),
+					pulumi.String("services"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("create"),
+					pulumi.String("delete"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("networking.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("ingresses"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("create"),
+					pulumi.String("delete"),
+					pulumi.String("update"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("route.openshift.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("routes/custom-host"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("challenges/finalizers"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 		},
@@ -536,71 +554,71 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_clusterissuersClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-clusterissuers"),
+			Name: pulumi.String("cert-manager-controller-clusterissuers"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("clusterissuers"),
-					p.String("clusterissuers/status"),
+				Resources: pulumi.StringArray{
+					pulumi.String("clusterissuers"),
+					pulumi.String("clusterissuers/status"),
 				},
-				Verbs: p.StringArray{
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("clusterissuers"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("secrets"),
+				Resources: pulumi.StringArray{
+					pulumi.String("clusterissuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("create"),
-					p.String("update"),
-					p.String("delete"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("events"),
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("patch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("create"),
+					pulumi.String("update"),
+					pulumi.String("delete"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("events"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("patch"),
 				},
 			},
 		},
@@ -609,84 +627,84 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_ingress_shimClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-ingress-shim"),
+			Name: pulumi.String("cert-manager-controller-ingress-shim"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("certificates"),
-					p.String("certificaterequests"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates"),
+					pulumi.String("certificaterequests"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("update"),
-					p.String("delete"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("certificates"),
-					p.String("certificaterequests"),
-					p.String("issuers"),
-					p.String("clusterissuers"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("update"),
+					pulumi.String("delete"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("networking.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("ingresses"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates"),
+					pulumi.String("certificaterequests"),
+					pulumi.String("issuers"),
+					pulumi.String("clusterissuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("networking.k8s.io"),
-				},
-				Resources: p.StringArray{
-					p.String("ingresses/finalizers"),
-				},
-				Verbs: p.StringArray{
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("networking.k8s.io"),
 				},
-				Resources: p.StringArray{
-					p.String("events"),
+				Resources: pulumi.StringArray{
+					pulumi.String("ingresses"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("patch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("networking.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("ingresses/finalizers"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("events"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("patch"),
 				},
 			},
 		},
@@ -695,71 +713,71 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_issuersClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-issuers"),
+			Name: pulumi.String("cert-manager-controller-issuers"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("issuers"),
-					p.String("issuers/status"),
+				Resources: pulumi.StringArray{
+					pulumi.String("issuers"),
+					pulumi.String("issuers/status"),
 				},
-				Verbs: p.StringArray{
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("issuers"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("secrets"),
+				Resources: pulumi.StringArray{
+					pulumi.String("issuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("create"),
-					p.String("update"),
-					p.String("delete"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("events"),
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("patch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("create"),
+					pulumi.String("update"),
+					pulumi.String("delete"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("events"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("patch"),
 				},
 			},
 		},
@@ -768,106 +786,106 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_controller_ordersClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-orders"),
+			Name: pulumi.String("cert-manager-controller-orders"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("orders"),
-					p.String("orders/status"),
+				Resources: pulumi.StringArray{
+					pulumi.String("orders"),
+					pulumi.String("orders/status"),
 				},
-				Verbs: p.StringArray{
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("orders"),
-					p.String("challenges"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("clusterissuers"),
-					p.String("issuers"),
+				Resources: pulumi.StringArray{
+					pulumi.String("orders"),
+					pulumi.String("challenges"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
-				},
-				Resources: p.StringArray{
-					p.String("challenges"),
-				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("delete"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("orders/finalizers"),
+				Resources: pulumi.StringArray{
+					pulumi.String("clusterissuers"),
+					pulumi.String("issuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("update"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
-				},
-				Resources: p.StringArray{
-					p.String("secrets"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("events"),
+				Resources: pulumi.StringArray{
+					pulumi.String("challenges"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("patch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("delete"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("orders/finalizers"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("update"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("events"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("patch"),
 				},
 			},
 		},
@@ -876,53 +894,53 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_editClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                                          p.String("cert-manager"),
-				"app.kubernetes.io/component":                  p.String("controller"),
-				"app.kubernetes.io/instance":                   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by":                 p.String("Helm"),
-				"app.kubernetes.io/name":                       p.String("cert-manager"),
-				"helm.sh/chart":                                p.String("cert-manager-v1.4.0"),
-				"rbac.authorization.k8s.io/aggregate-to-admin": p.String("true"),
-				"rbac.authorization.k8s.io/aggregate-to-edit":  p.String("true"),
+			Labels: pulumi.StringMap{
+				"app":                                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":                  pulumi.String("controller"),
+				"app.kubernetes.io/instance":                   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by":                 pulumi.String("Helm"),
+				"app.kubernetes.io/name":                       pulumi.String("cert-manager"),
+				"helm.sh/chart":                                pulumi.String("cert-manager-v1.4.0"),
+				"rbac.authorization.k8s.io/aggregate-to-admin": pulumi.String("true"),
+				"rbac.authorization.k8s.io/aggregate-to-edit":  pulumi.String("true"),
 			},
-			Name: p.String("cert-manager-edit"),
+			Name: pulumi.String("cert-manager-edit"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("certificates"),
-					p.String("certificaterequests"),
-					p.String("issuers"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates"),
+					pulumi.String("certificaterequests"),
+					pulumi.String("issuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("delete"),
-					p.String("deletecollection"),
-					p.String("patch"),
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("delete"),
+					pulumi.String("deletecollection"),
+					pulumi.String("patch"),
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("challenges"),
-					p.String("orders"),
+				Resources: pulumi.StringArray{
+					pulumi.String("challenges"),
+					pulumi.String("orders"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
-					p.String("delete"),
-					p.String("deletecollection"),
-					p.String("patch"),
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
+					pulumi.String("delete"),
+					pulumi.String("deletecollection"),
+					pulumi.String("patch"),
+					pulumi.String("update"),
 				},
 			},
 		},
@@ -931,50 +949,50 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_viewClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                                          p.String("cert-manager"),
-				"app.kubernetes.io/component":                  p.String("controller"),
-				"app.kubernetes.io/instance":                   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by":                 p.String("Helm"),
-				"app.kubernetes.io/name":                       p.String("cert-manager"),
-				"helm.sh/chart":                                p.String("cert-manager-v1.4.0"),
-				"rbac.authorization.k8s.io/aggregate-to-admin": p.String("true"),
-				"rbac.authorization.k8s.io/aggregate-to-edit":  p.String("true"),
-				"rbac.authorization.k8s.io/aggregate-to-view":  p.String("true"),
+			Labels: pulumi.StringMap{
+				"app":                                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":                  pulumi.String("controller"),
+				"app.kubernetes.io/instance":                   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by":                 pulumi.String("Helm"),
+				"app.kubernetes.io/name":                       pulumi.String("cert-manager"),
+				"helm.sh/chart":                                pulumi.String("cert-manager-v1.4.0"),
+				"rbac.authorization.k8s.io/aggregate-to-admin": pulumi.String("true"),
+				"rbac.authorization.k8s.io/aggregate-to-edit":  pulumi.String("true"),
+				"rbac.authorization.k8s.io/aggregate-to-view":  pulumi.String("true"),
 			},
-			Name: p.String("cert-manager-view"),
+			Name: pulumi.String("cert-manager-view"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("certificates"),
-					p.String("certificaterequests"),
-					p.String("issuers"),
+				Resources: pulumi.StringArray{
+					pulumi.String("certificates"),
+					pulumi.String("certificaterequests"),
+					pulumi.String("issuers"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("acme.cert-manager.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("acme.cert-manager.io"),
 				},
-				Resources: p.StringArray{
-					p.String("challenges"),
-					p.String("orders"),
+				Resources: pulumi.StringArray{
+					pulumi.String("challenges"),
+					pulumi.String("orders"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
 				},
 			},
 		},
@@ -983,29 +1001,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRole(ctx, "cert_manager_webhook_subjectaccessreviewsClusterRole", &rbacv1.ClusterRoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRole"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-webhook:subjectaccessreviews"),
+			Name: pulumi.String("cert-manager-webhook:subjectaccessreviews"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("authorization.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("authorization.k8s.io"),
 				},
-				Resources: p.StringArray{
-					p.String("subjectaccessreviews"),
+				Resources: pulumi.StringArray{
+					pulumi.String("subjectaccessreviews"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
 				},
 			},
 		},
@@ -1014,29 +1032,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_cainjectorClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cainjector"),
-				"app.kubernetes.io/component":  p.String("cainjector"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cainjector"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cainjector"),
+				"app.kubernetes.io/component":  pulumi.String("cainjector"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cainjector"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-cainjector"),
+			Name: pulumi.String("cert-manager-cainjector"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-cainjector"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-cainjector"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager-cainjector"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager-cainjector"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1044,29 +1062,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_approve_cert_manager_ioClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("cert-manager"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("cert-manager"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-approve:cert-manager-io"),
+			Name: pulumi.String("cert-manager-controller-approve:cert-manager-io"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-approve:cert-manager-io"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-approve:cert-manager-io"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1074,29 +1092,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_certificatesClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-certificates"),
+			Name: pulumi.String("cert-manager-controller-certificates"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-certificates"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-certificates"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1104,29 +1122,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_certificatesigningrequestsClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("cert-manager"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("cert-manager"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-certificatesigningrequests"),
+			Name: pulumi.String("cert-manager-controller-certificatesigningrequests"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-certificatesigningrequests"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-certificatesigningrequests"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1134,29 +1152,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_challengesClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-challenges"),
+			Name: pulumi.String("cert-manager-controller-challenges"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-challenges"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-challenges"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1164,29 +1182,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_clusterissuersClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-clusterissuers"),
+			Name: pulumi.String("cert-manager-controller-clusterissuers"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-clusterissuers"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-clusterissuers"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1194,29 +1212,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_ingress_shimClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-ingress-shim"),
+			Name: pulumi.String("cert-manager-controller-ingress-shim"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-ingress-shim"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-ingress-shim"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1224,29 +1242,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_issuersClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-issuers"),
+			Name: pulumi.String("cert-manager-controller-issuers"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-issuers"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-issuers"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1254,29 +1272,29 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_controller_ordersClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-controller-orders"),
+			Name: pulumi.String("cert-manager-controller-orders"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-controller-orders"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-controller-orders"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1284,30 +1302,30 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewClusterRoleBinding(ctx, "cert_manager_webhook_subjectaccessreviewsClusterRoleBinding", &rbacv1.ClusterRoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("ClusterRoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("ClusterRoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-webhook:subjectaccessreviews"),
+			Name: pulumi.String("cert-manager-webhook:subjectaccessreviews"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("ClusterRole"),
-			Name:     p.String("cert-manager-webhook:subjectaccessreviews"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("ClusterRole"),
+			Name:     pulumi.String("cert-manager-webhook:subjectaccessreviews"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				ApiGroup:  p.String(""),
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager-webhook"),
-				Namespace: p.String("cert-manager"),
+				ApiGroup:  pulumi.String(""),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager-webhook"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1315,67 +1333,67 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = appsv1.NewDeployment(ctx, "cert_managerCert_manager_cainjectorDeployment", &appsv1.DeploymentArgs{
-		ApiVersion: p.String("apps/v1"),
-		Kind:       p.String("Deployment"),
+		ApiVersion: pulumi.String("apps/v1"),
+		Kind:       pulumi.String("Deployment"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cainjector"),
-				"app.kubernetes.io/component":  p.String("cainjector"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cainjector"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cainjector"),
+				"app.kubernetes.io/component":  pulumi.String("cainjector"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cainjector"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-cainjector"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager-cainjector"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			Replicas: p.Int(1),
+			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
-				MatchLabels: p.StringMap{
-					"app.kubernetes.io/component": p.String("cainjector"),
-					"app.kubernetes.io/instance":  p.String("cert-manager"),
-					"app.kubernetes.io/name":      p.String("cainjector"),
+				MatchLabels: pulumi.StringMap{
+					"app.kubernetes.io/component": pulumi.String("cainjector"),
+					"app.kubernetes.io/instance":  pulumi.String("cert-manager"),
+					"app.kubernetes.io/name":      pulumi.String("cainjector"),
 				},
 			},
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
-					Labels: p.StringMap{
-						"app":                          p.String("cainjector"),
-						"app.kubernetes.io/component":  p.String("cainjector"),
-						"app.kubernetes.io/instance":   p.String("cert-manager"),
-						"app.kubernetes.io/managed-by": p.String("Helm"),
-						"app.kubernetes.io/name":       p.String("cainjector"),
-						"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+					Labels: pulumi.StringMap{
+						"app":                          pulumi.String("cainjector"),
+						"app.kubernetes.io/component":  pulumi.String("cainjector"),
+						"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+						"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+						"app.kubernetes.io/name":       pulumi.String("cainjector"),
+						"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Args: p.StringArray{
-								p.String("--v=2"),
-								p.String("--leader-election-namespace=kube-system"),
+							Args: pulumi.StringArray{
+								pulumi.String("--v=2"),
+								pulumi.String("--leader-election-namespace=kube-system"),
 							},
 							Env: corev1.EnvVarArray{
 								&corev1.EnvVarArgs{
-									Name: p.String("POD_NAMESPACE"),
+									Name: pulumi.String("POD_NAMESPACE"),
 									ValueFrom: &corev1.EnvVarSourceArgs{
 										FieldRef: &corev1.ObjectFieldSelectorArgs{
-											FieldPath: p.String("metadata.namespace"),
+											FieldPath: pulumi.String("metadata.namespace"),
 										},
 									},
 								},
 							},
-							Image:           p.String("quay.io/jetstack/cert-manager-cainjector:v1.4.0"),
-							ImagePullPolicy: p.String("IfNotPresent"),
-							Name:            p.String("cert-manager"),
+							Image:           pulumi.String("quay.io/jetstack/cert-manager-cainjector:v1.4.0"),
+							ImagePullPolicy: pulumi.String("IfNotPresent"),
+							Name:            pulumi.String("cert-manager"),
 							Resources:       nil,
 						},
 					},
 					SecurityContext: &corev1.PodSecurityContextArgs{
-						RunAsNonRoot: p.Bool(true),
+						RunAsNonRoot: pulumi.Bool(true),
 					},
-					ServiceAccountName: p.String("cert-manager-cainjector"),
+					ServiceAccountName: pulumi.String("cert-manager-cainjector"),
 				},
 			},
 		},
@@ -1384,100 +1402,100 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = appsv1.NewDeployment(ctx, "cert_managerCert_manager_webhookDeployment", &appsv1.DeploymentArgs{
-		ApiVersion: p.String("apps/v1"),
-		Kind:       p.String("Deployment"),
+		ApiVersion: pulumi.String("apps/v1"),
+		Kind:       pulumi.String("Deployment"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-webhook"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager-webhook"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			Replicas: p.Int(1),
+			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
-				MatchLabels: p.StringMap{
-					"app.kubernetes.io/component": p.String("webhook"),
-					"app.kubernetes.io/instance":  p.String("cert-manager"),
-					"app.kubernetes.io/name":      p.String("webhook"),
+				MatchLabels: pulumi.StringMap{
+					"app.kubernetes.io/component": pulumi.String("webhook"),
+					"app.kubernetes.io/instance":  pulumi.String("cert-manager"),
+					"app.kubernetes.io/name":      pulumi.String("webhook"),
 				},
 			},
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
-					Labels: p.StringMap{
-						"app":                          p.String("webhook"),
-						"app.kubernetes.io/component":  p.String("webhook"),
-						"app.kubernetes.io/instance":   p.String("cert-manager"),
-						"app.kubernetes.io/managed-by": p.String("Helm"),
-						"app.kubernetes.io/name":       p.String("webhook"),
-						"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+					Labels: pulumi.StringMap{
+						"app":                          pulumi.String("webhook"),
+						"app.kubernetes.io/component":  pulumi.String("webhook"),
+						"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+						"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+						"app.kubernetes.io/name":       pulumi.String("webhook"),
+						"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Args: p.StringArray{
-								p.String("--v=2"),
-								p.String("--secure-port=10250"),
-								p.String(fmt.Sprintf("%v%v%v", "--dynamic-serving-ca-secret-namespace=", "$", "(POD_NAMESPACE)")),
-								p.String("--dynamic-serving-ca-secret-name=cert-manager-webhook-ca"),
-								p.String("--dynamic-serving-dns-names=cert-manager-webhook,cert-manager-webhook.cert-manager,cert-manager-webhook.cert-manager.svc"),
+							Args: pulumi.StringArray{
+								pulumi.String("--v=2"),
+								pulumi.String("--secure-port=10250"),
+								pulumi.String(fmt.Sprintf("%v%v%v", "--dynamic-serving-ca-secret-namespace=", "$", "(POD_NAMESPACE)")),
+								pulumi.String("--dynamic-serving-ca-secret-name=cert-manager-webhook-ca"),
+								pulumi.String("--dynamic-serving-dns-names=cert-manager-webhook,cert-manager-webhook.cert-manager,cert-manager-webhook.cert-manager.svc"),
 							},
 							Env: corev1.EnvVarArray{
 								&corev1.EnvVarArgs{
-									Name: p.String("POD_NAMESPACE"),
+									Name: pulumi.String("POD_NAMESPACE"),
 									ValueFrom: &corev1.EnvVarSourceArgs{
 										FieldRef: &corev1.ObjectFieldSelectorArgs{
-											FieldPath: p.String("metadata.namespace"),
+											FieldPath: pulumi.String("metadata.namespace"),
 										},
 									},
 								},
 							},
-							Image:           p.String("quay.io/jetstack/cert-manager-webhook:v1.4.0"),
-							ImagePullPolicy: p.String("IfNotPresent"),
+							Image:           pulumi.String("quay.io/jetstack/cert-manager-webhook:v1.4.0"),
+							ImagePullPolicy: pulumi.String("IfNotPresent"),
 							LivenessProbe: &corev1.ProbeArgs{
-								FailureThreshold: p.Int(3),
+								FailureThreshold: pulumi.Int(3),
 								HttpGet: &corev1.HTTPGetActionArgs{
-									Path:   p.String("/livez"),
-									Port:   p.Int(6080),
-									Scheme: p.String("HTTP"),
+									Path:   pulumi.String("/livez"),
+									Port:   pulumi.Int(6080),
+									Scheme: pulumi.String("HTTP"),
 								},
-								InitialDelaySeconds: p.Int(60),
-								PeriodSeconds:       p.Int(10),
-								SuccessThreshold:    p.Int(1),
-								TimeoutSeconds:      p.Int(1),
+								InitialDelaySeconds: pulumi.Int(60),
+								PeriodSeconds:       pulumi.Int(10),
+								SuccessThreshold:    pulumi.Int(1),
+								TimeoutSeconds:      pulumi.Int(1),
 							},
-							Name: p.String("cert-manager"),
+							Name: pulumi.String("cert-manager"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
-									ContainerPort: p.Int(10250),
-									Name:          p.String("https"),
+									ContainerPort: pulumi.Int(10250),
+									Name:          pulumi.String("https"),
 								},
 							},
 							ReadinessProbe: &corev1.ProbeArgs{
-								FailureThreshold: p.Int(3),
+								FailureThreshold: pulumi.Int(3),
 								HttpGet: &corev1.HTTPGetActionArgs{
-									Path:   p.String("/healthz"),
-									Port:   p.Int(6080),
-									Scheme: p.String("HTTP"),
+									Path:   pulumi.String("/healthz"),
+									Port:   pulumi.Int(6080),
+									Scheme: pulumi.String("HTTP"),
 								},
-								InitialDelaySeconds: p.Int(5),
-								PeriodSeconds:       p.Int(5),
-								SuccessThreshold:    p.Int(1),
-								TimeoutSeconds:      p.Int(1),
+								InitialDelaySeconds: pulumi.Int(5),
+								PeriodSeconds:       pulumi.Int(5),
+								SuccessThreshold:    pulumi.Int(1),
+								TimeoutSeconds:      pulumi.Int(1),
 							},
 							Resources: nil,
 						},
 					},
 					SecurityContext: &corev1.PodSecurityContextArgs{
-						RunAsNonRoot: p.Bool(true),
+						RunAsNonRoot: pulumi.Bool(true),
 					},
-					ServiceAccountName: p.String("cert-manager-webhook"),
+					ServiceAccountName: pulumi.String("cert-manager-webhook"),
 				},
 			},
 		},
@@ -1486,79 +1504,79 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = appsv1.NewDeployment(ctx, "cert_managerCert_managerDeployment", &appsv1.DeploymentArgs{
-		ApiVersion: p.String("apps/v1"),
-		Kind:       p.String("Deployment"),
+		ApiVersion: pulumi.String("apps/v1"),
+		Kind:       pulumi.String("Deployment"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			Replicas: p.Int(1),
+			Replicas: pulumi.Int(1),
 			Selector: &metav1.LabelSelectorArgs{
-				MatchLabels: p.StringMap{
-					"app.kubernetes.io/component": p.String("controller"),
-					"app.kubernetes.io/instance":  p.String("cert-manager"),
-					"app.kubernetes.io/name":      p.String("cert-manager"),
+				MatchLabels: pulumi.StringMap{
+					"app.kubernetes.io/component": pulumi.String("controller"),
+					"app.kubernetes.io/instance":  pulumi.String("cert-manager"),
+					"app.kubernetes.io/name":      pulumi.String("cert-manager"),
 				},
 			},
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
-					Annotations: p.StringMap{
-						"prometheus.io/path":   p.String("/metrics"),
-						"prometheus.io/port":   p.String("9402"),
-						"prometheus.io/scrape": p.String("true"),
+					Annotations: pulumi.StringMap{
+						"prometheus.io/path":   pulumi.String("/metrics"),
+						"prometheus.io/port":   pulumi.String("9402"),
+						"prometheus.io/scrape": pulumi.String("true"),
 					},
-					Labels: p.StringMap{
-						"app":                          p.String("cert-manager"),
-						"app.kubernetes.io/component":  p.String("controller"),
-						"app.kubernetes.io/instance":   p.String("cert-manager"),
-						"app.kubernetes.io/managed-by": p.String("Helm"),
-						"app.kubernetes.io/name":       p.String("cert-manager"),
-						"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+					Labels: pulumi.StringMap{
+						"app":                          pulumi.String("cert-manager"),
+						"app.kubernetes.io/component":  pulumi.String("controller"),
+						"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+						"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+						"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+						"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Args: p.StringArray{
-								p.String("--v=2"),
-								p.String(fmt.Sprintf("%v%v%v", "--cluster-resource-namespace=", "$", "(POD_NAMESPACE)")),
-								p.String("--leader-election-namespace=kube-system"),
+							Args: pulumi.StringArray{
+								pulumi.String("--v=2"),
+								pulumi.String(fmt.Sprintf("%v%v%v", "--cluster-resource-namespace=", "$", "(POD_NAMESPACE)")),
+								pulumi.String("--leader-election-namespace=kube-system"),
 							},
 							Env: corev1.EnvVarArray{
 								&corev1.EnvVarArgs{
-									Name: p.String("POD_NAMESPACE"),
+									Name: pulumi.String("POD_NAMESPACE"),
 									ValueFrom: &corev1.EnvVarSourceArgs{
 										FieldRef: &corev1.ObjectFieldSelectorArgs{
-											FieldPath: p.String("metadata.namespace"),
+											FieldPath: pulumi.String("metadata.namespace"),
 										},
 									},
 								},
 							},
-							Image:           p.String("quay.io/jetstack/cert-manager-controller:v1.4.0"),
-							ImagePullPolicy: p.String("IfNotPresent"),
-							Name:            p.String("cert-manager"),
+							Image:           pulumi.String("quay.io/jetstack/cert-manager-controller:v1.4.0"),
+							ImagePullPolicy: pulumi.String("IfNotPresent"),
+							Name:            pulumi.String("cert-manager"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
-									ContainerPort: p.Int(9402),
-									Protocol:      p.String("TCP"),
+									ContainerPort: pulumi.Int(9402),
+									Protocol:      pulumi.String("TCP"),
 								},
 							},
 							Resources: nil,
 						},
 					},
 					SecurityContext: &corev1.PodSecurityContextArgs{
-						RunAsNonRoot: p.Bool(true),
+						RunAsNonRoot: pulumi.Bool(true),
 					},
-					ServiceAccountName: p.String("cert-manager"),
+					ServiceAccountName: pulumi.String("cert-manager"),
 				},
 			},
 		},
@@ -1567,57 +1585,57 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = admissionregistrationv1.NewMutatingWebhookConfiguration(ctx, "cert_manager_webhookMutatingWebhookConfiguration", &admissionregistrationv1.MutatingWebhookConfigurationArgs{
-		ApiVersion: p.String("admissionregistration.k8s.io/v1"),
-		Kind:       p.String("MutatingWebhookConfiguration"),
+		ApiVersion: pulumi.String("admissionregistration.k8s.io/v1"),
+		Kind:       pulumi.String("MutatingWebhookConfiguration"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Annotations: p.StringMap{
-				"cert-manager.io/inject-ca-from-secret": p.String("cert-manager/cert-manager-webhook-ca"),
+			Annotations: pulumi.StringMap{
+				"cert-manager.io/inject-ca-from-secret": pulumi.String("cert-manager/cert-manager-webhook-ca"),
 			},
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-webhook"),
+			Name: pulumi.String("cert-manager-webhook"),
 		},
 		Webhooks: admissionregistrationv1.MutatingWebhookArray{
 			&admissionregistrationv1.MutatingWebhookArgs{
-				AdmissionReviewVersions: p.StringArray{
-					p.String("v1"),
-					p.String("v1beta1"),
+				AdmissionReviewVersions: pulumi.StringArray{
+					pulumi.String("v1"),
+					pulumi.String("v1beta1"),
 				},
 				ClientConfig: &admissionregistrationv1.WebhookClientConfigArgs{
 					Service: &admissionregistrationv1.ServiceReferenceArgs{
-						Name:      p.String("cert-manager-webhook"),
-						Namespace: p.String("cert-manager"),
-						Path:      p.String("/mutate"),
+						Name:      pulumi.String("cert-manager-webhook"),
+						Namespace: pulumi.String("cert-manager"),
+						Path:      pulumi.String("/mutate"),
 					},
 				},
-				FailurePolicy: p.String("Fail"),
-				Name:          p.String("webhook.cert-manager.io"),
+				FailurePolicy: pulumi.String("Fail"),
+				Name:          pulumi.String("webhook.cert-manager.io"),
 				Rules: admissionregistrationv1.RuleWithOperationsArray{
 					&admissionregistrationv1.RuleWithOperationsArgs{
-						ApiGroups: p.StringArray{
-							p.String("cert-manager.io"),
-							p.String("acme.cert-manager.io"),
+						ApiGroups: pulumi.StringArray{
+							pulumi.String("cert-manager.io"),
+							pulumi.String("acme.cert-manager.io"),
 						},
-						ApiVersions: p.StringArray{
-							p.String("*"),
+						ApiVersions: pulumi.StringArray{
+							pulumi.String("*"),
 						},
-						Operations: p.StringArray{
-							p.String("CREATE"),
-							p.String("UPDATE"),
+						Operations: pulumi.StringArray{
+							pulumi.String("CREATE"),
+							pulumi.String("UPDATE"),
 						},
-						Resources: p.StringArray{
-							p.String("*/*"),
+						Resources: pulumi.StringArray{
+							pulumi.String("*/*"),
 						},
 					},
 				},
-				SideEffects:    p.String("None"),
-				TimeoutSeconds: p.Int(10),
+				SideEffects:    pulumi.String("None"),
+				TimeoutSeconds: pulumi.Int(10),
 			},
 		},
 	})
@@ -1625,85 +1643,85 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = corev1.NewNamespace(ctx, "cert_managerNamespace", &corev1.NamespaceArgs{
-		ApiVersion: p.String("v1"),
-		Kind:       p.String("Namespace"),
+		ApiVersion: pulumi.String("v1"),
+		Kind:       pulumi.String("Namespace"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Name: p.String("cert-manager"),
+			Name: pulumi.String("cert-manager"),
 		},
 	})
 	if err != nil {
 		return err
 	}
 	_, err = rbacv1.NewRole(ctx, "kube_systemCert_manager_cainjector_leaderelectionRole", &rbacv1.RoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("Role"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("Role"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cainjector"),
-				"app.kubernetes.io/component":  p.String("cainjector"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cainjector"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cainjector"),
+				"app.kubernetes.io/component":  pulumi.String("cainjector"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cainjector"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-cainjector:leaderelection"),
-			Namespace: p.String("kube-system"),
+			Name:      pulumi.String("cert-manager-cainjector:leaderelection"),
+			Namespace: pulumi.String("kube-system"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				ResourceNames: p.StringArray{
-					p.String("cert-manager-cainjector-leader-election"),
-					p.String("cert-manager-cainjector-leader-election-core"),
+				ResourceNames: pulumi.StringArray{
+					pulumi.String("cert-manager-cainjector-leader-election"),
+					pulumi.String("cert-manager-cainjector-leader-election-core"),
 				},
-				Resources: p.StringArray{
-					p.String("configmaps"),
+				Resources: pulumi.StringArray{
+					pulumi.String("configmaps"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("update"),
-					p.String("patch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
-				},
-				Resources: p.StringArray{
-					p.String("configmaps"),
-				},
-				Verbs: p.StringArray{
-					p.String("create"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("update"),
+					pulumi.String("patch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("coordination.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				ResourceNames: p.StringArray{
-					p.String("cert-manager-cainjector-leader-election"),
-					p.String("cert-manager-cainjector-leader-election-core"),
+				Resources: pulumi.StringArray{
+					pulumi.String("configmaps"),
 				},
-				Resources: p.StringArray{
-					p.String("leases"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("update"),
-					p.String("patch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("coordination.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("coordination.k8s.io"),
 				},
-				Resources: p.StringArray{
-					p.String("leases"),
+				ResourceNames: pulumi.StringArray{
+					pulumi.String("cert-manager-cainjector-leader-election"),
+					pulumi.String("cert-manager-cainjector-leader-election-core"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
+				Resources: pulumi.StringArray{
+					pulumi.String("leases"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("update"),
+					pulumi.String("patch"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("coordination.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("leases"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
 				},
 			},
 		},
@@ -1712,47 +1730,47 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewRole(ctx, "cert_managerCert_manager_webhook_dynamic_servingRole", &rbacv1.RoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("Role"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("Role"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-webhook:dynamic-serving"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager-webhook:dynamic-serving"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				ResourceNames: p.StringArray{
-					p.String("cert-manager-webhook-ca"),
+				ResourceNames: pulumi.StringArray{
+					pulumi.String("cert-manager-webhook-ca"),
 				},
-				Resources: p.StringArray{
-					p.String("secrets"),
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("list"),
-					p.String("watch"),
-					p.String("update"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("list"),
+					pulumi.String("watch"),
+					pulumi.String("update"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				Resources: p.StringArray{
-					p.String("secrets"),
+				Resources: pulumi.StringArray{
+					pulumi.String("secrets"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
 				},
 			},
 		},
@@ -1761,73 +1779,73 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewRole(ctx, "kube_systemCert_manager_leaderelectionRole", &rbacv1.RoleArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("Role"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("Role"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager:leaderelection"),
-			Namespace: p.String("kube-system"),
+			Name:      pulumi.String("cert-manager:leaderelection"),
+			Namespace: pulumi.String("kube-system"),
 		},
 		Rules: rbacv1.PolicyRuleArray{
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				ResourceNames: p.StringArray{
-					p.String("cert-manager-controller"),
+				ResourceNames: pulumi.StringArray{
+					pulumi.String("cert-manager-controller"),
 				},
-				Resources: p.StringArray{
-					p.String("configmaps"),
+				Resources: pulumi.StringArray{
+					pulumi.String("configmaps"),
 				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("update"),
-					p.String("patch"),
-				},
-			},
-			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String(""),
-				},
-				Resources: p.StringArray{
-					p.String("configmaps"),
-				},
-				Verbs: p.StringArray{
-					p.String("create"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("update"),
+					pulumi.String("patch"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("coordination.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String(""),
 				},
-				ResourceNames: p.StringArray{
-					p.String("cert-manager-controller"),
+				Resources: pulumi.StringArray{
+					pulumi.String("configmaps"),
 				},
-				Resources: p.StringArray{
-					p.String("leases"),
-				},
-				Verbs: p.StringArray{
-					p.String("get"),
-					p.String("update"),
-					p.String("patch"),
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
 				},
 			},
 			&rbacv1.PolicyRuleArgs{
-				ApiGroups: p.StringArray{
-					p.String("coordination.k8s.io"),
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("coordination.k8s.io"),
 				},
-				Resources: p.StringArray{
-					p.String("leases"),
+				ResourceNames: pulumi.StringArray{
+					pulumi.String("cert-manager-controller"),
 				},
-				Verbs: p.StringArray{
-					p.String("create"),
+				Resources: pulumi.StringArray{
+					pulumi.String("leases"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("get"),
+					pulumi.String("update"),
+					pulumi.String("patch"),
+				},
+			},
+			&rbacv1.PolicyRuleArgs{
+				ApiGroups: pulumi.StringArray{
+					pulumi.String("coordination.k8s.io"),
+				},
+				Resources: pulumi.StringArray{
+					pulumi.String("leases"),
+				},
+				Verbs: pulumi.StringArray{
+					pulumi.String("create"),
 				},
 			},
 		},
@@ -1836,30 +1854,30 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewRoleBinding(ctx, "kube_systemCert_manager_cainjector_leaderelectionRoleBinding", &rbacv1.RoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("RoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("RoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cainjector"),
-				"app.kubernetes.io/component":  p.String("cainjector"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cainjector"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cainjector"),
+				"app.kubernetes.io/component":  pulumi.String("cainjector"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cainjector"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-cainjector:leaderelection"),
-			Namespace: p.String("kube-system"),
+			Name:      pulumi.String("cert-manager-cainjector:leaderelection"),
+			Namespace: pulumi.String("kube-system"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("Role"),
-			Name:     p.String("cert-manager-cainjector:leaderelection"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("Role"),
+			Name:     pulumi.String("cert-manager-cainjector:leaderelection"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager-cainjector"),
-				Namespace: p.String("cert-manager"),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager-cainjector"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1867,31 +1885,31 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewRoleBinding(ctx, "cert_managerCert_manager_webhook_dynamic_servingRoleBinding", &rbacv1.RoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("RoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("RoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-webhook:dynamic-serving"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager-webhook:dynamic-serving"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("Role"),
-			Name:     p.String("cert-manager-webhook:dynamic-serving"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("Role"),
+			Name:     pulumi.String("cert-manager-webhook:dynamic-serving"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				ApiGroup:  p.String(""),
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager-webhook"),
-				Namespace: p.String("cert-manager"),
+				ApiGroup:  pulumi.String(""),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager-webhook"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1899,31 +1917,31 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = rbacv1.NewRoleBinding(ctx, "kube_systemCert_manager_leaderelectionRoleBinding", &rbacv1.RoleBindingArgs{
-		ApiVersion: p.String("rbac.authorization.k8s.io/v1"),
-		Kind:       p.String("RoleBinding"),
+		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
+		Kind:       pulumi.String("RoleBinding"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager:leaderelection"),
-			Namespace: p.String("kube-system"),
+			Name:      pulumi.String("cert-manager:leaderelection"),
+			Namespace: pulumi.String("kube-system"),
 		},
 		RoleRef: &rbacv1.RoleRefArgs{
-			ApiGroup: p.String("rbac.authorization.k8s.io"),
-			Kind:     p.String("Role"),
-			Name:     p.String("cert-manager:leaderelection"),
+			ApiGroup: pulumi.String("rbac.authorization.k8s.io"),
+			Kind:     pulumi.String("Role"),
+			Name:     pulumi.String("cert-manager:leaderelection"),
 		},
 		Subjects: rbacv1.SubjectArray{
 			&rbacv1.SubjectArgs{
-				ApiGroup:  p.String(""),
-				Kind:      p.String("ServiceAccount"),
-				Name:      p.String("cert-manager"),
-				Namespace: p.String("cert-manager"),
+				ApiGroup:  pulumi.String(""),
+				Kind:      pulumi.String("ServiceAccount"),
+				Name:      pulumi.String("cert-manager"),
+				Namespace: pulumi.String("cert-manager"),
 			},
 		},
 	})
@@ -1931,203 +1949,203 @@ func CreateCertmanager(ctx *p.Context) error {
 		return err
 	}
 	_, err = corev1.NewService(ctx, "cert_managerCert_manager_webhookService", &corev1.ServiceArgs{
-		ApiVersion: p.String("v1"),
-		Kind:       p.String("Service"),
+		ApiVersion: pulumi.String("v1"),
+		Kind:       pulumi.String("Service"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-webhook"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager-webhook"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					Name:       p.String("https"),
-					Port:       p.Int(443),
-					TargetPort: p.Int(10250),
+					Name:       pulumi.String("https"),
+					Port:       pulumi.Int(443),
+					TargetPort: pulumi.Int(10250),
 				},
 			},
-			Selector: p.StringMap{
-				"app.kubernetes.io/component": p.String("webhook"),
-				"app.kubernetes.io/instance":  p.String("cert-manager"),
-				"app.kubernetes.io/name":      p.String("webhook"),
+			Selector: pulumi.StringMap{
+				"app.kubernetes.io/component": pulumi.String("webhook"),
+				"app.kubernetes.io/instance":  pulumi.String("cert-manager"),
+				"app.kubernetes.io/name":      pulumi.String("webhook"),
 			},
-			Type: p.String("ClusterIP"),
+			Type: pulumi.String("ClusterIP"),
 		},
 	})
 	if err != nil {
 		return err
 	}
 	_, err = corev1.NewService(ctx, "cert_managerCert_managerService", &corev1.ServiceArgs{
-		ApiVersion: p.String("v1"),
-		Kind:       p.String("Service"),
+		ApiVersion: pulumi.String("v1"),
+		Kind:       pulumi.String("Service"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 		Spec: &corev1.ServiceSpecArgs{
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					Port:       p.Int(9402),
-					Protocol:   p.String("TCP"),
-					TargetPort: p.Int(9402),
+					Port:       pulumi.Int(9402),
+					Protocol:   pulumi.String("TCP"),
+					TargetPort: pulumi.Int(9402),
 				},
 			},
-			Selector: p.StringMap{
-				"app.kubernetes.io/component": p.String("controller"),
-				"app.kubernetes.io/instance":  p.String("cert-manager"),
-				"app.kubernetes.io/name":      p.String("cert-manager"),
+			Selector: pulumi.StringMap{
+				"app.kubernetes.io/component": pulumi.String("controller"),
+				"app.kubernetes.io/instance":  pulumi.String("cert-manager"),
+				"app.kubernetes.io/name":      pulumi.String("cert-manager"),
 			},
-			Type: p.String("ClusterIP"),
+			Type: pulumi.String("ClusterIP"),
 		},
 	})
 	if err != nil {
 		return err
 	}
 	_, err = corev1.NewServiceAccount(ctx, "cert_managerCert_manager_cainjectorServiceAccount", &corev1.ServiceAccountArgs{
-		ApiVersion:                   p.String("v1"),
-		AutomountServiceAccountToken: p.Bool(true),
-		Kind:                         p.String("ServiceAccount"),
+		ApiVersion:                   pulumi.String("v1"),
+		AutomountServiceAccountToken: pulumi.Bool(true),
+		Kind:                         pulumi.String("ServiceAccount"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cainjector"),
-				"app.kubernetes.io/component":  p.String("cainjector"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cainjector"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cainjector"),
+				"app.kubernetes.io/component":  pulumi.String("cainjector"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cainjector"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-cainjector"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager-cainjector"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 	})
 	if err != nil {
 		return err
 	}
 	_, err = corev1.NewServiceAccount(ctx, "cert_managerCert_manager_webhookServiceAccount", &corev1.ServiceAccountArgs{
-		ApiVersion:                   p.String("v1"),
-		AutomountServiceAccountToken: p.Bool(true),
-		Kind:                         p.String("ServiceAccount"),
+		ApiVersion:                   pulumi.String("v1"),
+		AutomountServiceAccountToken: pulumi.Bool(true),
+		Kind:                         pulumi.String("ServiceAccount"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager-webhook"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager-webhook"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 	})
 	if err != nil {
 		return err
 	}
 	_, err = corev1.NewServiceAccount(ctx, "cert_managerCert_managerServiceAccount", &corev1.ServiceAccountArgs{
-		ApiVersion:                   p.String("v1"),
-		AutomountServiceAccountToken: p.Bool(true),
-		Kind:                         p.String("ServiceAccount"),
+		ApiVersion:                   pulumi.String("v1"),
+		AutomountServiceAccountToken: pulumi.Bool(true),
+		Kind:                         pulumi.String("ServiceAccount"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Labels: p.StringMap{
-				"app":                          p.String("cert-manager"),
-				"app.kubernetes.io/component":  p.String("controller"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("cert-manager"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("cert-manager"),
+				"app.kubernetes.io/component":  pulumi.String("controller"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("cert-manager"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name:      p.String("cert-manager"),
-			Namespace: p.String("cert-manager"),
+			Name:      pulumi.String("cert-manager"),
+			Namespace: pulumi.String("cert-manager"),
 		},
 	})
 	if err != nil {
 		return err
 	}
 	_, err = admissionregistrationv1.NewValidatingWebhookConfiguration(ctx, "cert_manager_webhookValidatingWebhookConfiguration", &admissionregistrationv1.ValidatingWebhookConfigurationArgs{
-		ApiVersion: p.String("admissionregistration.k8s.io/v1"),
-		Kind:       p.String("ValidatingWebhookConfiguration"),
+		ApiVersion: pulumi.String("admissionregistration.k8s.io/v1"),
+		Kind:       pulumi.String("ValidatingWebhookConfiguration"),
 		Metadata: &metav1.ObjectMetaArgs{
-			Annotations: p.StringMap{
-				"cert-manager.io/inject-ca-from-secret": p.String("cert-manager/cert-manager-webhook-ca"),
+			Annotations: pulumi.StringMap{
+				"cert-manager.io/inject-ca-from-secret": pulumi.String("cert-manager/cert-manager-webhook-ca"),
 			},
-			Labels: p.StringMap{
-				"app":                          p.String("webhook"),
-				"app.kubernetes.io/component":  p.String("webhook"),
-				"app.kubernetes.io/instance":   p.String("cert-manager"),
-				"app.kubernetes.io/managed-by": p.String("Helm"),
-				"app.kubernetes.io/name":       p.String("webhook"),
-				"helm.sh/chart":                p.String("cert-manager-v1.4.0"),
+			Labels: pulumi.StringMap{
+				"app":                          pulumi.String("webhook"),
+				"app.kubernetes.io/component":  pulumi.String("webhook"),
+				"app.kubernetes.io/instance":   pulumi.String("cert-manager"),
+				"app.kubernetes.io/managed-by": pulumi.String("Helm"),
+				"app.kubernetes.io/name":       pulumi.String("webhook"),
+				"helm.sh/chart":                pulumi.String("cert-manager-v1.4.0"),
 			},
-			Name: p.String("cert-manager-webhook"),
+			Name: pulumi.String("cert-manager-webhook"),
 		},
 		Webhooks: admissionregistrationv1.ValidatingWebhookArray{
 			&admissionregistrationv1.ValidatingWebhookArgs{
-				AdmissionReviewVersions: p.StringArray{
-					p.String("v1"),
-					p.String("v1beta1"),
+				AdmissionReviewVersions: pulumi.StringArray{
+					pulumi.String("v1"),
+					pulumi.String("v1beta1"),
 				},
 				ClientConfig: &admissionregistrationv1.WebhookClientConfigArgs{
 					Service: &admissionregistrationv1.ServiceReferenceArgs{
-						Name:      p.String("cert-manager-webhook"),
-						Namespace: p.String("cert-manager"),
-						Path:      p.String("/validate"),
+						Name:      pulumi.String("cert-manager-webhook"),
+						Namespace: pulumi.String("cert-manager"),
+						Path:      pulumi.String("/validate"),
 					},
 				},
-				FailurePolicy: p.String("Fail"),
-				Name:          p.String("webhook.cert-manager.io"),
+				FailurePolicy: pulumi.String("Fail"),
+				Name:          pulumi.String("webhook.cert-manager.io"),
 				NamespaceSelector: &metav1.LabelSelectorArgs{
 					MatchExpressions: metav1.LabelSelectorRequirementArray{
 						&metav1.LabelSelectorRequirementArgs{
-							Key:      p.String("cert-manager.io/disable-validation"),
-							Operator: p.String("NotIn"),
-							Values: p.StringArray{
-								p.String("true"),
+							Key:      pulumi.String("cert-manager.io/disable-validation"),
+							Operator: pulumi.String("NotIn"),
+							Values: pulumi.StringArray{
+								pulumi.String("true"),
 							},
 						},
 						&metav1.LabelSelectorRequirementArgs{
-							Key:      p.String("name"),
-							Operator: p.String("NotIn"),
-							Values: p.StringArray{
-								p.String("cert-manager"),
+							Key:      pulumi.String("name"),
+							Operator: pulumi.String("NotIn"),
+							Values: pulumi.StringArray{
+								pulumi.String("cert-manager"),
 							},
 						},
 					},
 				},
 				Rules: admissionregistrationv1.RuleWithOperationsArray{
 					&admissionregistrationv1.RuleWithOperationsArgs{
-						ApiGroups: p.StringArray{
-							p.String("cert-manager.io"),
-							p.String("acme.cert-manager.io"),
+						ApiGroups: pulumi.StringArray{
+							pulumi.String("cert-manager.io"),
+							pulumi.String("acme.cert-manager.io"),
 						},
-						ApiVersions: p.StringArray{
-							p.String("*"),
+						ApiVersions: pulumi.StringArray{
+							pulumi.String("*"),
 						},
-						Operations: p.StringArray{
-							p.String("CREATE"),
-							p.String("UPDATE"),
+						Operations: pulumi.StringArray{
+							pulumi.String("CREATE"),
+							pulumi.String("UPDATE"),
 						},
-						Resources: p.StringArray{
-							p.String("*/*"),
+						Resources: pulumi.StringArray{
+							pulumi.String("*/*"),
 						},
 					},
 				},
-				SideEffects:    p.String("None"),
-				TimeoutSeconds: p.Int(10),
+				SideEffects:    pulumi.String("None"),
+				TimeoutSeconds: pulumi.Int(10),
 			},
 		},
 	})
