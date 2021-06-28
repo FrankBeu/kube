@@ -1,4 +1,4 @@
-encryptionsalt: v1:6Q+OXNtm8tc=:v1:4WfQu6szmhipdppg:E/Y4M5Aa78Z5dDKP9mg5n0BN2h5J1w==
+encryptionsalt: v1:YJCrLoNp8LE=:v1:d8zNbcxVP8MP8x4u:6LsHK89Najr3u6YntJAxphnL86u/fg==
 config:
   kube:domain: dev.thesym.site
   kube:env: dev

@@ -1,4 +1,4 @@
-encryptionsalt: v1:u7lsOADMlBY=:v1:SDK11zQfFTwgYMNF:YA077B8TZwH/P2Qh7Z2nfjaIqBYdxQ==
+encryptionsalt: v1:1Wd1F0/iWdU=:v1:lfrS6UlrO3xgdLra:rq1WgiI51/u1l4ev9qvvxkZ62h7Usg==
 config:
   kube:domain: stage.thesym.site
   kube:env: stage
