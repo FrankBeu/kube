@@ -42,30 +42,63 @@ func CreateGitea(ctx *pulumi.Context) error {
 	}
 	// `helm repo add gitea-charts https://dl.gitea.io/charts/`
 	_, err = helm.NewChart(ctx, "gitea", helm.ChartArgs{
-		Repo:    pulumi.String("gitea-charts"),
-		Chart:   pulumi.String("gitea"),
-		Version: pulumi.String("3.1.4"),
+		Repo:        pulumi.String("gitea-charts"),
+		Chart:       pulumi.String("gitea"),
+		Version:     pulumi.String("3.1.4"),
+		Namespace:   pulumi.String(namespaceGitea.Name),
+		APIVersions: pulumi.StringArray{pulumi.String("networking.k8s.io/v1")}, //// NOT working: https://github.com/pulumi/pulumi-kubernetes/issues/1034
 		// TODO: test if `helm repo add ...` is necessary
 		// FetchArgs: &helm.FetchArgs{
 		// Repo: pulumi.String("https://dl.gitea.io/charts/"),
 		// },
+
+		//// DEBUG: Transformation act on the yaml-layer
+		//// DEBUG: ` helm template -s templates/gitea/ingress.yaml ./CHART/gitea --set ingress.enabled=true --set "ingress.hosts\.0.host"=git.thesym.site -a networking.k8s.io/v1/Ingress`
 		Transformations: []yaml.Transformation{
-			// Make every service private to the cluster, i.e., turn all services into ClusterIP
-			// instead of LoadBalancer.
 			func(state map[string]interface{}, opts ...pulumi.ResourceOption) {
-				// name := state["metadata"].(map[string]interface{})["name"]
-				// if state["kind"] == "Pod" && name == "test" {
 				if state["kind"] == "Ingress" {
 					state["apiVersion"] = "networking.k8s.io/v1"
+
+					// DEBUG: //////////////////////////////////////////////////////////////////
+					// rules := state["spec"].(map[string]interface{})["rules"].([]interface{})
+					// rules = []interface{}{
+					// 	0: "test",
+					// }
+					// state["spec"] = rules
+
+					// host, _ := json.Marshal(state["spec"])
+					// fmt.Println(string(host))
+					////////////////////////////////////////////////////////////////////////////
+
+					spec := map[string]interface{}{
+						"rules": []interface{}{
+							map[string]interface{}{
+								"host": domainName,
+								"http": map[string]interface{}{
+									"paths": []interface{}{
+										map[string]interface{}{
+											"path":     "/",
+											"pathType": "Prefix",
+											"backend": map[string]interface{}{
+												"service": map[string]interface{}{
+													"name": name + "-http",
+													"port": map[string]interface{}{
+														"number": 3000,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					}
+
+					state["spec"] = spec
 				}
-				// spec := state["spec"].(map[string]interface{})
-				// // if spec["
-				// spec["type"] = "ClusterIP"
 			},
 		},
-
-		//// Do not act on the yamlLayer - act on the helmValuesLayer
-		//// DEBUG: NOT: `helm template -s templates/gitea/ingress.yaml ./CHART/gitea --set ingress.enabled=true --set "ingress.hosts\.0.host"=git.thesym.site`
+		//// DEBUG: Values - act on the helmValuesLayer
 		//// DEBUG: `cat CHART/gitea/templates/gitea/ingress.yaml`
 		Values: pulumi.Map{
 			"gitea": pulumi.Map{
@@ -106,7 +139,6 @@ func CreateGitea(ctx *pulumi.Context) error {
 			// "existingClaim": pulumi.String(pvNameData),
 			// },
 		},
-		Namespace: pulumi.String(namespaceGitea.Name),
 	})
 	if err != nil {
 		return err
