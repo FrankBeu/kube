@@ -15,7 +15,9 @@ import (
 )
 
 var (
-	namespaceNginxIngress = &lib.Namespace{
+	ingressControllerPortHTTP  = 30080
+	ingressControllerPortHTTPS = 30443
+	namespaceNginxIngress      = &lib.Namespace{
 		Name: "ingress-nginx",
 		Tier: lib.NamespaceTierEdge,
 		AdditionalLabels: []lib.NamespaceLabel{
@@ -26,7 +28,6 @@ var (
 )
 
 func CreateNginxIngressController(ctx *pulumi.Context) error {
-
 	err := lib.CreateNamespaces(ctx, namespaceNginxIngress)
 	if err != nil {
 		return err
@@ -40,6 +41,7 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 	return nil
 }
 
+//nolint
 func execGeneratedCode(ctx *pulumi.Context) error {
 	// CHANGES: namespaceChange Resource Name; DefaultLabels
 
@@ -594,14 +596,14 @@ func execGeneratedCode(ctx *pulumi.Context) error {
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
 					Name:       pulumi.String("http"),
-					NodePort:   pulumi.Int(30080),
+					NodePort:   pulumi.Int(ingressControllerPortHTTP),
 					Port:       pulumi.Int(80),
 					Protocol:   pulumi.String("TCP"),
 					TargetPort: pulumi.String("http"),
 				},
 				&corev1.ServicePortArgs{
 					Name:       pulumi.String("https"),
-					NodePort:   pulumi.Int(30443),
+					NodePort:   pulumi.Int(ingressControllerPortHTTPS),
 					Port:       pulumi.Int(443),
 					Protocol:   pulumi.String("TCP"),
 					TargetPort: pulumi.String("https"),
