@@ -33,7 +33,7 @@ type NamespaceLabel struct {
 	Value string
 }
 
-// Namespace are used to configurate the pulumiNamespaces.
+// Namespace is used to configure the creation of a pulumiNamespaces.
 // Mind that bools default to false if not set otherwise at instantiation
 type Namespace struct {
 	Name             string
@@ -44,9 +44,7 @@ type Namespace struct {
 
 // CreateNamespaces takes one or more namespaces
 func CreateNamespaces(ctx *pulumi.Context, nameSpaces ...*Namespace) error {
-
 	for _, n := range nameSpaces {
-
 		labels := pulumi.StringMap{
 			"name": pulumi.String(n.Name),
 			"tier": pulumi.String(n.Tier.String()),
