@@ -40,20 +40,21 @@ generate a =main.go= which must be processed further
 ** safety / security
 in order to prevent an unauthorized or accidental deploy to the wrong cluster
 *gopass* and *summon* are used to wrapp calls to *pulumi*.
-*** usage
-**** deploy
+*** command ~pulumi~
+**** usage
+***** deploy
 if the *deployCommand* and the *stack* do not match
 the following message is printed:
 #+begin_quote
 error: decrypting secret value: failed to decrypt:
 incorrect passphrase, please set PULUMI_CONFIG_PASSPHRASE to the correct passphrase or set PULUMI_CONFIG_PASSPHRASE_FILE to a file containing the passphrase
 #+end_quote
-**** choose your target stack
+***** choose your target stack
 #+begin_src shell :results drawer
   p{,S,PROD} stack select kube-{dev,stage,prod}
 #+end_src
-**** deploy
-*** shell-setup
+***** deploy
+**** shell-setup
 The ~pulumi~ command is only used via calls to stack-dependent aliases
 #+begin_example shell
 alias     p="summonPulumi dev"
@@ -67,20 +68,22 @@ function summonPulumi() {
     summon --up -e ${ENV} zsh -c "pulumi ${PULUMI_ARGS}"
 }
 #+end_example
-*** summon
+**** summon
 chooses the env defined in [[./KUBE/secrets.yml]]
 calls gopass to retrieve the value
 and sets the PULUMI_CONFIG_PASSPHRASE accordingly
-*** gopass
+**** gopass
 protects a password for each env
 =k8s/misc/pulumiDev=
 =k8s/misc/pulumiStage=
 =k8s/misc/pulumiProd=
+*** secrets in environment
+-> [[*secrets][kube/environments/secrets]]
 ** cluster
 *** dev
 **** view =./KUBE/Taskfile.yml=
 ~clusterCreateDev~
-*** staging 
+*** staging
 **** view =./KUBE/Taskfile.yml=
 ~clusterCreateStage~
 **** TODO should match production
@@ -109,6 +112,31 @@ each env needs an stack initialized using the right aliases
 #+begin_src shell :results drawer
   pProd stack init kube-prod
 #+end_src
+*** secrets
+**** password
+***** set
+#+begin_src shell :results drawer
+p config set --secret --path secTest.password qwer
+#+end_src
+***** get
+#+begin_src shell :results drawer
+p config get --path secTest.password
+#+end_src
+**** passphrases
+can not be entered via aliases
+#+begin_src shell :results drawer
+summon -e dev zsh -c 'pulumi config set --secret --path secTest.passphras "a secret passphrase"'
+#+end_src
+***** n. move to subkey indented
+**** arrays
+can not be entered via aliases
+#+begin_src shell :results drawer
+summon -e dev bash -c 'pulumi config set --secret --path secTest.array[0] qwer'
+#+end_src
+**** remove
+#+begin_src shell :results drawer
+p config rm secTest
+#+end_src
 ** proxy
 The Ingresscontroller is  used in  ~NodePort~ Mode.
 Only ports 30000 - 32767 can be use.
@@ -118,7 +146,7 @@ The k3d-server-layer must be traversed by  portMapping, too,
 *** TODO link to https://gitea.thesym.site...dns/domain
 ** configuration
 *** changes to config must be applied with ~pulumi up~ in order to be affective
-*** think of ENV - not of config - *.go is your config* now 
+*** think of ENV - not of config - *.go is your config* now
 *** RESIST
 **** the urge to write a config.yaml
 ***** never import viper
@@ -281,7 +309,7 @@ token authentication only possible with enterprise-version
 ****** template
 https://kubernetes.github.io/ingress-nginx/deploy/
 #+begin_src shell :results drawer
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
 curl -O https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.47.0/deploy/static/provider/baremetal/deploy.yaml
 #+end_src
 ***** tyk
@@ -301,30 +329,31 @@ needs proxy -> nginx -> use nginx as ingressController
   curl -LO https://github.com/jetstack/cert-manager/releases/download/v1.4.0/cert-manager.yaml
   crd2pulumi --goPath ./KUBE/crds/cert-manager ./RESOURCES/definition/structural/certs/certmanager/cdrDefinitions/customresourcedefinition-*.yaml
 #+end_src
-**** testing
-***** gloo
+*** TESTING
+**** gloo
 #+begin_src shell :results drawer
 curl -O https://raw.githubusercontent.com/solo-io/gloo/v1.2.9/example/petstore/petstore.yaml
 #+end_src
-****** petstore
+***** petstore
 #+begin_src shell :results drawer
 kubectl -n testing-petstore port-forward petstore-9d499b76f-2xjqz 8080:8080
 #+end_src
 http://localhost:8080/swagger.json
 http://localhost:8080/api/pets
-***** [[file:KUBE/definition/testing/pulumiexamples/README.org::*pulumiExamples][pulumiExamples]]
+**** [[file:KUBE/definition/testing/pulumiexamples/README.org::*pulumiExamples][pulumiExamples]]
 *** APP
-**** gitea
-***** helm
+**** vcs
+***** gitea
+****** helm
 https://gitea.com/gitea/helm-chart/
 #+begin_src shell :results drawer
 helm repo add gitea-charts https://dl.gitea.io/charts/
 helm repo update
 #+end_src
-***** ~Transformations~
+****** ~Transformations~
 Transformation act on the yaml-layer
 The ingress chooses the wrong api
-****** CURRENT:
+******* CURRENT:
 #+begin_src shell :results drawer
 helm template -s templates/gitea/ingress.yaml gitea-charts/gitea --set ingress.enabled=true --set "ingress.hosts\.0.host"=git.thesym.site
 #+end_src
@@ -353,18 +382,18 @@ spec:
               serviceName: RELEASE-NAME-gitea-http
               servicePort: 3000
 #+end_src
-******* drill down with ~map[string]interface{}~ and ~[]interface{}~
+******** drill down with ~map[string]interface{}~ and ~[]interface{}~
 #+begin_src go
 serviceName := state["spec"].(map[string]interface{})["rules"].([]interface{})[0].(map[string]interface{})["http"].(map[string]interface{})["paths"].([]interface{})[0].(map[string]interface{})["backend"].(map[string]interface{})["serviceName"]
 #+end_src
-******* print json
+******** print json
 #+begin_src go
 paths := state["spec"].(map[string]interface{})["rules"].([]interface{})[0].(map[string]interface{})["http"].(map[string]interface{})["paths"]
 // DEBUG:
 result, _ := json.Marshal(backend)
 fmt.Println(string(result))
 #+end_src
-****** TARGET:
+******* TARGET:
 #+begin_src shell :results drawer
 helm template -s templates/gitea/ingress.yaml gitea-charts/gitea --set ingress.enabled=true --set "ingress.hosts\.0.host"=git.thesym.site -a networking.k8s.io/v1/Ingress
 #+end_src
@@ -397,14 +426,62 @@ spec:
                 port:
                   number: 3000
 #+end_src
-***** ~Values~
+****** ~Values~
 act on the helmValuesLayer
-****** show all available valuse
+******* show all available valuse
 #+begin_src shell :results drawer
   helm show values gitea-charts/gitea
   ### needs local version
   cat CHART/gitea/templates/gitea/ingress.yaml
 #+end_src
+**** observer
+****** jaeger
+https://github.com/jaegertracing/jaeger-operator
+https://www.jaegertracing.io/docs/1.23/operator/
+******* RESOURCES
+#+begin_src shell :results drawer
+mkdir -p ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/crds
+#+end_src
+#+begin_src shell :results drawer
+    curl https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/service_account.yaml      -o ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/service_account.yaml
+  # only needed when not installed clusterwide # curl https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/role.yaml                 -o ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/role.yaml
+  # only needed when not installed clusterwide # curl https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/role_binding.yaml         -o ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/role_binding.yaml
+    curl https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/operator.yaml             -o ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/operator.yaml
+
+    curl https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/cluster_role.yaml         -o ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/cluster_role.yaml
+    curl https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/cluster_role_binding.yaml -o ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/cluster_role_binding.yaml
+#+end_src
+******** customize operator.yaml, setting the env var WATCH_NAMESPACE to have an empty value, so that it can watch for instances across all namespaces.
+#+begin_src yaml
+env:
+- name: WATCH_NAMESPACE
+  value: ""
+#+end_src
+******** remove #comments from cluster_role.yaml (from role.yaml)
+******** create golang
+#+begin_src shell :results drawer
+kube2pulumi go -d ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS
+#+end_src
+******** crds
+#+begin_src shell :results drawer
+curl https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/crds/jaegertracing.io_jaegers_crd.yaml -o ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/crds/jaegertracing.io_jaegers_crd.yaml
+
+crd2pulumi --goPath ./KUBE/crds/jaeger ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/crds/jaegertracing.io_jaegers_crd.yaml
+
+mkdir ./KUBE/crds/jaeger/crdDefinitions
+cp ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/crds/jaegertracing.io_jaegers_crd.yaml  ./KUBE/crds/jaeger/crdDefinitions/jaegertracing.io_jaegers_crd.yaml
+#+end_src
+******** instance
+#+begin_src shell :results drawer
+  kubectl apply -n observability -f - <<EOF
+  apiVersion: jaegertracing.io/v1
+  kind: Jaeger
+  metadata:
+    name: jaeger
+  EOF
+#+end_src
+******** create jaegerinstance
+use crds and the instance
 ** DEVELOPMENT
 *** transformations
 **** examples
@@ -417,6 +494,9 @@ https://github.com/idcrosby/pulumi-gitops/blob/f6fd7fa373409beb0f349be6af97bbb87
 ***** NOT WORKING
 https://github.com/pulumi/pulumi-kubernetes/issues/1034
 ***** use transformations
+*** crds
+**** operator-crds-repo
+https://github.com/pulumi/pulumi-kubernetes-crds
 ** TODO TODOS
 *** TODO create/automate update cycle
 **** pull changes

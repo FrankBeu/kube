@@ -2,6 +2,7 @@
 package staging
 
 import (
+	"thesym.site/kube/definition/app/observer/jaeger"
 	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/nginx"
@@ -33,6 +34,15 @@ var Kube = lib.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// APPS
 	////
+
+	//////////////////////// ////////////////////////
+	//// MONITORING
+	////
+	////////////////////////
+	//// OBSERVING
+	////
+	"jaeger": jaeger.CreateJaegerOperator,
+
 	//////////////////////// ////////////////////////
 	//// VCS
 	////
