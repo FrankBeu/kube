@@ -1,4 +1,6 @@
 name: kube
 runtime:
   name: go
+  options:
+    binary: pulumi-main
 description: k8s-cluster built with pulumi on nixos for thesym.site

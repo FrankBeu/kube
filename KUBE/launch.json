@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        //// Attach to a running local process via its process ID
+        {
+            "name": "PROCESS: Attach to Local Process worksOnVs",
+            "type": "go",
+            "request": "attach",
+            "mode": "local",
+	    //VAR
+            "processId": "858289",
+        },
+    ]
+}
+
+
+//// INFO
+// https://code.visualstudio.com/docs/editor/debugging#_launch-configurations
+// https://github.com/golang/vscode-go/blob/master/docs/debugging.md#snippets
+// https://code.visualstudio.com/docs/editor/variables-reference
+
+
+//// Properties
+//        {
+//            "name":       "",
+//            "type":       "",
+//            "request":    "",
+//            "mode":       "",
+//            "program":    "",
+//            "buildFlags": "",
+//            "env":        "",
+//            "envFile":    "",
+//            "args":       [],
+//// Debugging
+//	      "showLog":    true,
+//	      "trace":      "log",
+//        },
+
+//// FUNDUS
+//        //// Debug all tests in the given package (Symbol’s value as variable is void: Go:)
+//        {
+//            "name": "NW-TEST: Launch Test Package",
+//            "type": "go",
+//            "request": "launch",
+//            "mode": "test",
+//            "program": "${workspaceFolder}",
+//        },

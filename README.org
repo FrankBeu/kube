@@ -343,7 +343,7 @@ http://localhost:8080/api/pets
 **** [[file:KUBE/definition/testing/pulumiexamples/README.org::*pulumiExamples][pulumiExamples]]
 *** APP
 **** vcs
-***** gitea
+***** gitea                                                            :helm:
 ****** helm
 https://gitea.com/gitea/helm-chart/
 #+begin_src shell :results drawer
@@ -435,7 +435,7 @@ act on the helmValuesLayer
   cat CHART/gitea/templates/gitea/ingress.yaml
 #+end_src
 **** observer
-****** jaeger
+****** jaeger                                                      :operator:
 https://github.com/jaegertracing/jaeger-operator
 https://www.jaegertracing.io/docs/1.23/operator/
 ******* RESOURCES
@@ -482,6 +482,9 @@ cp ./RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/crds/jaegertracing.io_j
 #+end_src
 ******** create jaegerinstance
 use crds and the instance
+**** communication
+***** jitsi                                                            :helm:
+https://github.com/krakazyabra/jitsi-helm
 ** DEVELOPMENT
 *** transformations
 **** examples
@@ -497,6 +500,79 @@ https://github.com/pulumi/pulumi-kubernetes/issues/1034
 *** crds
 **** operator-crds-repo
 https://github.com/pulumi/pulumi-kubernetes-crds
+*** debugging with delve
+**** workflow
+***** check =Task.yaml=
+***** manual
+****** build without stripping dwarfSymbols
+******* debug
+#+begin_src shell :results drawer
+go build -gcflags '-N -l' -o pulumi-main main.go
+#+end_src
+******** if delving deeper is required
+do not build only toplevel packages - build all packages without stripping
+#+begin_src shell :results drawer
+go build -gcflags "all=-N -l" -o pulumi-main main.go
+#+end_src
+****** prepare =Pulumi.yaml= for debugging
+#+begin_src yaml
+  ### ...
+  runtime:
+      name: go
+      options:
+          binary: pulumi-main
+  ### ...
+#+end_src
+****** start
+#+begin_src shell :results drawer
+pS up -c debugMode=true
+#+end_src
+****** get pid
+#+begin_src shell :results drawer
+  ps pulumi-main
+#+end_src
+****** connect
+******* XOR
+******** insert pid into =launch.json=
+******** via template
+=SPC d d d=
+~Go Attach Executable Configuration~
+enter pid
+****** change ~debugReady~
+******* workflow
+1. after starting session continue till ~debugReady~ is available in locals-window
+2. quit hydra =q=
+3. change to locals-window =C-w C-w=
+4. navigate cursor to ~debugReady~
+5. =M-x= ~dap-ui-set-variable-value~ *true* =ENTER=
+6. back to man-window =C-w C-W=
+7. open hydra =SPC d .=
+8. start debugging
+******* TODO find/create *easier* workflow
+**** INFO
+https://github.com/pulumi/pulumi/issues/1372
+https://code.visualstudio.com/docs/
+https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#attach-to-a-process-on-a-remote-machine
+***** dap
+https://microsoft.github.io/debug-adapter-protocol/overview
+***** debugging a provider (other useCase)
+https://gist.github.com/lblackstone/e91e841cf022e67586aa98fb2c5025fe
+**** DONE implementation
+***** use channels??
+****** cleaner implementation but change~/callable  from emacs??
+NO
+***** debug debugging
+eval:
+#+begin_src elisp
+(setq dap-print-io t)
+#+end_src
+and check messages buffer
+***** proto for testing integration
+=~/SRC/GITEA/PROTO/GOLANG/delveTestAttach/main.go=
+***** schedule
+****** proto working
+******* attaching
+****** tdd with bool
 ** TODO TODOS
 *** TODO create/automate update cycle
 **** pull changes

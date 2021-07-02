@@ -1,5 +1,6 @@
 encryptionsalt: v1:1Wd1F0/iWdU=:v1:lfrS6UlrO3xgdLra:rq1WgiI51/u1l4ev9qvvxkZ62h7Usg==
 config:
+  kube:debugMode: "false"
   kube:domain: stage.thesym.site
   kube:env: stage
   kubernetes:context: k3d-kube-stage

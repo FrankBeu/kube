@@ -6,3 +6,6 @@
 
 ### tracing
 /KUBE/up.trace
+
+### debugging
+/KUBE/pulumi-main

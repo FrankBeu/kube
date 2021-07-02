@@ -1,4 +1,4 @@
-// Package emptycluster is used to remove all resources from an cluster
+// Package emptycluster is used to remove all resources from a cluster
 package emptycluster
 
 import (
