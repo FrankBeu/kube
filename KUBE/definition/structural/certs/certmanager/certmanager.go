@@ -11,11 +11,11 @@ import (
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
-	certv1b1 "thesym.site/kube/crds/cert-manager/certmanager/v1beta1"
 	"thesym.site/kube/lib"
 )
 
 func CreateCertmanager(ctx *pulumi.Context) error {
+	//// the default namespace created by the generated code is used unchanged
 	//nolint:lll
 	certManagerCrds := []lib.Crd{
 		{Name: "certmanager-order-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-orders.acme.cert-manager.io.yaml"},
@@ -31,43 +31,18 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 		return err
 	}
 
-	//nolint
-	//// exampleCert
-	// err = CreateCert(ctx)
+	err = lib.CreateClusterIssuer(ctx, lib.ClusterIssuerTypeCaLocal)
+	if err != nil {
+		return err
+	}
+
+	// err = lib.CreateClusterIssuer(ctx, lib.ClusterIssuerTypeLetsEncrypt)
 	// if err != nil {
 	// 	return err
 	// }
 
 	//// APP
 	err = execGeneratedCode(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// CreateCert creates a certificate
-func CreateCert(ctx *pulumi.Context) error {
-	//// Instantiate a Certificate resource.
-	_, err := certv1b1.NewCertificate(ctx, "example-cert", &certv1b1.CertificateArgs{
-		Metadata: &metav1.ObjectMetaArgs{
-			Name: pulumi.String("example-com"),
-		},
-		Spec: certv1b1.CertificateSpecArgs{
-			SecretName:  pulumi.String("example-com-tls"),
-			Duration:    pulumi.String("2160h"),
-			RenewBefore: pulumi.String("360h"),
-			CommonName:  pulumi.String("example.com"),
-			DnsNames: pulumi.StringArray{
-				pulumi.String("example.com"),
-				pulumi.String("www.example.com"),
-			},
-			IssuerRef: certv1b1.CertificateSpecIssuerRefArgs{
-				Name: pulumi.String("ca-issuer"),
-				Kind: pulumi.String("Issuer"),
-			},
-		},
-	})
 	if err != nil {
 		return err
 	}

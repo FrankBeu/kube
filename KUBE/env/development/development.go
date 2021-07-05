@@ -4,7 +4,7 @@ package development
 import (
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/nginx"
-	"thesym.site/kube/definition/testing/gloo/petstore"
+	"thesym.site/kube/definition/testing/testnamespace"
 	"thesym.site/kube/lib"
 )
 
@@ -36,6 +36,11 @@ var Kube = lib.KubeConfig{
 	////
 
 	//////////////////////// ////////////////////////
+	//// COMMUNICATION
+	////
+	// "jitsi": jitsi.CreateJitsi,
+
+	//////////////////////// ////////////////////////
 	//// MONITORING
 	////
 	////////////////////////
@@ -51,7 +56,17 @@ var Kube = lib.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// TESTING
 	////
-	"glooPetstore": petstore.CreateGlooPetstore,
+	//////////////////////// ////////////////////////
+	//// NAMESPACE
+	////
+	"namestpaceTest": testnamespace.CreateTestNamespace,
+
+	//////////////////////// ////////////////////////
+	//// TESTS, PROTOS, ...
+	////
+	// "certTest": certtest.CreateTestCert,
+
+	// "glooPetstore": petstore.CreateGlooPetstore,
 
 	// "fileSingle": pulumiexamples.CreateFromFileSingle,
 	// "filesMulti": pulumiexamples.CreateFromFilesMulti,

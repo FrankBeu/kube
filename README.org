@@ -329,6 +329,8 @@ needs proxy -> nginx -> use nginx as ingressController
   curl -LO https://github.com/jetstack/cert-manager/releases/download/v1.4.0/cert-manager.yaml
   crd2pulumi --goPath ./KUBE/crds/cert-manager ./RESOURCES/definition/structural/certs/certmanager/cdrDefinitions/customresourcedefinition-*.yaml
 #+end_src
+****** clusterIssuer
+[[file:./RESOURCES/definition/structural/certs/certmanager/issuer/ca-local/README.org][ClusterIssuer-Readme.org]]
 *** TESTING
 **** gloo
 #+begin_src shell :results drawer
@@ -485,7 +487,7 @@ use crds and the instance
 **** communication
 ***** jitsi                                                            :helm:
 https://github.com/krakazyabra/jitsi-helm
-** DEVELOPMENT
+** development
 *** transformations
 **** examples
 https://github.com/pulumi/pulumi-kubernetes/blob/760bd8d0ea2ffce11a936c3f4c323748d5fa5c9b/tests/sdk/go/yaml/main.go
