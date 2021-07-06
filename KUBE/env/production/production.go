@@ -58,12 +58,12 @@ var Kube = lib.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// NAMESPACE
 	////
-	// "namestpaceTest": testnamespace.CreateTestNamespace,
+	// "testNamespace": testnamespace.CreateTestNamespace,
 
 	//////////////////////// ////////////////////////
 	//// TESTS, PROTOS, ...
 	////
-	// "certTest": certtest.CreateTestCert,
+	// "testCert": testcert.CreateTestCert,
 
 	// "glooPetstore": petstore.CreateGlooPetstore,
 

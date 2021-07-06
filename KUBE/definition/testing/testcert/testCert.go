@@ -1,5 +1,5 @@
-// Package certtest use used for testing certManager
-package certtest
+// Package testcert use used for testing certManager
+package testcert
 
 import (
 	"strconv"
