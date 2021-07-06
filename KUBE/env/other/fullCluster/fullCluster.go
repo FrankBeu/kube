@@ -14,6 +14,7 @@ import (
 	"thesym.site/kube/definition/testing/gloo/petstore"
 	"thesym.site/kube/definition/testing/pulumiexamples"
 	"thesym.site/kube/definition/testing/testcert"
+	"thesym.site/kube/definition/testing/testingress"
 	"thesym.site/kube/definition/testing/testnamespace"
 	"thesym.site/kube/lib"
 )
@@ -74,6 +75,7 @@ var Kube = lib.KubeConfig{
 	//// TESTS, PROTOS, ...
 	////
 	"testCert": testcert.CreateTestCert,
+	"testIngress": testingress.CreateTestIngress,
 
 	"glooPetstore": petstore.CreateGlooPetstore,
 

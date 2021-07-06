@@ -64,6 +64,7 @@ var Kube = lib.KubeConfig{
 	//// TESTS, PROTOS, ...
 	////
 	// "testCert": testcert.CreateTestCert,
+	// "testIngress": testingress.CreateTestIngress,
 
 	// "glooPetstore": petstore.CreateGlooPetstore,
 
