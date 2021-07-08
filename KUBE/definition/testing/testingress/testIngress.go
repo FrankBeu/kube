@@ -1,4 +1,5 @@
 // Package testingress use used for testing tls-ingresses
+// TODO: cleanup and extractions required
 package testingress
 
 import (
@@ -56,8 +57,10 @@ func addIngress(ctx *pulumi.Context, name, namespace string) error {
 			},
 		},
 		Spec: &networkingv1.IngressSpecArgs{
+			//// TODO: create const
+			IngressClassName: pulumi.String("nginx"),
+			//// TLS
 
-				//// TLS
 			Tls: networkingv1.IngressTLSArray{
 				&networkingv1.IngressTLSArgs{
 					Hosts: pulumi.StringArray{
@@ -66,7 +69,7 @@ func addIngress(ctx *pulumi.Context, name, namespace string) error {
 					SecretName: pulumi.String(name + "-tls"),
 				},
 			},
-				//// TLS-END
+			//// TLS-END
 			Rules: networkingv1.IngressRuleArray{
 				&networkingv1.IngressRuleArgs{
 					Host: pulumi.String(name + domainNameSuffix),
