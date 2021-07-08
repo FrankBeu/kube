@@ -1,4 +1,4 @@
-// Package giteas installs a gitea instance via helm-chart
+// Package gitea installs a gitea instance via helm-chart
 package gitea
 
 import (
@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	name          = "gitea"
-	subDomainName = "git"
+	name = "gitea"
+	// subDomainName = "git"
+	subDomainName = name
 
 	// pvNameData = name + "-data"
 
@@ -33,6 +34,7 @@ var (
 	}
 )
 
+//nolint:funlen
 func CreateGitea(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	domainName := subDomainName + "." + conf.Require("domain")
@@ -41,26 +43,65 @@ func CreateGitea(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
-	// `helm repo add gitea-charts https://dl.gitea.io/charts/`
 	_, err = helm.NewChart(ctx, "gitea", helm.ChartArgs{
+		// `helm repo add gitea-charts https://dl.gitea.io/charts/`
 		Repo:      pulumi.String("gitea-charts"),
 		Chart:     pulumi.String("gitea"),
 		Version:   pulumi.String("3.1.4"),
 		Namespace: pulumi.String(namespaceGitea.Name),
 		//// APIVersion is NOT working: https://github.com/pulumi/pulumi-kubernetes/issues/1034
-		//// use Trasnformations instead
+		//// use Transformations instead
 		APIVersions: pulumi.StringArray{pulumi.String("networking.k8s.io/v1")},
 		// TODO: test if `helm repo add ...` is necessary
 		// FetchArgs: &helm.FetchArgs{
 		// Repo: pulumi.String("https://dl.gitea.io/charts/"),
 		// },
+		// helm show values gitea-charts/gitea
+		Values: pulumi.Map{
+			"gitea": pulumi.Map{
+				"config": pulumi.Map{
+					"APP_NAME": pulumi.String(strings.Title(name)),
+					"server": pulumi.Map{
+						"DOMAIN":     pulumi.String(domainName),
+						"ROOT_URL":   pulumi.String("https://" + domainName),
+						"SSH_DOMAIN": pulumi.String(domainName), // gitea.config.server.SSH_DOMAIN={{.domainName}}
+					},
+				},
+			},
+			"ingress": pulumi.Map{
+				"enabled": pulumi.Bool(true),
+				"annotations": pulumi.Map{
+					"cert-manager.io/cluster-issuer": pulumi.String(lib.ClusterIssuerTypeCaLocal.String()),
+				},
+				"hosts": pulumi.Array{
+					pulumi.String(domainName),
+				},
+				"tls": pulumi.Array{
+					pulumi.Map{
+						"secretName": pulumi.String(name + "-tls"),
+						"hosts": pulumi.Array{
+							pulumi.String(domainName),
+						},
+					},
+				},
+			},
+			"resources": pulumi.Map{
+				"requests": pulumi.Map{
+					"cpu": pulumi.String("10m"), // resources.requests.cpu=10m
+				},
+			},
+			// --set persistence.existingClaim={{.pvName0}} \
+			// "persistence": pulumi.Map{
+			// "existingClaim": pulumi.String(pvNameData),
+			// },
+		},
 		Transformations: []yaml.Transformation{
 			func(state map[string]interface{}, opts ...pulumi.ResourceOption) {
 				//// only act if the ingress is passed to this callback
 				if state["kind"] == "Ingress" {
 					state["apiVersion"] = "networking.k8s.io/v1"
 
-					//// information{Retrieval,Setting}
+					//// backendInformation{Retrieval,Setting}
 					//nolint:lll
 					paths := state["spec"].(map[string]interface{})["rules"].([]interface{})[0].(map[string]interface{})["http"].(map[string]interface{})["paths"]
 					path := paths.([]interface{})[0].(map[string]interface{})["path"]
@@ -70,6 +111,15 @@ func CreateGitea(ctx *pulumi.Context) error {
 
 					//// specRebuild
 					spec := map[string]interface{}{
+						"tls": []interface{}{
+							map[string]interface{}{
+								"hosts": []interface{}{
+									domainName,
+								},
+								"secretName": name + "-tls",
+							},
+						},
+						"ingressClassName": "nginx",
 						"rules": []interface{}{
 							map[string]interface{}{
 								"host": domainName,
@@ -95,36 +145,6 @@ func CreateGitea(ctx *pulumi.Context) error {
 					state["spec"] = spec
 				}
 			},
-		},
-		Values: pulumi.Map{
-			"gitea": pulumi.Map{
-				"config": pulumi.Map{
-					"APP_NAME": pulumi.String(strings.Title(name)),
-					"server": pulumi.Map{
-						"DOMAIN":     pulumi.String(domainName),
-						"ROOT_URL":   pulumi.String("https://" + domainName),
-						"SSH_DOMAIN": pulumi.String(domainName), // gitea.config.server.SSH_DOMAIN={{.domainName}}
-					},
-				},
-			},
-			"ingress": pulumi.Map{
-				"enabled": pulumi.Bool(true),
-				// "annotations": pulumi.Map{
-				// 	"": pulumi.String(""),
-				// },
-				"hosts": pulumi.Array{ // ingress.hosts[0].host
-					pulumi.String(domainName),
-				},
-			},
-			"resources": pulumi.Map{
-				"requests": pulumi.Map{
-					"cpu": pulumi.String("10m"), // resources.requests.cpu=10m
-				},
-			},
-			// --set persistence.existingClaim={{.pvName0}} \
-			// "persistence": pulumi.Map{
-			// "existingClaim": pulumi.String(pvNameData),
-			// },
 		},
 	})
 	if err != nil {
