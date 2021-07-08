@@ -9,6 +9,7 @@ import (
 	batchv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/batch/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
+	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/kube/lib"
@@ -38,23 +39,50 @@ func CreateNginxIngressController(ctx *pulumi.Context) error {
 		return err
 	}
 
+	err = createIngressClass(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createIngressClass(ctx *pulumi.Context) error {
+	_, err := networkingv1.NewIngressClass(ctx, "nginxIngressClass", &networkingv1.IngressClassArgs{
+		ApiVersion: pulumi.String("networking.k8s.io/v1"),
+		Kind:       pulumi.String("IngressClass"),
+		Metadata: &metav1.ObjectMetaArgs{
+			Labels: pulumi.StringMap{
+				"app.kubernetes.io/name":      pulumi.String("ingress-nginx"),
+				"app.kubernetes.io/component": pulumi.String("controller"),
+			},
+			Name: pulumi.String("nginx"),
+			Annotations: pulumi.StringMap{
+				"ingressclass.kubernetes.io/is-default-class": pulumi.String("true"),
+			},
+		},
+		Spec: &networkingv1.IngressClassSpecArgs{
+			Controller: pulumi.String("k8s.io/ingress-nginx"),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 //nolint
 func execGeneratedCode(ctx *pulumi.Context) error {
 	// CHANGES: namespaceChange Resource Name; DefaultLabels
-
 	_, err := rbacv1.NewClusterRole(ctx, "ingress_nginxClusterRole", &rbacv1.ClusterRoleArgs{
 		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),
 		Kind:       pulumi.String("ClusterRole"),
 		Metadata: &metav1.ObjectMetaArgs{
 			Labels: pulumi.StringMap{
-				// "helm.sh/chart":                pulumi.String("ingress-nginx-3.33.0"),
 				"app.kubernetes.io/name":     pulumi.String("ingress-nginx"),
 				"app.kubernetes.io/instance": pulumi.String("ingress-nginx"),
 				"app.kubernetes.io/version":  pulumi.String("0.47.0"),
-				// "app.kubernetes.io/managed-by": pulumi.String("Helm"),
 			},
 			Name: pulumi.String("ingress-nginx"),
 		},
