@@ -9,4 +9,9 @@ config:
   kube:debugMode: "false"
   kube:domain: stage.thesym.site
   kube:env: stage
+  kube:promStack:
+    grafana:
+      adminPassword:
+        secure: v1:hCzjnRn1Bt9PjK5I:QKFHmNhsRFLYUcPURUqthGg5uFk3uko6jPEeJRkUnNJB0mplkEA09g==
   kubernetes:context: k3d-kube-stage
+  kubernetes:suppressDeprecationWarnings: "true"

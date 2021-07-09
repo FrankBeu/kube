@@ -5,12 +5,14 @@ package fullcluster
 
 import (
 	"thesym.site/kube/definition/app/communication/jitsi"
+	"thesym.site/kube/definition/app/communication/matrix"
 	"thesym.site/kube/definition/app/observer/jaeger"
 	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/emmissary"
 	"thesym.site/kube/definition/structural/ingress/nginx"
 	"thesym.site/kube/definition/structural/ingress/tyk"
+	"thesym.site/kube/definition/structural/monitoring/prometheus"
 	"thesym.site/kube/definition/testing/gloo/petstore"
 	"thesym.site/kube/definition/testing/pulumiexamples"
 	"thesym.site/kube/definition/testing/testcert"
@@ -41,6 +43,11 @@ var Kube = lib.KubeConfig{
 	////
 	"certmanager": certmanager.CreateCertmanager,
 
+	//////////////////////// ////////////////////////
+	//// MONITORING
+	////
+	"prometheus": prometheus.CreatePrometheus,
+
 	//////////////////////// //////////////////////// ////////////////////////
 	//// APPS
 	////
@@ -50,9 +57,6 @@ var Kube = lib.KubeConfig{
 	////
 	"jitsi": jitsi.CreateJitsi,
 
-	//////////////////////// ////////////////////////
-	//// MONITORING
-	////
 	////////////////////////
 	//// OBSERVING
 	////

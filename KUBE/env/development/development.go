@@ -5,6 +5,7 @@ import (
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/nginx"
 	"thesym.site/kube/definition/testing/testnamespace"
+	// "thesym.site/kube/definition/structural/monitoring/prometheus"
 	"thesym.site/kube/lib"
 )
 
@@ -31,6 +32,11 @@ var Kube = lib.KubeConfig{
 	////
 	"certmanager": certmanager.CreateCertmanager,
 
+	//////////////////////// ////////////////////////
+	//// MONITORING
+	////
+	// "prometheus": prometheus.CreatePrometheus,
+
 	//////////////////////// //////////////////////// ////////////////////////
 	//// APPS
 	////
@@ -40,9 +46,6 @@ var Kube = lib.KubeConfig{
 	////
 	// "jitsi": jitsi.CreateJitsi,
 
-	//////////////////////// ////////////////////////
-	//// MONITORING
-	////
 	////////////////////////
 	//// OBSERVING
 	////

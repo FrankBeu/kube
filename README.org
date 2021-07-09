@@ -11,6 +11,8 @@ https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/
 **** pulumi
 https://www.pulumi.com/
 **** kubectl
+**** gojsontoyaml
+prometheus is defined in jsonnet
 *** convenience
 **** *summon + gopass*
 providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
@@ -345,6 +347,48 @@ needs proxy -> nginx -> use nginx as ingressController
 #+end_src
 ****** clusterIssuer
 [[file:./RESOURCES/definition/structural/certs/certmanager/issuer/ca-local/README.org][ClusterIssuer-Readme.org]]
+**** monitoring
+***** loki
+***** prometheus
+https://github.com/prometheus-operator/prometheus-operator#prometheus-operator-vs-kube-prometheus-vs-community-helm-chart
+****** helm-chart
+https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+****** TODO kube-prometheus
+******* currently not working
+because of kube2pulumi's missing support for crds
+******** TODO XOR
+********* write manually
+********* connect kube2pulumi + crd2pulumi
+******* workflow
+https://github.com/prometheus-operator/kube-prometheus#installing
+#+begin_src shell :results drawer
+      WD=./RESOURCES/definition/structural/monitoring/prometheus2
+      mkdir -p $WD
+      cd $WD
+
+      jb init
+      jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@release-0.8
+      jb update
+
+      wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/release-0.8/example.jsonnet -O example.jsonnet
+      wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/release-0.8/build.sh -O build.sh
+
+
+    ./build.sh
+
+    ### CRDS
+  mkdir crds
+  mv manifests/setup/*CustomResourceDefinition.yaml crds\n
+
+  crd2pulumi --goPath ../../../../../KUBE/crds/prometheus crds/*.yaml
+
+  ### create golang
+  kube2pulumi go -d ./manifests
+
+#+end_src
+**** TODO unify clusterWide grafana
+- loki
+- prometheus
 *** TESTING
 **** gloo
 #+begin_src shell :results drawer
@@ -677,5 +721,3 @@ https://kubernetes.io/docs/concepts/services-networking/ingress/#single-service-
 *** TODO nginx
 **** use helm-chart
 is the default way to install nginx
-
-
