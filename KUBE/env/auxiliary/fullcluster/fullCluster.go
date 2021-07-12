@@ -56,6 +56,7 @@ var Kube = lib.KubeConfig{
 	//// COMMUNICATION
 	////
 	"jitsi": jitsi.CreateJitsi,
+	"matrix": matrix.CreateMatrix,
 
 	////////////////////////
 	//// OBSERVING
