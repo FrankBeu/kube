@@ -39,7 +39,7 @@ func CreateGitea(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	domainName := subDomainName + "." + conf.Require("domain")
 
-	err := lib.CreateNamespaces(ctx, namespaceGitea)
+	_, err := lib.CreateNamespace(ctx, namespaceGitea)
 	if err != nil {
 		return err
 	}

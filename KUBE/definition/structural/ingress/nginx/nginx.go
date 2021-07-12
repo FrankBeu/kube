@@ -29,7 +29,7 @@ var (
 )
 
 func CreateNginxIngressController(ctx *pulumi.Context) error {
-	err := lib.CreateNamespaces(ctx, namespaceNginxIngress)
+	_, err := lib.CreateNamespace(ctx, namespaceNginxIngress)
 	if err != nil {
 		return err
 	}

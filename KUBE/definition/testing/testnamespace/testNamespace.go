@@ -17,7 +17,7 @@ var (
 )
 
 func CreateTestNamespace(ctx *pulumi.Context) error {
-	err := lib.CreateNamespaces(ctx, namespaceTest)
+	_, err := lib.CreateNamespace(ctx, namespaceTest)
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,7 @@ func CreatePrometheus(ctx *pulumi.Context) error {
 	conf.RequireSecretObject("promStack", &psc)
 	grafanaAdminPw := psc.Grafana.AdminPassword
 
-	err := lib.CreateNamespaces(ctx, namespacePrometheus)
+	_, err := lib.CreateNamespace(ctx, namespacePrometheus)
 	if err != nil {
 		return err
 	}

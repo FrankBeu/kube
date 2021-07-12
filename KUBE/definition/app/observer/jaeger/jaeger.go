@@ -27,7 +27,7 @@ func CreateJaegerOperator(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	domainName := subDomainName + "." + conf.Require("domain")
 
-	err := lib.CreateNamespaces(ctx, namespaceJaeger)
+	_, err := lib.CreateNamespace(ctx, namespaceJaeger)
 	if err != nil {
 		return err
 	}

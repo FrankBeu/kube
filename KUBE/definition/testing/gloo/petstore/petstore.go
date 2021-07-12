@@ -25,7 +25,7 @@ func CreateGlooPetstore(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	domainName := name + "." + conf.Require("domain")
 
-	err := lib.CreateNamespaces(ctx, namespacePetstore)
+	_, err := lib.CreateNamespace(ctx, namespacePetstore)
 	if err != nil {
 		return err
 	}

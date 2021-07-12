@@ -8,6 +8,7 @@ import (
 )
 
 // NamespaceTier is used to group namespaces respectively apps belonging to different namespaces
+// e.g.: show all all available communicationTools
 type NamespaceTier int
 
 // onChange: regenerate with `go generate`
@@ -26,6 +27,10 @@ const (
 	NamespaceTierSecurity                               // security
 	NamespaceTierStorage                                // storage
 	NamespaceTierTesting                                // testing
+
+	namespaceAPIVersion   string = "v1"
+	namespaceKind         string = "Namespace"
+	namespaceGlooLabelKey string = "discovery.solo.io/function_discovery"
 )
 
 type NamespaceLabel struct {
@@ -33,8 +38,8 @@ type NamespaceLabel struct {
 	Value string
 }
 
-// Namespace is used to configure the creation of a pulumiNamespaces.
-// Mind that bools default to false if not set otherwise at instantiation
+// Namespace is used to configure the creation of a pulumiNamespace.
+// Remember: bools default to false if not set at instantiation otherwise
 type Namespace struct {
 	Name             string
 	Tier             NamespaceTier
@@ -42,42 +47,39 @@ type Namespace struct {
 	AdditionalLabels []NamespaceLabel
 }
 
-// CreateNamespaces takes one or more namespaces
-func CreateNamespaces(ctx *pulumi.Context, nameSpaces ...*Namespace) error {
-	for _, n := range nameSpaces {
-		labels := pulumi.StringMap{
-			"name": pulumi.String(n.Name),
-			"tier": pulumi.String(n.Tier.String()),
-		}
+func CreateNamespace(ctx *pulumi.Context, n *Namespace) (*corev1.Namespace, error) {
+	labels := pulumi.StringMap{
+		"name": pulumi.String(n.Name),
+		"tier": pulumi.String(n.Tier.String()),
+	}
 
-		if n.GlooDiscovery {
-			labels["discovery.solo.io/function_discovery"] = pulumi.String("enabled")
-		}
+	if n.GlooDiscovery {
+		labels[namespaceGlooLabelKey] = pulumi.String("enabled")
+	}
 
-		if len(n.AdditionalLabels) > 0 {
-			for _, label := range n.AdditionalLabels {
-				labels[label.Name] = pulumi.String(label.Value)
-			}
-		}
-
-		_, err := corev1.NewNamespace(
-			ctx,
-			n.Name,
-			&corev1.NamespaceArgs{
-				ApiVersion: pulumi.String("v1"),
-				Kind:       pulumi.String("Namespace"),
-				Metadata: &metav1.ObjectMetaArgs{
-					Name:   pulumi.String(n.Name),
-					Labels: labels,
-				},
-				Spec: nil,
-			},
-		)
-
-		if err != nil {
-			return err
+	if len(n.AdditionalLabels) > 0 {
+		for _, label := range n.AdditionalLabels {
+			labels[label.Name] = pulumi.String(label.Value)
 		}
 	}
 
-	return nil
+	ns, err := corev1.NewNamespace(
+		ctx,
+		n.Name,
+		&corev1.NamespaceArgs{
+			ApiVersion: pulumi.String(namespaceAPIVersion),
+			Kind:       pulumi.String(namespaceKind),
+			Metadata: &metav1.ObjectMetaArgs{
+				Name:   pulumi.String(n.Name),
+				Labels: labels,
+			},
+			Spec: nil,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ns, nil
 }

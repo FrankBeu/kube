@@ -24,7 +24,12 @@ var (
 )
 
 func CreateEmmissary(ctx *p.Context) error {
-	err := lib.CreateNamespaces(ctx, namespaceEmmissary, namespaceEmmissaryHosts)
+	_, err := lib.CreateNamespace(ctx, namespaceEmmissary)
+	if err != nil {
+		return err
+	}
+
+	_, err = lib.CreateNamespace(ctx, namespaceEmmissaryHosts)
 	if err != nil {
 		return err
 	}
