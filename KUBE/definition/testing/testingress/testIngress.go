@@ -6,23 +6,39 @@ import (
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
-	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/ingress"
 )
 
 // CreateTestIngress creates an application with a tls-ingress
 func CreateTestIngress(ctx *pulumi.Context) error {
 	namespace := "test"
 	name := "testingress"
+	servicePort := 80
+	serviceTargetPort := 80
 
-	err := createDeploymentAndService(ctx, name, namespace)
+	err := createDeploymentAndService(ctx, name, namespace, servicePort, serviceTargetPort)
 	if err != nil {
 		return err
 	}
 
-	err = addIngress(ctx, name, namespace)
+	ing := ingress.Config{
+		// Annotations:       map[string]pulumi.StringInput{},
+		ClusterIssuerType: certificate.ClusterIssuerTypeCaLocal,
+		Hosts: []ingress.Host{
+			{
+				Name:        name,
+				ServiceName: name,
+				ServicePort: servicePort,
+			},
+		},
+		IngressClassName: ingress.IngressClassNameNginx,
+		Name:             name,
+		NamespaceName:    namespace,
+		TLS:              true,
+	}
+	_, err = ingress.CreateIngress(ctx, &ing)
 	if err != nil {
 		return err
 	}
@@ -30,77 +46,7 @@ func CreateTestIngress(ctx *pulumi.Context) error {
 	return nil
 }
 
-// TODO: extract (gloopetstore, too)
-func addIngress(ctx *pulumi.Context, name, namespace string) error {
-	conf := config.New(ctx, "")
-	domainNameSuffix := "." + conf.Require("domain")
-
-	_, err := networkingv1.NewIngress(ctx, name, &networkingv1.IngressArgs{
-		ApiVersion: pulumi.String("networking.k8s.io/v1"),
-		Kind:       pulumi.String("Ingress"),
-		Metadata: &metav1.ObjectMetaArgs{
-			Labels:    pulumi.StringMap{"app": pulumi.String(name)},
-			Name:      pulumi.String(name),
-			Namespace: pulumi.String(namespace),
-			Annotations: pulumi.StringMap{
-				//// TLS
-				"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
-				//// TLS-END
-				// "kubernetes.io/ingress.class": pulumi.String("nginx"),
-				// "nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("true"),
-				// "nginx.ingress.kubernetes.io/ssl-redirect": pulumi.String("true"),
-				// "nginx.ingress.kubernetes.io/ssl-redirect": pulumi.String("false"),
-				// "nginx.ingress.kubernetes.io/configuration-snippet": pulumi.String(
-				// 	`if ($http_x_forwarded_proto = 'http') {
-				//            return 301 https://$host$request_uri;
-				//          }`),
-			},
-		},
-		Spec: &networkingv1.IngressSpecArgs{
-			//// TODO: create const
-			IngressClassName: pulumi.String("nginx"),
-			//// TLS
-
-			Tls: networkingv1.IngressTLSArray{
-				&networkingv1.IngressTLSArgs{
-					Hosts: pulumi.StringArray{
-						pulumi.String(name + domainNameSuffix),
-					},
-					SecretName: pulumi.String(name + "-tls"),
-				},
-			},
-			//// TLS-END
-			Rules: networkingv1.IngressRuleArray{
-				&networkingv1.IngressRuleArgs{
-					Host: pulumi.String(name + domainNameSuffix),
-					Http: &networkingv1.HTTPIngressRuleValueArgs{
-						Paths: networkingv1.HTTPIngressPathArray{
-							&networkingv1.HTTPIngressPathArgs{
-								PathType: pulumi.String("Prefix"),
-								Path:     pulumi.String("/"),
-								Backend: &networkingv1.IngressBackendArgs{
-									Service: &networkingv1.IngressServiceBackendArgs{
-										Name: pulumi.String(name),
-										Port: &networkingv1.ServiceBackendPortArgs{
-											Number: pulumi.Int(80),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		// Tls:              nil,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func createDeploymentAndService(ctx *pulumi.Context, name string, namespace string) error {
+func createDeploymentAndService(ctx *pulumi.Context, name, namespace string, servicePort, serviceTargetPort int) error {
 	appName := name
 	appLabels := pulumi.StringMap{
 		"app": pulumi.String(appName),
@@ -144,8 +90,8 @@ func createDeploymentAndService(ctx *pulumi.Context, name string, namespace stri
 			Type: pulumi.String("ClusterIP"),
 			Ports: &corev1.ServicePortArray{
 				corev1.ServicePortArgs{
-					Port:       pulumi.Int(80),
-					TargetPort: pulumi.Int(80),
+					Port:       pulumi.Int(servicePort),
+					TargetPort: pulumi.Int(serviceTargetPort),
 					Protocol:   pulumi.String("TCP"),
 				},
 			},

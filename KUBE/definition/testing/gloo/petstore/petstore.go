@@ -5,9 +5,9 @@ import (
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
-	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
+	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/ingress"
 	"thesym.site/kube/lib/namespace"
 )
 
@@ -21,17 +21,27 @@ var (
 )
 
 func CreateGlooPetstore(ctx *pulumi.Context) error {
-
-	conf := config.New(ctx, "")
-	domainName := name + "." + conf.Require("domain")
-
 	_, err := namespace.CreateNamespace(ctx, namespacePetstore)
 	if err != nil {
 		return err
 	}
 
-	err = addIngress(ctx, domainName)
-
+	ing := ingress.Config{
+		// Annotations:       map[string]pulumi.StringInput{},
+		ClusterIssuerType: certificate.ClusterIssuerTypeCaLocal,
+		Hosts: []ingress.Host{
+			{
+				Name:        name,
+				ServiceName: name,
+				ServicePort: 8080,
+			},
+		},
+		IngressClassName: ingress.IngressClassNameNginx,
+		Name:             name,
+		NamespaceName:    name,
+		TLS:              true,
+	}
+	_, err = ingress.CreateIngress(ctx, &ing)
 	if err != nil {
 		return err
 	}
@@ -42,58 +52,6 @@ func CreateGlooPetstore(ctx *pulumi.Context) error {
 		return err
 	}
 
-	return nil
-}
-
-// TODO: extract
-func addIngress(ctx *pulumi.Context, domainName string) error {
-
-	_, err := networkingv1.NewIngress(ctx, namespacePetstore.Name, &networkingv1.IngressArgs{
-		ApiVersion: pulumi.String("networking.k8s.io/v1"),
-		Kind:       pulumi.String("Ingress"),
-		Metadata: &metav1.ObjectMetaArgs{
-			Labels:      pulumi.StringMap{"app": pulumi.String("petstore")},
-			Name:        pulumi.String("petstore"),
-			Namespace:   pulumi.String(namespacePetstore.Name),
-			Annotations: pulumi.StringMap{
-				// "kubernetes.io/ingress.class": pulumi.String("nginx"),
-				// "nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("true"),
-				// "nginx.ingress.kubernetes.io/ssl-redirect": pulumi.String("true"),
-				// "nginx.ingress.kubernetes.io/ssl-redirect": pulumi.String("false"),
-				// "nginx.ingress.kubernetes.io/configuration-snippet": pulumi.String(
-				// 	`if ($http_x_forwarded_proto = 'http') {
-				//            return 301 https://$host$request_uri;
-				//          }`),
-			},
-		},
-		Spec: &networkingv1.IngressSpecArgs{
-			Rules: networkingv1.IngressRuleArray{
-				&networkingv1.IngressRuleArgs{
-					Host: pulumi.String(domainName),
-					Http: &networkingv1.HTTPIngressRuleValueArgs{
-						Paths: networkingv1.HTTPIngressPathArray{
-							&networkingv1.HTTPIngressPathArgs{
-								PathType: pulumi.String("Prefix"),
-								Path:     pulumi.String("/"),
-								Backend: &networkingv1.IngressBackendArgs{
-									Service: &networkingv1.IngressServiceBackendArgs{
-										Name: pulumi.String("petstore"),
-										Port: &networkingv1.ServiceBackendPortArgs{
-											Number: pulumi.Int(8080),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		// Tls:              nil,
-	})
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
