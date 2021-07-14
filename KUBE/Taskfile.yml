@@ -116,6 +116,8 @@ tasks:
         {{.name}}-dev \
         --no-lb \
         --k3s-server-arg '--no-deploy=traefik' \
+        --port 24:22 \
+        --port 16689:16686 \
         --port 32080:30080 \
         --port 32443:30443
 
@@ -151,6 +153,8 @@ tasks:
         {{.name}}-stage \
         --no-lb \
         --k3s-server-arg '--no-deploy=traefik' \
+        --port 23:22 \
+        --port 16687:16686 \
         --port 31080:30080 \
         --port 31443:30443
 
