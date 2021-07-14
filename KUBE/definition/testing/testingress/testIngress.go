@@ -9,7 +9,7 @@ import (
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/certificate"
 )
 
 // CreateTestIngress creates an application with a tls-ingress
@@ -44,7 +44,7 @@ func addIngress(ctx *pulumi.Context, name, namespace string) error {
 			Namespace: pulumi.String(namespace),
 			Annotations: pulumi.StringMap{
 				//// TLS
-				"cert-manager.io/cluster-issuer": pulumi.String(lib.ClusterIssuerTypeCaLocal.String()),
+				"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
 				//// TLS-END
 				// "kubernetes.io/ingress.class": pulumi.String("nginx"),
 				// "nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("true"),

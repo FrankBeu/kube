@@ -1,4 +1,4 @@
-package crds
+package crd
 
 import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/yaml"

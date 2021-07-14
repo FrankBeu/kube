@@ -7,7 +7,7 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
-	"thesym.site/kube/lib/testutils"
+	"thesym.site/kube/lib/testutil"
 )
 
 func TestCreateNamespace(t *testing.T) {
@@ -77,30 +77,30 @@ func TestCreateNamespace(t *testing.T) {
 				})
 
 				return nil
-			}, pulumi.WithMocks("project", "stack", testutils.Mocks(0)))
+			}, pulumi.WithMocks("project", "stack", testutil.Mocks(0)))
 			assert.NoError(t, err)
 		})
 	}
 }
 
-func assertLabels(t *testing.T, labelsActual testutils.Labels, ns *Namespace, glooDiscoveryActivated bool) {
+func assertLabels(t *testing.T, labelsActual testutil.Labels, ns *Namespace, glooDiscoveryActivated bool) {
 	containsMsg := "label %q is not set"
 
-	testutils.AssertLabel(t, labelsActual, "name", ns.Name, containsMsg)
-	testutils.AssertLabel(t, labelsActual, "tier", ns.Tier.String(), containsMsg)
+	testutil.AssertLabel(t, labelsActual, "name", ns.Name, containsMsg)
+	testutil.AssertLabel(t, labelsActual, "tier", ns.Tier.String(), containsMsg)
 
 	assertGlooDiscovery(t, glooDiscoveryActivated, labelsActual)
 
 	for _, label := range ns.AdditionalLabels {
-		testutils.AssertLabel(t, labelsActual, label.Name, label.Value, containsMsg)
+		testutil.AssertLabel(t, labelsActual, label.Name, label.Value, containsMsg)
 	}
 }
 
-func assertGlooDiscovery(t *testing.T, activated bool, labelsActual testutils.Labels) {
+func assertGlooDiscovery(t *testing.T, activated bool, labelsActual testutil.Labels) {
 	containsMsgGloo := "glooDiscoveryLabel is NOT set despite glooDiscovery being activated"
 
 	if activated {
-		testutils.AssertLabel(t, labelsActual, namespaceGlooLabelKey, "enabled", containsMsgGloo)
+		testutil.AssertLabel(t, labelsActual, namespaceGlooLabelKey, "enabled", containsMsgGloo)
 	} else {
 		assert.NotContainsf(
 			t,

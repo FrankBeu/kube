@@ -1,5 +1,5 @@
 // Package testutils contains all mocks, assertions, helpers, … used for testing the libPackage
-package testutils
+package testutil
 
 import (
 	"testing"

@@ -8,7 +8,8 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/namespace"
 )
 
 var (
@@ -27,9 +28,9 @@ var (
 	// pvStorageClass0:          local-path
 	// pvStorageClass1:          local-path
 
-	namespaceGitea = &lib.Namespace{
+	namespaceGitea = &namespace.Namespace{
 		Name: name,
-		Tier: lib.NamespaceTierCommunication,
+		Tier: namespace.NamespaceTierCommunication,
 		// GlooDiscovery: true,
 	}
 )
@@ -39,7 +40,7 @@ func CreateGitea(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	domainName := subDomainName + "." + conf.Require("domain")
 
-	_, err := lib.CreateNamespace(ctx, namespaceGitea)
+	_, err := namespace.CreateNamespace(ctx, namespaceGitea)
 	if err != nil {
 		return err
 	}
@@ -71,7 +72,7 @@ func CreateGitea(ctx *pulumi.Context) error {
 			"ingress": pulumi.Map{
 				"enabled": pulumi.Bool(true),
 				"annotations": pulumi.Map{
-					"cert-manager.io/cluster-issuer": pulumi.String(lib.ClusterIssuerTypeCaLocal.String()),
+					"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
 				},
 				"hosts": pulumi.Array{
 					pulumi.String(domainName),

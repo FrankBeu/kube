@@ -8,14 +8,14 @@ import (
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/namespace"
 )
 
 var (
 	name              = "petstore"
-	namespacePetstore = &lib.Namespace{
+	namespacePetstore = &namespace.Namespace{
 		Name:          name,
-		Tier:          lib.NamespaceTierTesting,
+		Tier:          namespace.NamespaceTierTesting,
 		GlooDiscovery: true,
 	}
 )
@@ -25,7 +25,7 @@ func CreateGlooPetstore(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	domainName := name + "." + conf.Require("domain")
 
-	_, err := lib.CreateNamespace(ctx, namespacePetstore)
+	_, err := namespace.CreateNamespace(ctx, namespacePetstore)
 	if err != nil {
 		return err
 	}

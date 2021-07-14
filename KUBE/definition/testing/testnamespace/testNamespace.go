@@ -4,20 +4,20 @@ package testnamespace
 
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/namespace"
 )
 
 var (
 	name          = "test"
-	namespaceTest = &lib.Namespace{
+	namespaceTest = &namespace.Namespace{
 		Name: name,
-		Tier: lib.NamespaceTierTesting,
+		Tier: namespace.NamespaceTierTesting,
 		// GlooDiscovery: true,
 	}
 )
 
 func CreateTestNamespace(ctx *pulumi.Context) error {
-	_, err := lib.CreateNamespace(ctx, namespaceTest)
+	_, err := namespace.CreateNamespace(ctx, namespaceTest)
 	if err != nil {
 		return err
 	}

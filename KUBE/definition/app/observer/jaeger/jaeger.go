@@ -11,31 +11,33 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	jaegerv1 "thesym.site/kube/crds/jaeger/jaegertracing/v1"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/crd"
+	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/namespace"
 )
 
 func CreateJaegerOperator(ctx *pulumi.Context) error {
 	name := "jaeger"
 	subDomainName := name
 
-	namespaceJaeger := &lib.Namespace{
+	namespaceJaeger := &namespace.Namespace{
 		Name: "observability",
-		Tier: lib.NamespaceTierMonitoring,
+		Tier: namespace.NamespaceTierMonitoring,
 		// GlooDiscovery: true,
 	}
 
 	conf := config.New(ctx, "")
 	domainName := subDomainName + "." + conf.Require("domain")
 
-	_, err := lib.CreateNamespace(ctx, namespaceJaeger)
+	_, err := namespace.CreateNamespace(ctx, namespaceJaeger)
 	if err != nil {
 		return err
 	}
 
-	jaegerCrds := []lib.Crd{
+	jaegerCrds := []crd.Crd{
 		{Name: "jaeger-definition", Location: "./crds/jaeger/crdDefinitions/jaegertracing.io_jaegers_crd.yaml"},
 	}
-	err = lib.RegisterCRDs(ctx, jaegerCrds)
+	err = crd.RegisterCRDs(ctx, jaegerCrds)
 	if err != nil {
 		return err
 	}
@@ -53,7 +55,7 @@ func CreateJaegerOperator(ctx *pulumi.Context) error {
 	return nil
 }
 
-func createJaegerInstance(ctx *pulumi.Context, name string, namespace *lib.Namespace, domainName string) error {
+func createJaegerInstance(ctx *pulumi.Context, name string, namespace *namespace.Namespace, domainName string) error {
 	_, err := jaegerv1.NewJaeger(ctx, name, &jaegerv1.JaegerArgs{
 		ApiVersion: pulumi.String("jaegertracing.io/v1"),
 		Kind:       pulumi.String(strings.ToTitle(name)),
@@ -63,11 +65,24 @@ func createJaegerInstance(ctx *pulumi.Context, name string, namespace *lib.Names
 			Namespace: pulumi.String(namespace.Name),
 		},
 		Spec: jaegerv1.JaegerSpecArgs{
+			//// TODO: only working setting a default host
+			//// cf.: klo jaeger-operator-....
 			Ingress: &jaegerv1.JaegerSpecIngressArgs{
+				Annotations: pulumi.StringMap{
+					"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
+				},
 				Enabled: pulumi.Bool(true),
 				Hosts: pulumi.StringArray{
 					pulumi.String(domainName),
 				},
+				// Tls: &jaegerv1.JaegerSpecIngressTlsArray{
+				// &jaegerv1.JaegerSpecIngressTlsArgs{
+				// Hosts: pulumi.StringArray{
+				// pulumi.String(domainName),
+				// },
+				// SecretName: pulumi.String(name + "-tls"),
+				// },
+				// },
 			},
 		},
 	})
@@ -80,7 +95,7 @@ func createJaegerInstance(ctx *pulumi.Context, name string, namespace *lib.Names
 }
 
 //nolint
-func execGeneratedCode(ctx *pulumi.Context, namespace *lib.Namespace) error {
+func execGeneratedCode(ctx *pulumi.Context, namespace *namespace.Namespace) error {
 	//// CHANGES: add namespace to Dep,SA
 	_, err := rbacv1.NewClusterRole(ctx, "jaeger_operatorClusterRole", &rbacv1.ClusterRoleArgs{
 		ApiVersion: pulumi.String("rbac.authorization.k8s.io/v1"),

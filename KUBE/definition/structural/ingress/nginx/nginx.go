@@ -12,16 +12,16 @@ import (
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/namespace"
 )
 
 var (
 	ingressControllerPortHTTP  = 30080
 	ingressControllerPortHTTPS = 30443
-	namespaceNginxIngress      = &lib.Namespace{
+	namespaceNginxIngress      = &namespace.Namespace{
 		Name: "ingress-nginx",
-		Tier: lib.NamespaceTierEdge,
-		AdditionalLabels: []lib.NamespaceLabel{
+		Tier: namespace.NamespaceTierEdge,
+		AdditionalLabels: []namespace.NamespaceLabel{
 			{Name: "app.kubernetes.io/name", Value: "ingress-nginx"},
 			{Name: "app.kubernetes.io/instance", Value: "ingress-nginx"},
 		},
@@ -29,7 +29,7 @@ var (
 )
 
 func CreateNginxIngressController(ctx *pulumi.Context) error {
-	_, err := lib.CreateNamespace(ctx, namespaceNginxIngress)
+	_, err := namespace.CreateNamespace(ctx, namespaceNginxIngress)
 	if err != nil {
 		return err
 	}

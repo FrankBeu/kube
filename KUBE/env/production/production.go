@@ -6,11 +6,11 @@ import (
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/nginx"
 	"thesym.site/kube/definition/structural/monitoring/prometheus"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/config"
 )
 
 // Kube is the configuration for the productionEnvironment
-var Kube = lib.KubeConfig{
+var Kube = config.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// STRUCTURAL
 	////

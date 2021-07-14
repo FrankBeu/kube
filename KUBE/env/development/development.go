@@ -7,11 +7,12 @@ import (
 	"thesym.site/kube/definition/testing/testnamespace"
 	// "thesym.site/kube/definition/structural/monitoring/prometheus"
 	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/config"
 )
 
 // Kube is the configuration for the developmentEnvironment
 // var Kube = map[string]func(*pulumi.Context) error{
-var Kube = lib.KubeConfig{
+var Kube = config.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// STRUCTURAL
 	////

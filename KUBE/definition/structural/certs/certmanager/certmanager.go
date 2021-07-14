@@ -11,13 +11,14 @@ import (
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/crd"
 )
 
 func CreateCertmanager(ctx *pulumi.Context) error {
 	//// the default namespace created by the generated code is used unchanged
 	//nolint:lll
-	certManagerCrds := []lib.Crd{
+	certManagerCrds := []crd.Crd{
 		{Name: "certmanager-order-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-orders.acme.cert-manager.io.yaml"},
 		{Name: "certmanager-issuer-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-issuers.cert-manager.io.yaml"},
 		{Name: "certmanager-challenge-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-challenges.acme.cert-manager.io.yaml"},
@@ -26,17 +27,17 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 		{Name: "certmanager-certificate-request-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-certificaterequests.cert-manager.io.yaml"},
 	}
 	//// Register the CRD.
-	err := lib.RegisterCRDs(ctx, certManagerCrds)
+	err := crd.RegisterCRDs(ctx, certManagerCrds)
 	if err != nil {
 		return err
 	}
 
-	err = lib.CreateClusterIssuer(ctx, lib.ClusterIssuerTypeCaLocal)
+	err = certificate.CreateClusterIssuer(ctx, certificate.ClusterIssuerTypeCaLocal)
 	if err != nil {
 		return err
 	}
 
-	// err = lib.CreateClusterIssuer(ctx, lib.ClusterIssuerTypeLetsEncrypt)
+	// err = certificate.CreateClusterIssuer(ctx, certificate.ClusterIssuerTypeLetsEncrypt)
 	// if err != nil {
 	// 	return err
 	// }

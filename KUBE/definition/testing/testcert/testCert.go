@@ -5,12 +5,12 @@ import (
 	"strconv"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/certificate"
 )
 
 var (
-	exampleCert = lib.Cert{
-		ClusterIssuerType: lib.ClusterIssuerTypeCaLocal,
+	exampleCert = certificate.Cert{
+		ClusterIssuerType: certificate.ClusterIssuerTypeCaLocal,
 		Namespace:         "test",
 		Name:              "testing",
 		Duration:          strconv.Itoa(99*24) + "h",
@@ -23,7 +23,7 @@ var (
 
 // CreateTestCert creates an exampleCertificate
 func CreateTestCert(ctx *pulumi.Context) error {
-	err := lib.CreateCert(ctx, &exampleCert)
+	err := certificate.CreateCert(ctx, &exampleCert)
 	if err != nil {
 		return err
 	}

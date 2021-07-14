@@ -5,7 +5,8 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"thesym.site/kube/lib"
+	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/namespace"
 )
 
 type PromStackConfig struct {
@@ -18,9 +19,9 @@ type PromStackConfig struct {
 func CreatePrometheus(ctx *pulumi.Context) error {
 	name := "prometheus"
 
-	namespacePrometheus := &lib.Namespace{
+	namespacePrometheus := &namespace.Namespace{
 		Name: "monitoring",
-		Tier: lib.NamespaceTierCommunication,
+		Tier: namespace.NamespaceTierCommunication,
 		// GlooDiscovery: true,
 	}
 
@@ -32,7 +33,7 @@ func CreatePrometheus(ctx *pulumi.Context) error {
 	conf.RequireSecretObject("promStack", &psc)
 	grafanaAdminPw := psc.Grafana.AdminPassword
 
-	_, err := lib.CreateNamespace(ctx, namespacePrometheus)
+	_, err := namespace.CreateNamespace(ctx, namespacePrometheus)
 	if err != nil {
 		return err
 	}
@@ -51,7 +52,7 @@ func CreatePrometheus(ctx *pulumi.Context) error {
 				"ingress": pulumi.Map{
 					"enabled": pulumi.Bool(true),
 					"annotations": pulumi.Map{
-						"cert-manager.io/cluster-issuer": pulumi.String(lib.ClusterIssuerTypeCaLocal.String()),
+						"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
 					},
 					"ingressClassName": pulumi.String("nginx"),
 					"hosts": pulumi.Array{
@@ -76,7 +77,7 @@ func CreatePrometheus(ctx *pulumi.Context) error {
 				"ingress": pulumi.Map{
 					"enabled": pulumi.Bool(true),
 					"annotations": pulumi.Map{
-						"cert-manager.io/cluster-issuer": pulumi.String(lib.ClusterIssuerTypeCaLocal.String()),
+						"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
 					},
 					"ingressClassName": pulumi.String("nginx"),
 					"hosts": pulumi.Array{
@@ -108,7 +109,7 @@ func CreatePrometheus(ctx *pulumi.Context) error {
 				"ingress": pulumi.Map{
 					"enabled": pulumi.Bool(true),
 					"annotations": pulumi.Map{
-						"cert-manager.io/cluster-issuer": pulumi.String(lib.ClusterIssuerTypeCaLocal.String()),
+						"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
 					},
 					"ingressClassName": pulumi.String("nginx"),
 					"hosts": pulumi.Array{
