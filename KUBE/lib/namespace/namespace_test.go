@@ -1,26 +1,14 @@
-package lib
+package namespace
 
 import (
 	"sync"
 	"testing"
 
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
+	"thesym.site/kube/lib/testutils"
 )
-
-type labels map[string]string
-
-type mocks int
-
-func (mocks) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
-	return args.Name + "_id", args.Inputs, nil
-}
-
-func (mocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
-	return args.Args, nil
-}
 
 func TestCreateNamespace(t *testing.T) {
 	type args struct {
@@ -89,51 +77,30 @@ func TestCreateNamespace(t *testing.T) {
 				})
 
 				return nil
-			}, pulumi.WithMocks("project", "stack", mocks(0)))
+			}, pulumi.WithMocks("project", "stack", testutils.Mocks(0)))
 			assert.NoError(t, err)
 		})
 	}
 }
 
-func assertLabels(t *testing.T, labelsActual labels, ns *Namespace, glooDiscoveryActivated bool) {
+func assertLabels(t *testing.T, labelsActual testutils.Labels, ns *Namespace, glooDiscoveryActivated bool) {
 	containsMsg := "label %q is not set"
 
-	assertLabel(t, labelsActual, "name", ns.Name, containsMsg)
-	assertLabel(t, labelsActual, "tier", ns.Tier.String(), containsMsg)
+	testutils.AssertLabel(t, labelsActual, "name", ns.Name, containsMsg)
+	testutils.AssertLabel(t, labelsActual, "tier", ns.Tier.String(), containsMsg)
 
 	assertGlooDiscovery(t, glooDiscoveryActivated, labelsActual)
 
 	for _, label := range ns.AdditionalLabels {
-		assertLabel(t, labelsActual, label.Name, label.Value, containsMsg)
+		testutils.AssertLabel(t, labelsActual, label.Name, label.Value, containsMsg)
 	}
 }
 
-func assertLabel(t *testing.T, labelsActual labels, keyTarget, valueTarget, containsMsg string) {
-	if assert.Containsf(
-		t,
-		labelsActual,
-		keyTarget,
-		containsMsg,
-		keyTarget,
-	) {
-		assert.Equalf(
-			t,
-			labelsActual[keyTarget],
-			valueTarget,
-			"value of label %q should be %q, got: %q",
-			keyTarget,
-			valueTarget,
-			labelsActual[keyTarget],
-		)
-	}
-}
-
-// aasertGlooDiscovery ensures that the label responsible for the discovery is or isNot set
-func assertGlooDiscovery(t *testing.T, activated bool, labelsActual labels) {
+func assertGlooDiscovery(t *testing.T, activated bool, labelsActual testutils.Labels) {
 	containsMsgGloo := "glooDiscoveryLabel is NOT set despite glooDiscovery being activated"
 
 	if activated {
-		assertLabel(t, labelsActual, namespaceGlooLabelKey, "enabled", containsMsgGloo)
+		testutils.AssertLabel(t, labelsActual, namespaceGlooLabelKey, "enabled", containsMsgGloo)
 	} else {
 		assert.NotContainsf(
 			t,

@@ -1,5 +1,5 @@
 // Package lib bundles all types and functions for the pulumi-k8s-definition
-package lib
+package namespace
 
 import (
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"

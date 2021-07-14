@@ -1,12 +1,13 @@
-package lib
+package certificates
 
 import (
+	"strconv"
+
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	certv1 "thesym.site/kube/crds/cert-manager/certmanager/v1"
-	"strconv"
 )
 
 type ClusterIssuerType int
@@ -16,35 +17,35 @@ const (
 	ClusterIssuerTypeCaLocal            ClusterIssuerType = iota // ca-local
 	ClusterIssuerTypeLetsEncryptProd                             // letsencrypt-prod
 	ClusterIssuerTypeLetsEncryptStaging                          // letsencrypt-staging
+
+	defaultDurationInDays = 90
 )
 
 type Cert struct {
-	ClusterIssuerType  ClusterIssuerType
-	Namespace          string
+	ClusterIssuerType ClusterIssuerType
+	Namespace         string
 	// name is also used as subdomainName
-	Name               string
+	Name string
 	// optional: default Duration is set to 90d
-	Duration           string
+	Duration string
 	// optional:
 	AdditionalSubdomainNames []string
 }
 
 func CreateCert(ctx *pulumi.Context, cert *Cert) error {
-	//// defaultDuration: 90 days
 	if cert.Duration == "" {
-		cert.Duration = strconv.Itoa(90*24) + "h"
+		cert.Duration = strconv.Itoa(defaultDurationInDays*24) + "h"
 	}
 
 	conf := config.New(ctx, "")
 	domainNameSuffix := "." + conf.Require("domain")
 	domainName := cert.Name + domainNameSuffix
 
-
-	dnsNames  := pulumi.StringArray{
+	dnsNames := pulumi.StringArray{
 		pulumi.String(domainName),
 	}
 	for _, subdomainName := range cert.AdditionalSubdomainNames {
-		dnsNames = append(dnsNames, pulumi.String(subdomainName + domainNameSuffix))
+		dnsNames = append(dnsNames, pulumi.String(subdomainName+domainNameSuffix))
 	}
 
 	_, err := certv1.NewCertificate(ctx, cert.Name, &certv1.CertificateArgs{
@@ -57,7 +58,7 @@ func CreateCert(ctx *pulumi.Context, cert *Cert) error {
 			Duration:    pulumi.String(cert.Duration),
 			RenewBefore: pulumi.String("360h"),
 			CommonName:  pulumi.String(domainName),
-			DnsNames: dnsNames,
+			DnsNames:    dnsNames,
 			IssuerRef: certv1.CertificateSpecIssuerRefArgs{
 				Name: pulumi.String(cert.ClusterIssuerType.String()),
 				//// currently only ClusterIssuers are used

@@ -1,4 +1,4 @@
-package lib
+package debug
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ func (t *DebugingTimeoutError) Error() string {
 	return "reached DebuggingTimeout"
 }
 
-// RunInDebugMode enables attaching delve to a currently running pulumi-process
+// RunInDebugMode enables attaching delve to the currently running pulumi-process
 // 1. !!! set BreakPoint inside RunInDebugMode !!! otherwise you will get an 'LSP :: There is no stopped thread?"
 // 2. `p{,S,PROD} up -c debugMode=true`
 // 3. start delve (attach to executable) with pulumi-main's pID
