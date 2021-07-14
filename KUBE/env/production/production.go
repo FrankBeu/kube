@@ -44,6 +44,7 @@ var Kube = config.KubeConfig{
 	//// COMMUNICATION
 	////
 	// "jitsi": jitsi.CreateJitsi,
+	// "matrix": matrix.CreateMatrix,
 
 	//////////////////////// ////////////////////////
 	//// OBSERVING

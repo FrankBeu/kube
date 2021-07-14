@@ -55,7 +55,7 @@ var Kube = config.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// COMMUNICATION
 	////
-	"jitsi": jitsi.CreateJitsi,
+	"jitsi":  jitsi.CreateJitsi,
 	"matrix": matrix.CreateMatrix,
 
 	////////////////////////
@@ -79,7 +79,7 @@ var Kube = config.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// TESTS, PROTOS, ...
 	////
-	"testCert": testcert.CreateTestCert,
+	"testCert":    testcert.CreateTestCert,
 	"testIngress": testingress.CreateTestIngress,
 
 	"glooPetstore": petstore.CreateGlooPetstore,

@@ -2,11 +2,10 @@
 package development
 
 import (
-	"thesym.site/kube/definition/structural/certs/certmanager"
-	"thesym.site/kube/definition/structural/ingress/nginx"
-	"thesym.site/kube/definition/testing/testnamespace"
+	// "thesym.site/kube/definition/app/communication/matrix"
 	// "thesym.site/kube/definition/structural/monitoring/prometheus"
-	"thesym.site/kube/lib"
+	// "thesym.site/kube/definition/testing/testnamespace"
+	"thesym.site/kube/definition/testing/testnamespace"
 	"thesym.site/kube/lib/config"
 )
 
@@ -19,7 +18,7 @@ var Kube = config.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// Ingress
 	////
-	"nginxIngress": nginx.CreateNginxIngressController,
+	// "nginxIngress": nginx.CreateNginxIngressController,
 
 	//// installation working; crd-usage not
 	// "emmissary": emmissary.CreateEmmissary,
@@ -31,7 +30,7 @@ var Kube = config.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// certificates
 	////
-	"certmanager": certmanager.CreateCertmanager,
+	// "certmanager": certmanager.CreateCertmanager,
 
 	//////////////////////// ////////////////////////
 	//// MONITORING
@@ -46,6 +45,7 @@ var Kube = config.KubeConfig{
 	//// COMMUNICATION
 	////
 	// "jitsi": jitsi.CreateJitsi,
+	// "matrix": matrix.CreateMatrix,
 
 	////////////////////////
 	//// OBSERVING
