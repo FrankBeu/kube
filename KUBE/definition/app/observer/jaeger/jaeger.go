@@ -9,25 +9,24 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	jaegerv1 "thesym.site/kube/crds/jaeger/jaegertracing/v1"
-	"thesym.site/kube/lib/crd"
 	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/crd"
+	"thesym.site/kube/lib/ingress"
+
+	// "thesym.site/kube/lib/certificate"
+	// "thesym.site/kube/lib/ingress"
 	"thesym.site/kube/lib/namespace"
 )
 
 func CreateJaegerOperator(ctx *pulumi.Context) error {
 	name := "jaeger"
-	subDomainName := name
 
 	namespaceJaeger := &namespace.Namespace{
 		Name: "observability",
 		Tier: namespace.NamespaceTierMonitoring,
 		// GlooDiscovery: true,
 	}
-
-	conf := config.New(ctx, "")
-	domainName := subDomainName + "." + conf.Require("domain")
 
 	_, err := namespace.CreateNamespace(ctx, namespaceJaeger)
 	if err != nil {
@@ -47,43 +46,46 @@ func CreateJaegerOperator(ctx *pulumi.Context) error {
 		return err
 	}
 
-	err = createJaegerInstance(ctx, name, namespaceJaeger, domainName)
+	err = createJaegerInstance(ctx, name, namespaceJaeger)
 
 	if err != nil {
 		return err
 	}
+
+	//// the operator will only create an ingress which acts as default ingress
+	//// workaround till upstream is fixed
+	ing := ingress.Config{
+		// Annotations:       map[string]pulumi.StringInput{},
+		ClusterIssuerType: certificate.ClusterIssuerTypeCaLocal,
+		Hosts: []ingress.Host{
+			{
+				Name:        name,
+				ServiceName: "jaeger-query",
+				ServicePort: 16686,
+			},
+		},
+		IngressClassName: ingress.IngressClassNameNginx,
+		Name:             name,
+		NamespaceName:    namespaceJaeger.Name,
+		TLS:              true,
+	}
+
+	_, err = ingress.CreateIngress(ctx, &ing)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func createJaegerInstance(ctx *pulumi.Context, name string, namespace *namespace.Namespace, domainName string) error {
+func createJaegerInstance(ctx *pulumi.Context, name string, nameSpace *namespace.Namespace) error {
 	_, err := jaegerv1.NewJaeger(ctx, name, &jaegerv1.JaegerArgs{
 		ApiVersion: pulumi.String("jaegertracing.io/v1"),
 		Kind:       pulumi.String(strings.ToTitle(name)),
-		// Metadata:   &getambassadorv2.HostMetadataArgs{},
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(name),
-			Namespace: pulumi.String(namespace.Name),
-		},
-		Spec: jaegerv1.JaegerSpecArgs{
-			//// TODO: only working setting a default host
-			//// cf.: klo jaeger-operator-....
-			Ingress: &jaegerv1.JaegerSpecIngressArgs{
-				Annotations: pulumi.StringMap{
-					"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
-				},
-				Enabled: pulumi.Bool(true),
-				Hosts: pulumi.StringArray{
-					pulumi.String(domainName),
-				},
-				// Tls: &jaegerv1.JaegerSpecIngressTlsArray{
-				// &jaegerv1.JaegerSpecIngressTlsArgs{
-				// Hosts: pulumi.StringArray{
-				// pulumi.String(domainName),
-				// },
-				// SecretName: pulumi.String(name + "-tls"),
-				// },
-				// },
-			},
+			Namespace: pulumi.String(nameSpace.Name),
 		},
 	})
 
