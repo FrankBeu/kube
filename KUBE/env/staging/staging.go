@@ -8,6 +8,7 @@ import (
 	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/nginx"
+	"thesym.site/kube/definition/structural/monitoring/loki"
 
 	// "thesym.site/kube/definition/structural/monitoring/prometheus"
 	"thesym.site/kube/definition/testing/gloo/petstore"
@@ -42,6 +43,7 @@ var Kube = config.KubeConfig{
 	//// MONITORING
 	////
 	// "prometheus": prometheus.CreatePrometheus,
+	"loki": loki.CreateLoki,
 
 	//////////////////////// //////////////////////// ////////////////////////
 	//// APPS

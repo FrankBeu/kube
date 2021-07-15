@@ -32,6 +32,7 @@ func TestDomainNameSuffix(t *testing.T) {
 			ctx, err := pulumi.NewContext(context.Background(), pulumi.RunInfo{
 				Config: map[string]string{
 					":domain": tt.args.domain,
+					//// ":domain.subkey": subdomain,
 				},
 			})
 			if err != nil {

@@ -18,3 +18,17 @@ func DomainNameSuffix(ctx *pulumi.Context) (domainNameSuffix string) {
 	domainNameSuffix = "." + conf.Require("domain")
 	return
 }
+
+type grafana struct {
+	AdminPassword string
+}
+
+func GrafanaAdminPassword(ctx *pulumi.Context) (grafanaAdminPw string) {
+	var g grafana
+	conf := config.New(ctx, "")
+	conf.RequireSecretObject("grafana", &g)
+
+	grafanaAdminPw = g.AdminPassword
+
+	return
+}

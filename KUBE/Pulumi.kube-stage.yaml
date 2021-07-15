@@ -9,6 +9,9 @@ config:
   kube:debugMode: "false"
   kube:domain: stage.thesym.site
   kube:env: stage
+  kube:grafana:
+    adminPassword:
+      secure: v1:0iSo9GmRkPvjABBl:Wk+3GKIvpW0AzqOKpGcuFyJ4z6RHvQ+9MdRDdhxDGs9Pvzqj9zMDpA==
   kube:promStack:
     grafana:
       adminPassword:
