@@ -19,6 +19,12 @@ func DomainNameSuffix(ctx *pulumi.Context) (domainNameSuffix string) {
 	return
 }
 
+func Env(ctx *pulumi.Context) (env string) {
+	conf := config.New(ctx, "")
+	env = conf.Require("env")
+	return
+}
+
 type grafana struct {
 	AdminPassword string
 }

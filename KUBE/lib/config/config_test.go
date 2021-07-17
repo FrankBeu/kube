@@ -45,3 +45,41 @@ func TestDomainNameSuffix(t *testing.T) {
 		})
 	}
 }
+
+func TestEnv(t *testing.T) {
+	type args struct {
+		env string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantEnv string
+	}{
+		{
+			name:    "dev",
+			args:    args{env: "dev"},
+			wantEnv: "dev",
+		},
+		{
+			name:    "prod",
+			args:    args{env: "prod"},
+			wantEnv: "prod",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, err := pulumi.NewContext(context.Background(), pulumi.RunInfo{
+				Config: map[string]string{
+					":env": tt.args.env,
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if gotEnv := Env(ctx); gotEnv != tt.wantEnv {
+				t.Errorf("Env() = %v, want %v", gotEnv, tt.wantEnv)
+			}
+		})
+	}
+}

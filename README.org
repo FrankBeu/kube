@@ -95,6 +95,19 @@ use k3s
 *** production
 **** TODO k3s
 *** TODO persistence
+**** dev / staging k3d
+#+begin_src shell :results drawer
+ mkdir -p $XDG_STATE_HOME/kube/development
+ mkdir -p $XDG_STATE_HOME/kube/staging
+#+end_src
+**** stage k3s
+#+begin_src shell :results drawer
+ sudo mkdir -p /srv/kube/staging
+#+end_src
+**** prod k3s
+#+begin_src shell :results drawer
+sudo mkdir -p /srv/kube/production
+#+end_src
 ** environments
 each env needs an stack initialized using the right aliases
 *** env
