@@ -424,6 +424,7 @@ http://localhost:8080/api/pets
 *** APP
 **** vcs
 ***** gitea                                                            :helm:
+****** !!!! persistence needs 777 on =gitea/db=
 ****** helm
 https://gitea.com/gitea/helm-chart/
 #+begin_src shell :results drawer

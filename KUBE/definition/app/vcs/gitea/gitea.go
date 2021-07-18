@@ -10,6 +10,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/namespace"
+	"thesym.site/kube/lib/persistence"
 )
 
 var (
@@ -33,9 +34,30 @@ var (
 		Tier: namespace.NamespaceTierCommunication,
 		// GlooDiscovery: true,
 	}
+
+	persistentDataConfig = &persistence.Config{
+		//// pv, err := corev1.NewPersistentVolume(ctx, "gitea_dataPersistentVolume", &corev1.PersistentVolumeArgs{
+		Name:                  "gitea-data",
+		StorageClass:          persistence.StorageClassLocalPath,
+		Capacity:              "10Gi",
+		AccessMode:            persistence.AccessModeRWO,
+		PersistencePathSuffix: "gitea/data",
+		NamespaceName:         namespaceGitea.Name,
+	}
+	//// claim created via helm
+	persistentDBConfig = &persistence.Config{
+		//// pv, err = corev1.NewPersistentVolume(ctx, "data_gita_postgresql_0PersistentVolume", &corev1.PersistentVolumeArgs{
+		Name:                  "data-gitea-postgresql-0",
+		StorageClass:          persistence.StorageClassLocalPath,
+		Capacity:              "10Gi",
+		AccessMode:            persistence.AccessModeRWO,
+		PersistencePathSuffix: "gitea/db",
+		NamespaceName:         namespaceGitea.Name,
+	}
 )
 
 //nolint:funlen
+// CreateGitea creates a gitea instance via helm
 func CreateGitea(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	domainName := subDomainName + "." + conf.Require("domain")
@@ -44,6 +66,12 @@ func CreateGitea(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
+
+	err = createPersistence(ctx)
+	if err != nil {
+		return err
+	}
+
 	_, err = helm.NewChart(ctx, "gitea", helm.ChartArgs{
 		// `helm repo add gitea-charts https://dl.gitea.io/charts/`
 		Repo:      pulumi.String("gitea-charts"),
@@ -59,6 +87,7 @@ func CreateGitea(ctx *pulumi.Context) error {
 		// },
 		// helm show values gitea-charts/gitea
 		Values: pulumi.Map{
+
 			"gitea": pulumi.Map{
 				"config": pulumi.Map{
 					"APP_NAME": pulumi.String(strings.Title(name)),
@@ -92,9 +121,9 @@ func CreateGitea(ctx *pulumi.Context) error {
 				},
 			},
 			// --set persistence.existingClaim={{.pvName0}} \
-			// "persistence": pulumi.Map{
-			// "existingClaim": pulumi.String(pvNameData),
-			// },
+			"persistence": pulumi.Map{
+				"existingClaim": pulumi.String(persistentDataConfig.Name),
+			},
 		},
 		Transformations: []yaml.Transformation{
 			func(state map[string]interface{}, opts ...pulumi.ResourceOption) {
@@ -148,6 +177,25 @@ func CreateGitea(ctx *pulumi.Context) error {
 			},
 		},
 	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createPersistence(ctx *pulumi.Context) error {
+	_, err := persistence.CreatePersistentVolume(ctx, persistentDataConfig)
+	if err != nil {
+		return err
+	}
+
+	_, err = persistence.CreatePersistentVolumeClaim(ctx, persistentDataConfig)
+	if err != nil {
+		return err
+	}
+
+	_, err = persistence.CreatePersistentVolume(ctx, persistentDBConfig)
 	if err != nil {
 		return err
 	}
