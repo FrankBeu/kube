@@ -90,8 +90,8 @@ protects a password for each env
 *** staging
 **** view =./KUBE/Taskfile.yml=
 ~clusterCreateStage~
-**** TODO should match production
-use k3s
+**** should match production
+***** k3s needs swap disabled -> use k3d
 *** production
 **** TODO k3s
 *** TODO persistence
@@ -166,7 +166,7 @@ The k3d-server-layer must be traversed by  portMapping, too,
 *** think of ENV - not of config - *.go is your config* now
 *** RESIST
 **** the urge to write a config.yaml
-***** never import viper
+***** never import viper or packagesSimilar
 ***** again: golang is the config
 pulumi the app
 *** settings
@@ -196,7 +196,7 @@ pulumi config set domain "stage.thesym.site"
 #+begin_example shell
 pulumi config set env "stage"
 #+end_example
-** architecture
+** KUBE
 *** CRDS
 **** all ~crd2pulumi~ created crds
 **** yaml-definitions
@@ -362,6 +362,7 @@ needs proxy -> nginx -> use nginx as ingressController
 [[file:./RESOURCES/definition/structural/certs/certmanager/issuer/ca-local/README.org][ClusterIssuer-Readme.org]]
 **** monitoring
 ***** loki
+https://grafana.com/docs/loki/latest/installation/helm/
 ***** prometheus
 https://github.com/prometheus-operator/prometheus-operator#prometheus-operator-vs-kube-prometheus-vs-community-helm-chart
 ****** helm-chart
@@ -402,6 +403,12 @@ https://github.com/prometheus-operator/kube-prometheus#installing
 **** TODO unify clusterWide grafana
 - loki
 - prometheus
+***** datasources
+as configMaps
+#+begin_src shell :results drawer
+helm search repo grafana
+helm show values grafana/grafana
+#+end_src
 *** TESTING
 **** gloo
 #+begin_src shell :results drawer
@@ -705,7 +712,7 @@ for multi node experiments
 *** TODO testing, testing, testing
 **** after coms + vcs
 **** !!!
-**** unit tests
+**** DONE unit tests
 ***** only for lib
 **** "integrationTests"
 ***** goldenFiles
@@ -718,7 +725,7 @@ for multi node experiments
 ***** pulumi
 **** end2end
 ***** check if definedServices are available
-*** architecture
+*** TODO architecture
 **** all function should be pure
 ***** except Create.....()
 ***** TODO package config???
@@ -733,4 +740,12 @@ for multi node experiments
 https://kubernetes.io/docs/concepts/services-networking/ingress/#single-service-ingress
 *** TODO nginx
 **** use helm-chart
-is the default way to install nginx
+*** TODO loki
+**** colorize logs
+#+begin_src shell :results drawer
+helm show values grafana/promtail
+#+end_src
+**** systemdScraper
+***** nuc
+***** mac
+
