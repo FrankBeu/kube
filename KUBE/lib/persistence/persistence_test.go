@@ -90,13 +90,6 @@ func TestCreatePersistentVolume(t *testing.T) {
 					metaActual := *all[2].(*metav1.ObjectMeta)
 					specActual := *all[3].(*corev1.PersistentVolumeSpec)
 
-					// testutil.PrintJSONpretty(metaActual)
-					// testutil.PrintJSONpretty(specActual)
-					// testutil.PrintJSONpretty(specActual.HostPath["Path"])
-					// testutil.PrintJSONpretty(specActual.HostPath.Path)
-					// fmt.Printf("%T", specActual.HostPath.Path)
-					// fmt.Printf("%T", specActual.HostPath.Path)
-
 					testutil.Equalf(t, "PersistentVolume", "ApiVersion", apivActual, persistentVolumeAPIVersion) //// v1 is always set
 					testutil.Equalf(t, "PersistentVolume", "Kind", kindActual, persistentVolumeKind)             //// PersistentVolume is always set
 					testutil.Equalf(t, "PersistentVolume", "Name", *metaActual.Name, tt.args.persistenceConfig.Name)
@@ -143,8 +136,8 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 					testutil.Equalf(t, "PersistentVolumeClaim", "Namespace", *metaActual.Namespace, tt.args.persistenceConfig.NamespaceName)
 					testutil.Equalf(t, "PersistentVolumeClaim", "Spec.VolumeName", *specActual.VolumeName, tt.args.persistenceConfig.Name)
 					testutil.Equalf(t, "PersistentVolumeClaim", "Spec.StorageClass", *specActual.StorageClassName, tt.args.persistenceConfig.StorageClass.String())
-					testutil.Containsf(t, "PersistentVolumeClaim", "Spec.AccessMode", specActual.AccessModes, tt.args.persistenceConfig.AccessMode.String())
 					testutil.Equalf(t, "PersistentVolumeClaim", "Spec.Resources.Requiests.storage", specActual.Resources.Requests["storage"], tt.args.persistenceConfig.Capacity)
+					testutil.Containsf(t, "PersistentVolumeClaim", "Spec.AccessMode", specActual.AccessModes, tt.args.persistenceConfig.AccessMode.String())
 
 					wg.Done()
 					return nil

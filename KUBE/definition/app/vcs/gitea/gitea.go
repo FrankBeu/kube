@@ -13,30 +13,22 @@ import (
 	"thesym.site/kube/lib/persistence"
 )
 
+type giteaSecret struct {
+	PostgresqlPassword string
+	PostgresqlUsername string
+}
+
 var (
 	name = "gitea"
 	// subDomainName = "git"
 	subDomainName = name
 
-	// pvNameData = name + "-data"
-
-	// pvName0:                  "{{.name}}-data"
-	// pvName1:                  "data-{{.name}}-postgresql-0"
-	// pvRelativePath0:          "{{.name}}/data"
-	// pvRelativePath1:          "{{.name}}/db"
-	// pvStorageSize0:           10Gi
-	// pvStorageSize1:           10Gi
-	// pvStorageClass0:          local-path
-	// pvStorageClass1:          local-path
-
 	namespaceGitea = &namespace.Namespace{
 		Name: name,
 		Tier: namespace.NamespaceTierCommunication,
-		// GlooDiscovery: true,
 	}
 
 	persistentDataConfig = &persistence.Config{
-		//// pv, err := corev1.NewPersistentVolume(ctx, "gitea_dataPersistentVolume", &corev1.PersistentVolumeArgs{
 		Name:                  "gitea-data",
 		StorageClass:          persistence.StorageClassLocalPath,
 		Capacity:              "10Gi",
@@ -44,9 +36,8 @@ var (
 		PersistencePathSuffix: "gitea/data",
 		NamespaceName:         namespaceGitea.Name,
 	}
-	//// claim created via helm
+	//// claim will be created via helm
 	persistentDBConfig = &persistence.Config{
-		//// pv, err = corev1.NewPersistentVolume(ctx, "data_gita_postgresql_0PersistentVolume", &corev1.PersistentVolumeArgs{
 		Name:                  "data-gitea-postgresql-0",
 		StorageClass:          persistence.StorageClassLocalPath,
 		Capacity:              "10Gi",
@@ -72,6 +63,14 @@ func CreateGitea(ctx *pulumi.Context) error {
 		return err
 	}
 
+	var gs giteaSecret
+	conf.RequireSecretObject("giteaSecret", &gs)
+	postgresqlPassword := pulumi.String(gs.PostgresqlPassword)
+	postgresqlUsername := pulumi.String(gs.PostgresqlUsername)
+
+	_ = postgresqlPassword
+	_ = postgresqlUsername
+
 	_, err = helm.NewChart(ctx, "gitea", helm.ChartArgs{
 		// `helm repo add gitea-charts https://dl.gitea.io/charts/`
 		Repo:      pulumi.String("gitea-charts"),
@@ -81,11 +80,6 @@ func CreateGitea(ctx *pulumi.Context) error {
 		//// APIVersion is NOT working: https://github.com/pulumi/pulumi-kubernetes/issues/1034
 		//// use Transformations instead
 		APIVersions: pulumi.StringArray{pulumi.String("networking.k8s.io/v1")},
-		// TODO: test if `helm repo add ...` is necessary
-		// FetchArgs: &helm.FetchArgs{
-		// Repo: pulumi.String("https://dl.gitea.io/charts/"),
-		// },
-		// helm show values gitea-charts/gitea
 		Values: pulumi.Map{
 
 			"gitea": pulumi.Map{
@@ -120,9 +114,16 @@ func CreateGitea(ctx *pulumi.Context) error {
 					"cpu": pulumi.String("10m"), // resources.requests.cpu=10m
 				},
 			},
-			// --set persistence.existingClaim={{.pvName0}} \
 			"persistence": pulumi.Map{
 				"existingClaim": pulumi.String(persistentDataConfig.Name),
+			},
+			"postgresql": pulumi.Map{
+				"global": pulumi.Map{
+					"postgresql": pulumi.Map{
+						"postgresqlUsername": postgresqlUsername,
+						"postgresqlPassword": postgresqlPassword,
+					},
+				},
 			},
 		},
 		Transformations: []yaml.Transformation{

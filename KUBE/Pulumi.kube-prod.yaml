@@ -10,6 +10,11 @@ config:
   kube:domain: thesym.site
   kube:env: prod
   kube:grafana:
+  kube:giteaSecret:
+    postgresqlPassword:
+      secure: v1:B5V8mY8VOm1TKFXB:WSzoFO5SXfOpbz9HEbLiGDxnjuh0ve6ZZRhX0YRcBQxLT100u6N1pw==
+    postgresqlUsername:
+      secure: v1:1zw4A1o8S7QYlXdY:CWLP9wRaIMzSRxlR4jRFP6yUtiV6
     adminPassword:
       secure: v1:I8G/1YFaVvn2/A7I:mymZFA/HXeUeNIE11kkzWUajRfrqV1aoXIiaIw0DwtUz5yn1Wabi6g==
   kube:promStack:

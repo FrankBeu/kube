@@ -3,7 +3,7 @@ package staging
 
 import (
 	// "thesym.site/kube/definition/app/communication/jitsi"
-	"thesym.site/kube/definition/app/communication/matrix"
+	// "thesym.site/kube/definition/app/communication/matrix"
 	"thesym.site/kube/definition/app/observer/jaeger"
 	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
@@ -11,8 +11,8 @@ import (
 	"thesym.site/kube/definition/structural/monitoring/loki"
 
 	// "thesym.site/kube/definition/structural/monitoring/prometheus"
-	"thesym.site/kube/definition/testing/gloo/petstore"
-	"thesym.site/kube/definition/testing/testingress"
+	// "thesym.site/kube/definition/testing/gloo/petstore"
+	// "thesym.site/kube/definition/testing/testingress"
 	"thesym.site/kube/definition/testing/testnamespace"
 	"thesym.site/kube/lib/config"
 )
@@ -53,7 +53,7 @@ var Kube = config.KubeConfig{
 	//// COMMUNICATION
 	////
 	// "jitsi": jitsi.CreateJitsi,
-	"matrix": matrix.CreateMatrix,
+	// "matrix": matrix.CreateMatrix,
 
 	//////////////////////// ////////////////////////
 	//// OBSERVING
@@ -77,9 +77,9 @@ var Kube = config.KubeConfig{
 	//// TESTS, PROTOS, ...
 	////
 	// "testCert": testcert.CreateTestCert,
-	"testIngress": testingress.CreateTestIngress,
+	// "testIngress": testingress.CreateTestIngress,
 
-	"glooPetstore": petstore.CreateGlooPetstore,
+	// "glooPetstore": petstore.CreateGlooPetstore,
 
 	// "fileSingle": pulumiexamples.CreateFromFileSingle,
 	// "filesMulti": pulumiexamples.CreateFromFilesMulti,
