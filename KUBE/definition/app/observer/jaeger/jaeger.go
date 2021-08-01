@@ -13,9 +13,6 @@ import (
 	"thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/crd"
 	"thesym.site/kube/lib/ingress"
-
-	// "thesym.site/kube/lib/certificate"
-	// "thesym.site/kube/lib/ingress"
 	"thesym.site/kube/lib/namespace"
 )
 
@@ -56,7 +53,7 @@ func CreateJaegerOperator(ctx *pulumi.Context) error {
 	//// workaround till upstream is fixed
 	ing := ingress.Config{
 		// Annotations:       map[string]pulumi.StringInput{},
-		ClusterIssuerType: certificate.ClusterIssuerTypeCaLocal,
+		ClusterIssuerType: certificate.ClusterIssuerTypeCALocal,
 		Hosts: []ingress.Host{
 			{
 				Name:        name,

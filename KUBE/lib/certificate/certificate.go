@@ -14,9 +14,9 @@ type ClusterIssuerType int
 
 //go:generate stringer -type=ClusterIssuerType -linecomment
 const (
-	ClusterIssuerTypeCaLocal            ClusterIssuerType = iota // ca-local
-	ClusterIssuerTypeLetsEncryptProd                             // letsencrypt-prod
+	ClusterIssuerTypeCALocal            ClusterIssuerType = iota // ca-local
 	ClusterIssuerTypeLetsEncryptStaging                          // letsencrypt-staging
+	ClusterIssuerTypeLetsEncryptProd                             // letsencrypt-prod
 
 	defaultDurationInDays = 90
 )

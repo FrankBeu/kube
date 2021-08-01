@@ -8,14 +8,14 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[ClusterIssuerTypeCaLocal-0]
-	_ = x[ClusterIssuerTypeLetsEncryptProd-1]
-	_ = x[ClusterIssuerTypeLetsEncryptStaging-2]
+	_ = x[ClusterIssuerTypeCALocal-0]
+	_ = x[ClusterIssuerTypeLetsEncryptStaging-1]
+	_ = x[ClusterIssuerTypeLetsEncryptProd-2]
 }
 
-const _ClusterIssuerType_name = "ca-localletsencrypt-prodletsencrypt-staging"
+const _ClusterIssuerType_name = "ca-localletsencrypt-stagingletsencrypt-prod"
 
-var _ClusterIssuerType_index = [...]uint8{0, 8, 24, 43}
+var _ClusterIssuerType_index = [...]uint8{0, 8, 27, 43}
 
 func (i ClusterIssuerType) String() string {
 	if i < 0 || i >= ClusterIssuerType(len(_ClusterIssuerType_index)-1) {

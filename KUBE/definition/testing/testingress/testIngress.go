@@ -25,7 +25,7 @@ func CreateTestIngress(ctx *pulumi.Context) error {
 
 	ing := ingress.Config{
 		// Annotations:       map[string]pulumi.StringInput{},
-		ClusterIssuerType: certificate.ClusterIssuerTypeCaLocal,
+		ClusterIssuerType: certificate.ClusterIssuerTypeCALocal,
 		Hosts: []ingress.Host{
 			{
 				Name:        name,

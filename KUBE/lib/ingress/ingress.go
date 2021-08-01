@@ -47,7 +47,7 @@ func CreateIngress(ctx *pulumi.Context, ing *Config) (*networkingv1.Ingress, err
 	//// TLS annotation
 	annotations := pulumi.StringMap{}
 	if ing.TLS {
-		annotations["cert-manager.io/cluster-issuer"] = pulumi.String(cert.ClusterIssuerTypeCaLocal.String())
+		annotations["cert-manager.io/cluster-issuer"] = pulumi.String(cert.ClusterIssuerTypeCALocal.String())
 	}
 	for k, v := range ing.Annotations {
 		annotations[k] = v

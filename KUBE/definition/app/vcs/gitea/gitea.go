@@ -97,7 +97,7 @@ func CreateGitea(ctx *pulumi.Context) error {
 			"ingress": pulumi.Map{
 				"enabled": pulumi.Bool(true),
 				"annotations": pulumi.Map{
-					"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCaLocal.String()),
+					"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCALocal.String()),
 				},
 				"hosts": pulumi.Array{
 					pulumi.String(domainName),

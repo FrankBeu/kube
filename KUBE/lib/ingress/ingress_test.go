@@ -250,7 +250,7 @@ func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.Ing
 func assertAnnotations(t *testing.T, tlsEnabled bool, annotationsActual map[string]string, annotationsTarget pulumi.StringMap) {
 	if tlsEnabled {
 		containsMsg := "TLS: annotation %q is not set"
-		testutil.AssertAnnotation(t, annotationsActual, tlsAnnotationKey, pulumi.String(cert.ClusterIssuerTypeCaLocal.String()), containsMsg)
+		testutil.AssertAnnotation(t, annotationsActual, tlsAnnotationKey, pulumi.String(cert.ClusterIssuerTypeCALocal.String()), containsMsg)
 	} else {
 		assert.NotContainsf(
 			t,

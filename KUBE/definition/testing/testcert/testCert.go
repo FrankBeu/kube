@@ -10,7 +10,7 @@ import (
 
 var (
 	exampleCert = certificate.Cert{
-		ClusterIssuerType: certificate.ClusterIssuerTypeCaLocal,
+		ClusterIssuerType: certificate.ClusterIssuerTypeCALocal,
 		Namespace:         "test",
 		Name:              "testing",
 		Duration:          strconv.Itoa(99*24) + "h",
