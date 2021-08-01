@@ -1,6 +1,7 @@
 package certificate
 
 import (
+	"errors"
 	"strconv"
 
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
@@ -8,6 +9,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	certv1 "thesym.site/kube/crds/cert-manager/certmanager/v1"
+	"thesym.site/kube/lib/kubeConfig"
 )
 
 type ClusterIssuerType int
@@ -34,11 +36,11 @@ type Cert struct {
 
 func CreateCert(ctx *pulumi.Context, cert *Cert) error {
 	if cert.Duration == "" {
+		//nolint:gomnd
 		cert.Duration = strconv.Itoa(defaultDurationInDays*24) + "h"
 	}
 
-	conf := config.New(ctx, "")
-	domainNameSuffix := "." + conf.Require("domain")
+	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
 	domainName := cert.Name + domainNameSuffix
 
 	dnsNames := pulumi.StringArray{
@@ -81,101 +83,104 @@ type CaSecret struct {
 }
 
 // createClusterIssuer creates an internal clusterIssuer with a local CA or an letsencrypt based issuer
-func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType) error {
-	clusterIssuerSpec := &certv1.ClusterIssuerSpecArgs{}
+//nolint:lll
+func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass string) (*certv1.ClusterIssuer, error) {
+	adminEmail := kubeConfig.AdminEmail(ctx)
 
-	if clusterIssuerType == ClusterIssuerTypeCaLocal {
-		clusterIssuerSecretName := clusterIssuerType.String()
-		conf := config.New(ctx, "")
-		var ca CaSecret
-		conf.RequireSecretObject("certManager", &ca)
-
-		_, err := corev1.NewSecret(ctx, clusterIssuerType.String(), &corev1.SecretArgs{
-			Data: pulumi.StringMap{
-				"tls.crt": pulumi.String(ca.CA.Crt),
-				"tls.key": pulumi.String(ca.CA.Key),
-			},
-			Metadata: &metav1.ObjectMetaArgs{
-				Name:      pulumi.String(clusterIssuerSecretName),
-				Namespace: pulumi.String("cert-manager"),
-			},
-		})
+	if clusterIssuerType == ClusterIssuerTypeCALocal {
+		err := createCALocalSecret(ctx, clusterIssuerType)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		clusterIssuerSpec = &certv1.ClusterIssuerSpecArgs{
-			Ca: &certv1.ClusterIssuerSpecCaArgs{
-				// CrlDistributionPoints: []string{},
-				// OcspServers:           []string{},
-				SecretName: pulumi.String(clusterIssuerSecretName),
-			},
-		}
-	} else if clusterIssuerType == ClusterIssuerTypeLetsEncryptProd {
-		clusterIssuerSpec = &certv1.ClusterIssuerSpecArgs{
-			Acme: &certv1.ClusterIssuerSpecAcmeArgs{
-
-				// TODO:
-				// Status: nil,
-				// apiVersion: cert-manager.io/v1
-				// kind: ClusterIssuer
-				// metadata:
-				//   name: letsencrypt-prod
-				// spec:
-				//   acme:
-				//     email: {{.hostAcmeEmail}}
-				//     server: https://acme-v02.api.letsencrypt.org/directory
-				//     privateKeySecretRef:
-				//       name: letsencrypt-prod
-				//     solvers:
-				//     - http01:
-				//         ingress:
-				//           class: nginx
-				//       selector: {}
-			},
-		}
-	} else if clusterIssuerType == ClusterIssuerTypeLetsEncryptStaging {
-
-		//////////////////////////////////////////////////////////////
-		// hostApply:
-		//   desc: apply the host for {{.name}}
-		//   cmds:
-		//     - |
-		//       cat <<EOF | kubectl apply -f -
-		//       apiVersion: getambassador.io/v2
-		//       kind: Host
-		//       metadata:
-		//         name: {{.name}}
-		//         namespace: ambassador-hosts
-		//       spec:
-		//         hostname: {{.domainName}}
-		//         acmeProvider:
-		//           {{- if .hostCertStaging }}
-		//           authority: https://acme-staging-v02.api.letsencrypt.org/directory
-		//           {{- else}}
-		//           authority: https://acme-v02.api.letsencrypt.org/directory
-		//           {{- end}}
-		//           email: {{.hostAcmeEmail}}
-		//           privateKeySecret:
-		//             name: {{.name}}{{- if .hostCertStaging }}Staging{{- end}}-key
-		//         tlsSecret:
-		//           name: {{.name}}{{- if .hostCertStaging }}Staging{{- end}}
-		//         requestPolicy:
-		//           insecure:
-		//             action: Redirect
 	}
 
-	_, err := certv1.NewClusterIssuer(ctx, clusterIssuerType.String(), &certv1.ClusterIssuerArgs{
-		// ApiVersion: nil,
-		// Kind:       nil,
+	clusterIssuer, err := createClusterIssuer(ctx, clusterIssuerType, solverIngressClass, adminEmail)
+	if err != nil {
+		return nil, err
+	}
+	return clusterIssuer, nil
+}
+
+//nolint:lll
+func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass, adminEmail string) (*certv1.ClusterIssuer, error) {
+	var clusterIssuerSpec *certv1.ClusterIssuerSpecArgs
+
+	if clusterIssuerType == ClusterIssuerTypeCALocal {
+		clusterIssuerSpec = &certv1.ClusterIssuerSpecArgs{
+			Ca: &certv1.ClusterIssuerSpecCaArgs{
+				// SecretName: pulumi.String(clusterIssuerSecretName),
+				SecretName: pulumi.String(clusterIssuerType.String()),
+			},
+		}
+	} else {
+		acmeServerURL, err := acmeServerURL(clusterIssuerType)
+		if err != nil {
+			return nil, err
+		}
+
+		clusterIssuerSpec = &certv1.ClusterIssuerSpecArgs{
+
+			Acme: &certv1.ClusterIssuerSpecAcmeArgs{
+				Email: pulumi.String(adminEmail),
+				PrivateKeySecretRef: certv1.ClusterIssuerSpecAcmePrivateKeySecretRefArgs{
+					Name: pulumi.String(clusterIssuerType.String()),
+				},
+				Server: pulumi.String(acmeServerURL),
+				Solvers: &certv1.ClusterIssuerSpecAcmeSolversArray{
+					&certv1.ClusterIssuerSpecAcmeSolversArgs{
+						Http01: certv1.ClusterIssuerSpecAcmeSolversHttp01Args{
+							Ingress: &certv1.ClusterIssuerSpecAcmeSolversHttp01IngressArgs{
+								Class: pulumi.String(solverIngressClass),
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	clusterIssuer, err := certv1.NewClusterIssuer(ctx, clusterIssuerType.String(), &certv1.ClusterIssuerArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name: pulumi.String(clusterIssuerType.String()),
 		},
 		Spec: clusterIssuerSpec,
 	})
 	if err != nil {
+		return nil, err
+	}
+
+	return clusterIssuer, nil
+}
+func createCALocalSecret(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType) error {
+	conf := config.New(ctx, "")
+	var ca CaSecret
+	conf.RequireSecretObject("certManager", &ca)
+
+	_, err := corev1.NewSecret(ctx, clusterIssuerType.String(), &corev1.SecretArgs{
+		Data: pulumi.StringMap{
+			"tls.crt": pulumi.String(ca.CA.Crt),
+			"tls.key": pulumi.String(ca.CA.Key),
+		},
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String(clusterIssuerType.String()),
+			Namespace: pulumi.String("cert-manager"),
+		},
+	})
+	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func acmeServerURL(clusterIssuerType ClusterIssuerType) (string, error) {
+	switch clusterIssuerType {
+	case ClusterIssuerTypeCALocal:
+		return "", errors.New("cannot assign acmeServerUrl to ca-local")
+	case ClusterIssuerTypeLetsEncryptStaging:
+		return "https://acme-staging-v02.api.letsencrypt.org/directory", nil
+	case ClusterIssuerTypeLetsEncryptProd:
+		return "https://acme-v02.api.letsencrypt.org/directory", nil
+	}
+	return "", errors.New("no acme-url specified")
 }
