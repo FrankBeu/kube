@@ -2,8 +2,8 @@
 package emptycluster
 
 import (
-	"thesym.site/kube/lib/config"
+	"thesym.site/kube/lib/kubeConfig"
 )
 
 // Kube is the configuration for an empty cluster
-var Kube = config.KubeConfig{}
+var Kube = kubeConfig.KubeConfig{}

@@ -18,11 +18,11 @@ import (
 	"thesym.site/kube/definition/testing/testcert"
 	"thesym.site/kube/definition/testing/testingress"
 	"thesym.site/kube/definition/testing/testnamespace"
-	"thesym.site/kube/lib/config"
+	"thesym.site/kube/lib/kubeConfig"
 )
 
 // Kube is the configuration for the stagingEnvironment
-var Kube = config.KubeConfig{
+var Kube = kubeConfig.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// STRUCTURAL
 	////

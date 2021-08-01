@@ -9,14 +9,15 @@ import (
 	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/nginx"
+
 	// "thesym.site/kube/definition/testing/testingress"
 	"thesym.site/kube/definition/testing/testnamespace"
-	"thesym.site/kube/lib/config"
+	"thesym.site/kube/lib/kubeConfig"
 )
 
 // Kube is the configuration for the developmentEnvironment
 // var Kube = map[string]func(*pulumi.Context) error{
-var Kube = config.KubeConfig{
+var Kube = kubeConfig.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// STRUCTURAL
 	////

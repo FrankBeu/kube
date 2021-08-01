@@ -10,7 +10,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
 	cert "thesym.site/kube/lib/certificate"
-	"thesym.site/kube/lib/config"
+	"thesym.site/kube/lib/kubeConfig"
 	"thesym.site/kube/lib/testutil"
 )
 
@@ -235,7 +235,7 @@ func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.Ing
 
 	//// compare
 	for _, ht := range hostsTarget {
-		hostDomainNameTarget := ht.Name + config.DomainNameSuffix(ctx)
+		hostDomainNameTarget := ht.Name + kubeConfig.DomainNameSuffix(ctx)
 
 		testutil.Containsf(t, "Ingress", "Rules:Host", hostNamesActual, hostDomainNameTarget)
 		for _, ha := range hostsActual {
@@ -269,7 +269,7 @@ func assertAnnotations(t *testing.T, tlsEnabled bool, annotationsActual map[stri
 
 func assertSpecTLS(t *testing.T, ctx *pulumi.Context, tlsActual []networkingv1.IngressTLS, hostsTarget []Host, secretName string) {
 	for _, ht := range hostsTarget {
-		hostDomainNameTarget := ht.Name + config.DomainNameSuffix(ctx)
+		hostDomainNameTarget := ht.Name + kubeConfig.DomainNameSuffix(ctx)
 
 		//// currently only one TLS-item is used
 		testutil.Containsf(t, "Ingress", "Tls[0].Hosts", tlsActual[0].Hosts, hostDomainNameTarget)

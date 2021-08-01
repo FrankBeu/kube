@@ -1,4 +1,4 @@
-package config
+package kubeConfig
 
 import (
 	"context"

@@ -7,7 +7,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 	cert "thesym.site/kube/lib/certificate"
-	"thesym.site/kube/lib/config"
+	"thesym.site/kube/lib/kubeConfig"
 )
 
 //nolint:golint
@@ -42,7 +42,7 @@ type Config struct {
 }
 
 func CreateIngress(ctx *pulumi.Context, ing *Config) (*networkingv1.Ingress, error) {
-	domainNameSuffix := config.DomainNameSuffix(ctx)
+	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
 
 	//// TLS annotation
 	annotations := pulumi.StringMap{}
