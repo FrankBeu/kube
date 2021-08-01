@@ -11,6 +11,12 @@ const (
 	DefaultDurationInDays = 90
 )
 
+var AllClusterIssuerTypes = []ClusterIssuerType{
+	ClusterIssuerTypeCALocal,
+	ClusterIssuerTypeLetsEncryptStaging,
+	ClusterIssuerTypeLetsEncryptProd,
+}
+
 type Cert struct {
 	ClusterIssuerType ClusterIssuerType
 	Namespace         string

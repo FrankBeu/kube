@@ -2,8 +2,10 @@
 package kubeConfig
 
 import (
+	"errors"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
+	"thesym.site/kube/lib/types"
 )
 
 // KubeConfig makes it possible to control resource creation
@@ -12,14 +14,23 @@ type (
 	KubeConfig map[string]func(*pulumi.Context) error
 )
 
+type grafanaSecret struct {
+	AdminPassword string
+}
+
+type domainSecret struct {
+	AdminEmail string
+	Domain     string
+}
+
+type domain struct {
+	ClusterIssuer string
+}
+
 func Env(ctx *pulumi.Context) (env string) {
 	conf := config.New(ctx, "")
 	env = conf.Require("env")
 	return
-}
-
-type grafanaSecret struct {
-	AdminPassword string
 }
 
 func GrafanaAdminPassword(ctx *pulumi.Context) (grafanaAdminPw string) {
@@ -30,11 +41,6 @@ func GrafanaAdminPassword(ctx *pulumi.Context) (grafanaAdminPw string) {
 	grafanaAdminPw = gs.AdminPassword
 
 	return
-}
-
-type domainSecret struct {
-	AdminEmail string
-	Domain     string
 }
 
 func AdminEmail(ctx *pulumi.Context) (adminEmail string) {
@@ -56,13 +62,24 @@ func DomainNameSuffix(ctx *pulumi.Context) (domainNameSuffix string) {
 	return
 }
 
-// func DomainClusterIssuer(ctx *pulumi.Context) (clusterIssuer int) {
+func DomainClusterIssuer(ctx *pulumi.Context) (clusterIssuerType types.ClusterIssuerType) {
+	var d domain
+	conf := config.New(ctx, "")
+	conf.RequireObject("domain", &d)
+	domainClusterIssuer := d.ClusterIssuer
+	clusterIssuerType, err := convertClusterIssuerTypeString2Type(domainClusterIssuer)
+	if err != nil {
+		panic(err)
+	}
 
-// 	var ds domainSecret
-// 	conf := config.New(ctx, "")
-// 	conf.RequireSecretObject("domainSecret", &ds)
-// 	domainClusterIssuer =   ds.ClusterIssuer
+	return
+}
 
-
-// 	return
-// }
+func convertClusterIssuerTypeString2Type(clusterIssuerTypeString string) (types.ClusterIssuerType, error) {
+	for key, cit := range types.AllClusterIssuerTypes {
+		if clusterIssuerTypeString == cit.String() {
+			return types.ClusterIssuerType(key), nil
+		}
+	}
+	return 0, errors.New("could not find clusterIssuerType - check your pulumiConfigFiles")
+}

@@ -13,7 +13,7 @@ import (
 
 	"thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/crd"
-	"thesym.site/kube/lib/types"
+	"thesym.site/kube/lib/kubeConfig"
 )
 
 func CreateCertmanager(ctx *pulumi.Context) error {
@@ -27,19 +27,13 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 		{Name: "certmanager-clusterIssuer-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-clusterissuers.cert-manager.io.yaml"},
 		{Name: "certmanager-certificate-request-definition", Location: "./crds/cert-manager/cdrDefinitions/customresourcedefinition-certificaterequests.cert-manager.io.yaml"},
 	}
-	//// Register the CRD.
+
 	err := crd.RegisterCRDs(ctx, certManagerCrds)
 	if err != nil {
 		return err
 	}
 
-	/// TODO get clusterIssuerType from config
-	// var ds domainSecret
-	// conf := config.New(ctx, "")
-	// conf.RequireSecretObject("domainSecret", &ds)
-	// domainClusterIssuer =   ds.ClusterIssuer
-
-	_, err = certificate.CreateClusterIssuer(ctx, types.ClusterIssuerTypeCALocal)
+	_, err = certificate.CreateClusterIssuer(ctx, kubeConfig.DomainClusterIssuer(ctx))
 	if err != nil {
 		return err
 	}
