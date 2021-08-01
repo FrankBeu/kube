@@ -515,6 +515,16 @@ act on the helmValuesLayer
   ### needs local version
   cat CHART/gitea/templates/gitea/ingress.yaml
 #+end_src
+****** clone via ssh
+******* dev
+#+begin_src shell :results drawer
+  git clone ssh://git@gitea.dev.thesym.site:32022/infra/nixos.git
+#+end_src
+******* stage
+#+begin_src shell :results drawer
+  git clone ssh://git@gitea.stage.thesym.site:31022/infra/nixos.git
+#+end_src
+
 **** observer
 ****** jaeger                                                      :operator:
 https://github.com/jaegertracing/jaeger-operator
