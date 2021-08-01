@@ -10,10 +10,10 @@ import (
 	rbacv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/rbac/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	jaegerv1 "thesym.site/kube/crds/jaeger/jaegertracing/v1"
-	"thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/crd"
 	"thesym.site/kube/lib/ingress"
 	"thesym.site/kube/lib/namespace"
+	"thesym.site/kube/lib/types"
 )
 
 func CreateJaegerOperator(ctx *pulumi.Context) error {
@@ -51,17 +51,17 @@ func CreateJaegerOperator(ctx *pulumi.Context) error {
 
 	//// the operator will only create an ingress which acts as default ingress
 	//// workaround till upstream is fixed
-	ing := ingress.Config{
+	ing := types.Config{
 		// Annotations:       map[string]pulumi.StringInput{},
-		ClusterIssuerType: certificate.ClusterIssuerTypeCALocal,
-		Hosts: []ingress.Host{
+		ClusterIssuerType: types.ClusterIssuerTypeCALocal,
+		Hosts: []types.Host{
 			{
 				Name:        name,
 				ServiceName: "jaeger-query",
 				ServicePort: 16686,
 			},
 		},
-		IngressClassName: ingress.IngressClassNameNginx,
+		IngressClassName: types.IngressClassNameNginx,
 		Name:             name,
 		NamespaceName:    namespaceJaeger.Name,
 		TLS:              true,

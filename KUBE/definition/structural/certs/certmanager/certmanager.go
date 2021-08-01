@@ -13,7 +13,7 @@ import (
 
 	"thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/crd"
-	"thesym.site/kube/lib/ingress"
+	"thesym.site/kube/lib/types"
 )
 
 func CreateCertmanager(ctx *pulumi.Context) error {
@@ -33,15 +33,16 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 		return err
 	}
 
-	_, err = certificate.CreateClusterIssuer(ctx, certificate.ClusterIssuerTypeCALocal, ingress.IngressClassNameNginx.String())
+	/// TODO get clusterIssuerType from config
+	// var ds domainSecret
+	// conf := config.New(ctx, "")
+	// conf.RequireSecretObject("domainSecret", &ds)
+	// domainClusterIssuer =   ds.ClusterIssuer
+
+	_, err = certificate.CreateClusterIssuer(ctx, types.ClusterIssuerTypeCALocal)
 	if err != nil {
 		return err
 	}
-
-	// err = certificate.CreateClusterIssuer(ctx, certificate.ClusterIssuerTypeLetsEncrypt)
-	// if err != nil {
-	// 	return err
-	// }
 
 	//// APP
 	err = execGeneratedCode(ctx)

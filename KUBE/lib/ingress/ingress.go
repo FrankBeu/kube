@@ -5,49 +5,24 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-
-	cert "thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/types"
 )
 
-//nolint:golint
-// IngressClassName specifies the ingressController which implements the ingress
-type IngressClassName int
-
-//go:generate stringer -type=IngressClassName -linecomment
-const (
-	IngressClassNameNginx IngressClassName = iota // nginx
-	// IngressClassNameTest // test
-
-	ingressAPIVersion string = "networking.k8s.io/v1"
-	ingressKind       string = "Ingress"
-	tlsAnnotationKey  string = "cert-manager.io/cluster-issuer"
-	tlsSecretSuffix   string = "-tls"
-)
-
-type Host struct {
-	Name        string
-	ServiceName string
-	ServicePort int
-}
-
-type Config struct {
-	Annotations       pulumi.StringMap
-	ClusterIssuerType cert.ClusterIssuerType
-	Hosts             []Host
-	IngressClassName  IngressClassName
-	Name              string
-	NamespaceName     string
-	TLS               bool
-}
-
-func CreateIngress(ctx *pulumi.Context, ing *Config) (*networkingv1.Ingress, error) {
+func CreateIngress(ctx *pulumi.Context, ing *types.Config) (*networkingv1.Ingress, error) {
 	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
+	ingress, err := createIngress(ctx, ing, domainNameSuffix)
+	if err != nil {
+		return nil, err
+	}
+	return ingress, nil
+}
 
+func createIngress(ctx *pulumi.Context, ing *types.Config, domainNameSuffix string) (*networkingv1.Ingress, error) {
 	//// TLS annotation
 	annotations := pulumi.StringMap{}
 	if ing.TLS {
-		annotations["cert-manager.io/cluster-issuer"] = pulumi.String(cert.ClusterIssuerTypeCALocal.String())
+		annotations["cert-manager.io/cluster-issuer"] = pulumi.String(types.ClusterIssuerTypeCALocal.String())
 	}
 	for k, v := range ing.Annotations {
 		annotations[k] = v
@@ -62,7 +37,7 @@ func CreateIngress(ctx *pulumi.Context, ing *Config) (*networkingv1.Ingress, err
 		tls = networkingv1.IngressTLSArray{
 			&networkingv1.IngressTLSArgs{
 				Hosts:      tlsHosts,
-				SecretName: pulumi.String(ing.Name + tlsSecretSuffix),
+				SecretName: pulumi.String(ing.Name + types.TlsSecretSuffix),
 			},
 		}
 	}
@@ -93,8 +68,8 @@ func CreateIngress(ctx *pulumi.Context, ing *Config) (*networkingv1.Ingress, err
 	}
 
 	ingress, err := networkingv1.NewIngress(ctx, ing.Name, &networkingv1.IngressArgs{
-		ApiVersion: pulumi.String(ingressAPIVersion),
-		Kind:       pulumi.String(ingressKind),
+		ApiVersion: pulumi.String(types.IngressAPIVersion),
+		Kind:       pulumi.String(types.IngressKind),
 		Metadata: &metav1.ObjectMetaArgs{
 			Labels:    pulumi.StringMap{"app": pulumi.String(ing.Name)},
 			Name:      pulumi.String(ing.Name),

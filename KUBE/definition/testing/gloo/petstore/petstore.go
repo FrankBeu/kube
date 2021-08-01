@@ -6,9 +6,9 @@ import (
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/ingress"
 	"thesym.site/kube/lib/namespace"
+	"thesym.site/kube/lib/types"
 )
 
 var (
@@ -26,17 +26,17 @@ func CreateGlooPetstore(ctx *pulumi.Context) error {
 		return err
 	}
 
-	ing := ingress.Config{
+	ing := types.Config{
 		// Annotations:       map[string]pulumi.StringInput{},
-		ClusterIssuerType: certificate.ClusterIssuerTypeCALocal,
-		Hosts: []ingress.Host{
+		ClusterIssuerType: types.ClusterIssuerTypeCALocal,
+		Hosts: []types.Host{
 			{
 				Name:        name,
 				ServiceName: name,
 				ServicePort: 8080,
 			},
 		},
-		IngressClassName: ingress.IngressClassNameNginx,
+		IngressClassName: types.IngressClassNameNginx,
 		Name:             name,
 		NamespaceName:    name,
 		TLS:              true,

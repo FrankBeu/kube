@@ -6,11 +6,12 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/kube/lib/certificate"
+	"thesym.site/kube/lib/types"
 )
 
 var (
-	exampleCert = certificate.Cert{
-		ClusterIssuerType: certificate.ClusterIssuerTypeCALocal,
+	exampleCert = types.Cert{
+		ClusterIssuerType: types.ClusterIssuerTypeCALocal,
 		Namespace:         "test",
 		Name:              "testing",
 		Duration:          strconv.Itoa(99*24) + "h",

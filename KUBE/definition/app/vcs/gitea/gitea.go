@@ -8,10 +8,10 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"thesym.site/kube/lib/certificate"
 	"thesym.site/kube/lib/kubeConfig"
 	"thesym.site/kube/lib/namespace"
 	"thesym.site/kube/lib/persistence"
+	"thesym.site/kube/lib/types"
 )
 
 type giteaSecret struct {
@@ -97,7 +97,7 @@ func CreateGitea(ctx *pulumi.Context) error {
 			"ingress": pulumi.Map{
 				"enabled": pulumi.Bool(true),
 				"annotations": pulumi.Map{
-					"cert-manager.io/cluster-issuer": pulumi.String(certificate.ClusterIssuerTypeCALocal.String()),
+					"cert-manager.io/cluster-issuer": pulumi.String(types.ClusterIssuerTypeCALocal.String()),
 				},
 				"hosts": pulumi.Array{
 					pulumi.String(domainName),

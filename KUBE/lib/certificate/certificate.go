@@ -10,34 +10,13 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	certv1 "thesym.site/kube/crds/cert-manager/certmanager/v1"
 	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/types"
 )
 
-type ClusterIssuerType int
-
-//go:generate stringer -type=ClusterIssuerType -linecomment
-const (
-	ClusterIssuerTypeCALocal            ClusterIssuerType = iota // ca-local
-	ClusterIssuerTypeLetsEncryptStaging                          // letsencrypt-staging
-	ClusterIssuerTypeLetsEncryptProd                             // letsencrypt-prod
-
-	defaultDurationInDays = 90
-)
-
-type Cert struct {
-	ClusterIssuerType ClusterIssuerType
-	Namespace         string
-	// name is also used as subdomainName
-	Name string
-	// optional: default Duration is set to 90d
-	Duration string
-	// optional:
-	AdditionalSubdomainNames []string
-}
-
-func CreateCert(ctx *pulumi.Context, cert *Cert) error {
+func CreateCert(ctx *pulumi.Context, cert *types.Cert) error {
 	if cert.Duration == "" {
 		//nolint:gomnd
-		cert.Duration = strconv.Itoa(defaultDurationInDays*24) + "h"
+		cert.Duration = strconv.Itoa(types.DefaultDurationInDays*24) + "h"
 	}
 
 	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
@@ -75,26 +54,21 @@ func CreateCert(ctx *pulumi.Context, cert *Cert) error {
 	return nil
 }
 
-type CaSecret struct {
-	CA struct {
-		Crt string
-		Key string
-	}
-}
-
 // createClusterIssuer creates an internal clusterIssuer with a local CA or an letsencrypt based issuer
 //nolint:lll
-func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass string) (*certv1.ClusterIssuer, error) {
+// func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass string) (*certv1.ClusterIssuer, error) {
+func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIssuerType) (*certv1.ClusterIssuer, error) {
 	adminEmail := kubeConfig.AdminEmail(ctx)
 
-	if clusterIssuerType == ClusterIssuerTypeCALocal {
+	if clusterIssuerType == types.ClusterIssuerTypeCALocal {
 		err := createCALocalSecret(ctx, clusterIssuerType)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	clusterIssuer, err := createClusterIssuer(ctx, clusterIssuerType, solverIngressClass, adminEmail)
+	// clusterIssuer, err := createClusterIssuer(ctx, clusterIssuerType, solverIngressClass, adminEmail)
+	clusterIssuer, err := createClusterIssuer(ctx, clusterIssuerType, adminEmail)
 	if err != nil {
 		return nil, err
 	}
@@ -102,10 +76,11 @@ func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerTyp
 }
 
 //nolint:lll
-func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass, adminEmail string) (*certv1.ClusterIssuer, error) {
+// func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass, adminEmail string) (*certv1.ClusterIssuer, error) {
+func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIssuerType, adminEmail string) (*certv1.ClusterIssuer, error) {
 	var clusterIssuerSpec *certv1.ClusterIssuerSpecArgs
 
-	if clusterIssuerType == ClusterIssuerTypeCALocal {
+	if clusterIssuerType == types.ClusterIssuerTypeCALocal {
 		clusterIssuerSpec = &certv1.ClusterIssuerSpecArgs{
 			Ca: &certv1.ClusterIssuerSpecCaArgs{
 				// SecretName: pulumi.String(clusterIssuerSecretName),
@@ -130,7 +105,8 @@ func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerTyp
 					&certv1.ClusterIssuerSpecAcmeSolversArgs{
 						Http01: certv1.ClusterIssuerSpecAcmeSolversHttp01Args{
 							Ingress: &certv1.ClusterIssuerSpecAcmeSolversHttp01IngressArgs{
-								Class: pulumi.String(solverIngressClass),
+								// Class: pulumi.String(solverIngressClass),
+								Class: pulumi.String(types.IngressClassNameNginx.String()),
 							},
 						},
 					},
@@ -151,9 +127,9 @@ func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerTyp
 
 	return clusterIssuer, nil
 }
-func createCALocalSecret(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType) error {
+func createCALocalSecret(ctx *pulumi.Context, clusterIssuerType types.ClusterIssuerType) error {
 	conf := config.New(ctx, "")
-	var ca CaSecret
+	var ca types.CaSecret
 	conf.RequireSecretObject("certManager", &ca)
 
 	_, err := corev1.NewSecret(ctx, clusterIssuerType.String(), &corev1.SecretArgs{
@@ -173,13 +149,13 @@ func createCALocalSecret(ctx *pulumi.Context, clusterIssuerType ClusterIssuerTyp
 	return nil
 }
 
-func acmeServerURL(clusterIssuerType ClusterIssuerType) (string, error) {
+func acmeServerURL(clusterIssuerType types.ClusterIssuerType) (string, error) {
 	switch clusterIssuerType {
-	case ClusterIssuerTypeCALocal:
+	case types.ClusterIssuerTypeCALocal:
 		return "", errors.New("cannot assign acmeServerUrl to ca-local")
-	case ClusterIssuerTypeLetsEncryptStaging:
+	case types.ClusterIssuerTypeLetsEncryptStaging:
 		return "https://acme-staging-v02.api.letsencrypt.org/directory", nil
-	case ClusterIssuerTypeLetsEncryptProd:
+	case types.ClusterIssuerTypeLetsEncryptProd:
 		return "https://acme-v02.api.letsencrypt.org/directory", nil
 	}
 	return "", errors.New("no acme-url specified")

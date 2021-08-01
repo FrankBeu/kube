@@ -9,15 +9,17 @@ import (
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
-	cert "thesym.site/kube/lib/certificate"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/types"
+
+	// "thesym.site/kube/lib/kubeConfig"
 	"thesym.site/kube/lib/testutil"
 )
 
 //nolint:funlen
-func TestCreateIngress(t *testing.T) {
+func Test_createIngress(t *testing.T) {
 	type args struct {
-		ing Config
+		ing              types.Config
+		domainNameSuffix string
 	}
 	tests := []struct {
 		name string
@@ -26,11 +28,11 @@ func TestCreateIngress(t *testing.T) {
 		{
 			name: "test a ingress with defaults",
 			args: args{
-				ing: Config{
+				ing: types.Config{
 					Name:             "testingress",
 					NamespaceName:    "test",
-					IngressClassName: IngressClassNameNginx,
-					Hosts: []Host{
+					IngressClassName: types.IngressClassNameNginx,
+					Hosts: []types.Host{
 						{
 							Name:        "test",
 							ServiceName: "test",
@@ -38,17 +40,18 @@ func TestCreateIngress(t *testing.T) {
 						},
 					},
 				},
+				domainNameSuffix: ".example.com",
 			},
 		},
 		{
 			name: "test an ingress with two hosts",
 			args: args{
-				ing: Config{
+				ing: types.Config{
 					Name:             "otheringress",
 					NamespaceName:    "other",
-					IngressClassName: IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameNginx,
 
-					Hosts: []Host{
+					Hosts: []types.Host{
 						{
 							Name:        "test",
 							ServiceName: "test",
@@ -66,11 +69,11 @@ func TestCreateIngress(t *testing.T) {
 		{
 			name: "test an ingress with multiple hosts",
 			args: args{
-				ing: Config{
+				ing: types.Config{
 					Name:             "another",
 					NamespaceName:    "test",
-					IngressClassName: IngressClassNameNginx,
-					Hosts: []Host{
+					IngressClassName: types.IngressClassNameNginx,
+					Hosts: []types.Host{
 						{
 							Name:        "test",
 							ServiceName: "test",
@@ -88,20 +91,21 @@ func TestCreateIngress(t *testing.T) {
 						},
 					},
 				},
+				domainNameSuffix: ".example.com",
 			},
 		},
 		{
 			name: "test an ingress with annotations",
 			args: args{
-				ing: Config{
+				ing: types.Config{
 					Name:             "annotationingress",
 					NamespaceName:    "other",
-					IngressClassName: IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameNginx,
 					Annotations: pulumi.StringMap{
 						"nginx.ingress.kubernetes.io/ssl-redirect":       pulumi.String("false"),
 						"nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("false"),
 					},
-					Hosts: []Host{
+					Hosts: []types.Host{
 						{
 							Name:        "test",
 							ServiceName: "test",
@@ -109,16 +113,17 @@ func TestCreateIngress(t *testing.T) {
 						},
 					},
 				},
+				domainNameSuffix: ".example.com",
 			},
 		},
 		{
 			name: "test an ingress with tls activated",
 			args: args{
-				ing: Config{
+				ing: types.Config{
 					Name:             "tlsingress",
 					NamespaceName:    "other",
-					IngressClassName: IngressClassNameNginx,
-					Hosts: []Host{
+					IngressClassName: types.IngressClassNameNginx,
+					Hosts: []types.Host{
 						{
 							Name:        "test",
 							ServiceName: "test",
@@ -127,19 +132,20 @@ func TestCreateIngress(t *testing.T) {
 					},
 					TLS: true,
 				},
+				domainNameSuffix: ".example.com",
 			},
 		},
 		{
 			name: "test an ingress with tls activated and additional annotations",
 			args: args{
-				ing: Config{
+				ing: types.Config{
 					Name:             "otheringress",
 					NamespaceName:    "other",
-					IngressClassName: IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameNginx,
 					Annotations: pulumi.StringMap{
 						"nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("true"),
 					},
-					Hosts: []Host{
+					Hosts: []types.Host{
 						{
 							Name:        "test",
 							ServiceName: "test",
@@ -148,16 +154,17 @@ func TestCreateIngress(t *testing.T) {
 					},
 					TLS: true,
 				},
+				domainNameSuffix: ".example.com",
 			},
 		},
 		{
 			name: "test an ingress with tls activated and multiple hosts",
 			args: args{
-				ing: Config{
+				ing: types.Config{
 					Name:             "othertlsingress",
 					NamespaceName:    "other",
-					IngressClassName: IngressClassNameNginx,
-					Hosts: []Host{
+					IngressClassName: types.IngressClassNameNginx,
+					Hosts: []types.Host{
 						{
 							Name:        "test",
 							ServiceName: "test",
@@ -177,7 +184,7 @@ func TestCreateIngress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-				ingResult, err := CreateIngress(ctx, &tt.args.ing)
+				ingResult, err := createIngress(ctx, &tt.args.ing, tt.args.domainNameSuffix)
 				assert.NoError(t, err)
 
 				var wg sync.WaitGroup
@@ -189,18 +196,18 @@ func TestCreateIngress(t *testing.T) {
 					metaActual := *all[2].(*metav1.ObjectMeta)
 					specActual := *all[3].(*networkingv1.IngressSpec)
 
-					testutil.Equalf(t, "Ingress", "ApiVersion", apivActual, ingressAPIVersion)
-					testutil.Equalf(t, "Ingress", "Kind", kindActual, ingressKind)
+					testutil.Equalf(t, "Ingress", "ApiVersion", apivActual, types.IngressAPIVersion)
+					testutil.Equalf(t, "Ingress", "Kind", kindActual, types.IngressKind)
 					testutil.Equalf(t, "Ingress", "Name", *metaActual.Name, tt.args.ing.Name)
 					testutil.Equalf(t, "Ingress", "Namespace", *metaActual.Namespace, tt.args.ing.NamespaceName)
 					testutil.Equalf(t, "Ingress", "IngressClassName", *specActual.IngressClassName, tt.args.ing.IngressClassName.String())
 
-					assertSpecRules(t, ctx, specActual.Rules, tt.args.ing.Hosts)
+					assertSpecRules(t, ctx, specActual.Rules, tt.args.ing.Hosts, tt.args.domainNameSuffix)
 
 					assertAnnotations(t, tt.args.ing.TLS, metaActual.Annotations, tt.args.ing.Annotations)
 
 					if tt.args.ing.TLS {
-						assertSpecTLS(t, ctx, specActual.Tls, tt.args.ing.Hosts, tt.args.ing.Name+tlsSecretSuffix)
+						assertSpecTLS(t, ctx, specActual.Tls, tt.args.ing.Hosts, tt.args.ing.Name+types.TlsSecretSuffix, tt.args.domainNameSuffix)
 					} else {
 						assert.Emptyf(t, specActual.Tls, "TLS: specTls is not empty despite tls NOT being activated: actual: %+v", specActual.Tls)
 					}
@@ -216,11 +223,11 @@ func TestCreateIngress(t *testing.T) {
 	}
 }
 
-func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.IngressRule, hostsTarget []Host) {
+func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.IngressRule, hostsTarget []types.Host, domainNameSuffix string) {
 	//// extract the necessary data
-	var hostsActual []Host
+	var hostsActual []types.Host
 	for _, rule := range rules {
-		hostActual := Host{
+		hostActual := types.Host{
 			Name: *rule.Host,
 			//// currently only Hosts with a single path are used
 			ServiceName: rule.Http.Paths[0].Backend.Service.Name,
@@ -235,7 +242,7 @@ func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.Ing
 
 	//// compare
 	for _, ht := range hostsTarget {
-		hostDomainNameTarget := ht.Name + kubeConfig.DomainNameSuffix(ctx)
+		hostDomainNameTarget := ht.Name + domainNameSuffix
 
 		testutil.Containsf(t, "Ingress", "Rules:Host", hostNamesActual, hostDomainNameTarget)
 		for _, ha := range hostsActual {
@@ -250,14 +257,14 @@ func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.Ing
 func assertAnnotations(t *testing.T, tlsEnabled bool, annotationsActual map[string]string, annotationsTarget pulumi.StringMap) {
 	if tlsEnabled {
 		containsMsg := "TLS: annotation %q is not set"
-		testutil.AssertAnnotation(t, annotationsActual, tlsAnnotationKey, pulumi.String(cert.ClusterIssuerTypeCALocal.String()), containsMsg)
+		testutil.AssertAnnotation(t, annotationsActual, types.TlsAnnotationKey, pulumi.String(types.ClusterIssuerTypeCALocal.String()), containsMsg)
 	} else {
 		assert.NotContainsf(
 			t,
 			annotationsActual,
-			tlsAnnotationKey,
+			types.TlsAnnotationKey,
 			"TLS: label %q is set despite TLS not being activated",
-			tlsAnnotationKey,
+			types.TlsAnnotationKey,
 		)
 	}
 
@@ -267,9 +274,9 @@ func assertAnnotations(t *testing.T, tlsEnabled bool, annotationsActual map[stri
 	}
 }
 
-func assertSpecTLS(t *testing.T, ctx *pulumi.Context, tlsActual []networkingv1.IngressTLS, hostsTarget []Host, secretName string) {
+func assertSpecTLS(t *testing.T, ctx *pulumi.Context, tlsActual []networkingv1.IngressTLS, hostsTarget []types.Host, secretName, domainNameSuffix string) {
 	for _, ht := range hostsTarget {
-		hostDomainNameTarget := ht.Name + kubeConfig.DomainNameSuffix(ctx)
+		hostDomainNameTarget := ht.Name + domainNameSuffix
 
 		//// currently only one TLS-item is used
 		testutil.Containsf(t, "Ingress", "Tls[0].Hosts", tlsActual[0].Hosts, hostDomainNameTarget)
