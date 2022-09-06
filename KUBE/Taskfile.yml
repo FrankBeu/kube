@@ -105,19 +105,10 @@ tasks:
       - |
         k3d cluster create \
         {{.name}}-dev \
-        --no-lb \
-        --k3s-server-arg '--no-deploy=traefik' \
+        --k3s-arg "--disable=traefik@server:0" \
         --volume $XDG_STATE_HOME/kube/persistence/dev:/srv/kube/persistence/dev \
-        --port 32022:30022 \
-        --port 32686:30686 \
-        --port 32080:30080 \
-        --port 32443:30443
+        --port "32000-32767:32000-32767@server:0"
     silent: true
-
-      # --port 32022:30022  ### gitea
-      # --port 32686:30686  ### jaeger # 16686
-      # --port 32080:30080  ### http
-      # --port 32443:30443  ### https
 
 
   clusterCreateStage:
@@ -126,13 +117,10 @@ tasks:
       - |
         k3d cluster create \
         {{.name}}-stage \
-        --no-lb \
-        --k3s-server-arg '--no-deploy=traefik' \
+        --k3s-arg "--disable=traefik@server:0" \
         --volume $XDG_STATE_HOME/kube/persistence/stage:/srv/kube/persistence/stage \
-        --port 31022:30022 \
-        --port 31686:30686 \
-        --port 31080:30080 \
-        --port 31443:30443
+        --port "31000-31767:31000-31767@server:0"
+    silent: true
 
 
   clusterDeleteDev:
