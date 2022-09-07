@@ -4,8 +4,8 @@
 package fullcluster
 
 import (
-	"thesym.site/kube/definition/app/communication/jitsi"
-	"thesym.site/kube/definition/app/communication/matrix"
+	// "thesym.site/kube/definition/app/communication/jitsi"
+	// "thesym.site/kube/definition/app/communication/matrix"
 	"thesym.site/kube/definition/app/observer/jaeger"
 	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
@@ -55,8 +55,8 @@ var Kube = kubeConfig.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// COMMUNICATION
 	////
-	"jitsi":  jitsi.CreateJitsi,
-	"matrix": matrix.CreateMatrix,
+	// "jitsi":  jitsi.CreateJitsi,
+	// "matrix": matrix.CreateMatrix,
 
 	////////////////////////
 	//// OBSERVING

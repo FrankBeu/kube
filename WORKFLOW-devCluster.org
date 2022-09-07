@@ -1,0 +1,74 @@
+* workflow: devCluster-setup
+assumptions:
+  - on DEVOS (nixos)
+  - in GITROOT
+** create cluster
+#+BEGIN_EXAMPLE shell
+task 0
+#+END_EXAMPLE
+cf.: https://k3d.io/v5.4.3/usage/exposing_services/
+*** dependencies
+**** pulumi
+https://github.com/FrankBeu/devos/tree/main/home/profiles/k8s/pulumi/default.nix
+=~/DEVOS/home/profiles/k8s/pulumi/default.nix=
+**** k3d
+https://github.com/FrankBeu/devos/tree/main/nixos/profiles/k8s/k3d/default.nix
+=~/DEVOS/nixos/profiles/k8s/k3d/default.nix=
+**** go-task
+https://github.com/FrankBeu/devos/tree/main/nixos/profiles/tools/gotask/default.nix
+=~/DEVOS/nixos/profiles/tools/gotask/default.nix=
+*** check
+=~/.kube=
+** log-in to pulumi
+*** OR
+**** task
+#+BEGIN_EXAMPLE shell
+task 1
+#+END_EXAMPLE
+use =~/.local/state/pulumi= instead of a serviced pulumi
+**** alias
+#+BEGIN_EXAMPLE shell
+pl
+#+END_EXAMPLE
+*** check
+=~/.pulumi=
+** create stack
+*** OR
+**** plain
+- a stack-specific passphrase has to be entered
+#+BEGIN_EXAMPLE shell
+cd ./KUBE
+pulumi stack init --secrets-provider=passphrase --emoji kube-dev
+#+END_EXAMPLE
+**** w/ summon
+- if a passphrase is already retrievable  with ~gopass k8s/misc/pulumiDev~ summonPulumi can be used
+- only the global gopassPassphrase has to be entered
+#+BEGIN_EXAMPLE shell
+cd ./KUBE
+p stack init --secrets-provider=passphrase --emoji kube-dev
+#+END_EXAMPLE
+***** dependency
+******  summon + scripts + aliases (defined in the pulumi-dependency)
+https://github.com/FrankBeu/devos/tree/main/home/profiles/security/summon/default.nix
+=~/DEVOS/home/profiles/security/summon/default.nix=
+**** both calls will create a stack in =~/.local/state/pulumi=
+=KUBE/Pulumi.kube-dev.yaml= already exists and will not be recreated
+** configure the KUBE in
+=KUBE/env/development/development.go=
+** apply the config
+*** OR
+**** plain
+#+BEGIN_EXAMPLE shell
+pulumi up
+#+END_EXAMPLE
+**** w/ summon
+#+BEGIN_EXAMPLE shell
+p up
+#+END_EXAMPLE
+* TODO TODOS
+** TODO create cluster declaratively
+*** on DEVOS: systemd-one-shots
+- clusterCreate: k3d
+  - if not exists
+- clusterProvisioning: pulumi
+  - secrets with sops

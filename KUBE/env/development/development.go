@@ -6,7 +6,6 @@ import (
 	// "thesym.site/kube/definition/structural/monitoring/prometheus"
 	// "thesym.site/kube/definition/testing/testnamespace"
 
-	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/nginx"
 
@@ -61,7 +60,7 @@ var Kube = kubeConfig.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// VCS
 	////
-	"gitea": gitea.CreateGitea,
+	// "gitea": gitea.CreateGitea,
 
 	//////////////////////// //////////////////////// ////////////////////////
 	//// TESTING
