@@ -63,29 +63,81 @@ tasks:
 #
 #
   0:
-    desc: ( clusterCreateDev )
-    cmds:
-      - task: clusterCreateDev
-    silent: true
-
-
-  1:
     desc: ( pulumiLogin )
     cmds:
       - task: pulumiLogin
     silent: true
 
 
-  2:
-    desc: ( pulumiUp )
+  1d:
+    desc: ( clusterCreateDev )
     cmds:
-      - task: pulumiUp
+      - task: clusterCreateDev
     silent: true
-  4:
-    desc: ( clusterDelete )
+
+
+  2d:
+    desc: ( pulumiStackInitDev )
     cmds:
-      - task: clusterDelete
+      - task: pulumiStackInitDev
     silent: true
+
+
+  3d:
+    desc: ( pulumiUpDev )
+    cmds:
+      - task: pulumiUpDev
+    silent: true
+
+
+  4d:
+    desc: ( pulumiStackDeleteDev   - {{.red}}ATTENTION{{.reset}} {{.blue}}Pulumi.kube-dev.yaml{{.reset}}   has to be restored with {{.yellow}}git{{.reset}} )
+    cmds:
+      - task: pulumiStackDeleteDev
+    silent: true
+
+
+  5d:
+    desc: ( clusterDeleteDev )
+    cmds:
+      - task: clusterDeleteDev
+    silent: true
+
+
+  1s:
+    desc: ( clusterCreateStage )
+    cmds:
+      - task: clusterCreateStage
+    silent: true
+
+
+  2s:
+    desc: ( pulumiStackInitStage )
+    cmds:
+      - task: pulumiStackInitStage
+    silent: true
+
+
+  3s:
+    desc: ( pulumiUpStage )
+    cmds:
+      - task: pulumiUpStage
+    silent: true
+
+
+  4s:
+    desc: ( pulumiStackDeleteStage - {{.red}}ATTENTION{{.reset}} {{.blue}}Pulumi.kube-stage.yaml{{.reset}} has to be restored with {{.yellow}}git{{.reset}} )
+    cmds:
+      - task: pulumiStackDeleteStage
+    silent: true
+
+
+  5s:
+    desc: ( clusterDeleteStage )
+    cmds:
+      - task: clusterDeleteStage
+    silent: true
+
 
   c:
     desc: ( colorDisplay )
@@ -100,14 +152,14 @@ tasks:
 # ** ALPHABETICAL
 #
   clusterCreateDev:
-    desc: create a dev-cluster for {{.domain}}
+    desc: create a dev-cluster     for {{.domain}}
     cmds:
       - |
         k3d cluster create \
         {{.name}}-dev \
         --k3s-arg "--disable=traefik@server:0" \
         --volume $XDG_STATE_HOME/kube/persistence/dev:/srv/kube/persistence/dev \
-        --port "32000-32767:32000-32767@server:0"
+        --port "32000-32767:30000-30767@server:0"
     silent: true
 
 
@@ -119,7 +171,7 @@ tasks:
         {{.name}}-stage \
         --k3s-arg "--disable=traefik@server:0" \
         --volume $XDG_STATE_HOME/kube/persistence/stage:/srv/kube/persistence/stage \
-        --port "31000-31767:31000-31767@server:0"
+        --port "31000-31767:30000-30767@server:0"
     silent: true
 
 
@@ -140,7 +192,7 @@ tasks:
 
 
   pulumiDebugOn:
-    desc: switch on debug mode
+    desc: switch on  debug mode
     cmds:
       - go build -gcflags '-N -l' -o pulumi-main main.go
       - |
@@ -197,12 +249,21 @@ tasks:
     silent: true
 
 
-  pulumiUp:
-    desc: apply main.go
+  pulumiUpDev:
+    desc: |-
+      apply the kube-dev-stack   to the specified cluster ( {{.blue}}Pulumi.kube-dev.yaml{{.reset}}:   {{.magenta}}kubernetes:context:{{.reset}} )
     cmds:
       - |
-        summon --up bash -c 'PULUMI_CONFIG_PASSPHRASE=${PULUMI_CONFIG_PASSPHRASE} pulumi up'
+        summonPulumi dev up --emoji
+    silent: true
 
+
+  pulumiUpStage:
+    desc: |-
+      apply the kube-stage-stack to the specified cluster ( {{.blue}}Pulumi.kube-stage.yaml{{.reset}}: {{.magenta}}kubernetes:context:{{.reset}} )
+    cmds:
+      - |
+        summonPulumi stage up --emoji
     silent: true
 
 
@@ -212,6 +273,55 @@ tasks:
       - |
         cd test
         pulumi config set isContaineredCluster true
+    silent: true
+
+
+  pulumiStackInitDev:
+    desc: create a pulumi-stack for the dev-cluster     for {{.domain}}
+    cmds:
+      - |
+        summonPulumi dev stack init --secrets-provider=passphrase --emoji kube-dev
+    silent: true
+
+
+  pulumiStackInitStage:
+    desc: create a pulumi-stack for the staging-cluster for {{.domain}}
+    cmds:
+      - |
+        summonPulumi stage stack init --secrets-provider=passphrase --emoji kube-stage
+    silent: true
+
+
+  pulumiStackInitProd:
+    desc: create a pulumi-stack for the prod-cluster    for {{.domain}}
+    cmds:
+      - |
+        summonPulumi prod stack init --emoji kube-prod
+    silent: true
+
+
+  pulumiStackDeleteDev:
+    desc: delete the pulumi-stack for the dev-cluster     for {{.domain}}. {{.red}}ATTENTION{{.reset}} deletes {{.blue}}Pulumi.kube-dev.yaml{{.reset}}
+    cmds:
+      - |
+        summonPulumi dev stack rm --emoji kube-dev
+    silent: true
+
+
+  pulumiStackDeleteStage:
+    desc: delete the pulumi-stack for the staging-cluster for {{.domain}}. {{.red}}ATTENTION{{.reset}} deletes {{.blue}}Pulumi.kube-stage.yaml{{.reset}}
+    cmds:
+      - |
+        summonPulumi stage stack rm --secrets-provider=passphrase --emoji kube-stage
+    silent: true
+
+
+  pulumiStackDeleteProd:
+    desc: delete the pulumi-stack for the prod-cluster    for {{.domain}}. {{.red}}ATTENTION{{.reset}} deletes {{.blue}}Pulumi.kube-prod.yaml{{.reset}}
+
+    cmds:
+      - |
+        summonPulumi prod stack rm --emoji kube-prod
     silent: true
 
 

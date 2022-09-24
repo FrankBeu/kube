@@ -1,5 +1,5 @@
 * kube
-k8s-cluster built with pulumi  on nixos
+k8s-cluster built with pulumi on nixos
 ** INFO
 **** operators
 ***** prebuild
@@ -142,7 +142,7 @@ p config get --path secTest.password
 **** passphrases
 can not be entered via aliases
 #+begin_src shell :results drawer
-summon -e dev zsh -c 'pulumi config set --secret --path secTest.passphras "a secret passphrase"'
+summon -e dev zsh -c 'pulumi config set --secret --path secTest.passphrase "a secret passphrase"'
 #+end_src
 ***** n. move to subkey indented
 **** arrays

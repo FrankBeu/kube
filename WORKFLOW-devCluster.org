@@ -2,9 +2,22 @@
 assumptions:
   - on DEVOS (nixos)
   - in GITROOT
-** create cluster
+** log-in to pulumi
+*** OR
+**** task
 #+BEGIN_EXAMPLE shell
 task 0
+#+END_EXAMPLE
+use =~/.local/state/pulumi= instead of a serviced pulumi
+**** alias
+#+BEGIN_EXAMPLE shell
+pl
+#+END_EXAMPLE
+*** check
+=~/.pulumi=
+** create dev-cluster
+#+BEGIN_EXAMPLE shell
+task d1
 #+END_EXAMPLE
 cf.: https://k3d.io/v5.4.3/usage/exposing_services/
 *** dependencies
@@ -19,19 +32,6 @@ https://github.com/FrankBeu/devos/tree/main/nixos/profiles/tools/gotask/default.
 =~/DEVOS/nixos/profiles/tools/gotask/default.nix=
 *** check
 =~/.kube=
-** log-in to pulumi
-*** OR
-**** task
-#+BEGIN_EXAMPLE shell
-task 1
-#+END_EXAMPLE
-use =~/.local/state/pulumi= instead of a serviced pulumi
-**** alias
-#+BEGIN_EXAMPLE shell
-pl
-#+END_EXAMPLE
-*** check
-=~/.pulumi=
 ** create stack
 *** OR
 **** plain

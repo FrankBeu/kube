@@ -1,0 +1,8 @@
+encryptionsalt: v1:YJCrLoNp8LE=:v1:d8zNbcxVP8MP8x4u:6LsHK89Najr3u6YntJAxphnL86u/fg==
+config:
+  kube:debugMode: "false"
+  kube:domain:
+    clusterIssuer: ca-local
+  kube:env: dev
+  kubernetes:context: k3d-kube-dev
+  kubernetes:suppressDeprecationWarnings: "true"

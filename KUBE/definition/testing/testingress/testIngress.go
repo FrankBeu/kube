@@ -38,10 +38,12 @@ func CreateTestIngress(ctx *pulumi.Context) error {
 		NamespaceName:    namespace,
 		TLS:              true,
 	}
-	_, err = ingress.CreateIngress(ctx, &ing)
+	testIng, err := ingress.CreateIngress(ctx, &ing)
 	if err != nil {
 		return err
 	}
+
+	ctx.Export("testIngressUrl", testIng.Spec.Rules().Index(pulumi.Int(0)).Host()) //// retrievable with `p stack output tesIngressUrl`
 
 	return nil
 }
