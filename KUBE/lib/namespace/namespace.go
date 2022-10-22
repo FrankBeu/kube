@@ -26,6 +26,7 @@ const (
 	NamespaceTierProjectManagement                      // projectManagement
 	NamespaceTierSecurity                               // security
 	NamespaceTierStorage                                // storage
+	NamespaceTierStructural                             // structural
 	NamespaceTierTesting                                // testing
 
 	namespaceAPIVersion   string = "v1"

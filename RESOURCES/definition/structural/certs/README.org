@@ -1,0 +1,20 @@
+* cert-manager
+** directories
+*** =ca-local=
+recources to generate the key and cert for the ca-local
+*** =cert-manager=
+resources for pulumi-crds
+** INFO
+*** CRDs
+**** k8s
+***** cert-manager
+crds are installed automatically via helm-chart
+***** gateway
+crds are installed via traefik
+**** pulumi
+***** cert-manager
+cf.: [[file:WORKFLOW-update.org::*CRDs][./WORKFLOW-update.org::*CRDs]]
+***** gatewayAPI
+crds are installed via traefik
+
+

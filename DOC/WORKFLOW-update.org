@@ -1,0 +1,2 @@
+* workflow: update
+** [[file:../RESOURCES/definition/structural/certs/WORKFLOW-update.org::*UpdateWorkflow: cert-manager][cert-manager]]

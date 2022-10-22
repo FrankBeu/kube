@@ -1,0 +1,47 @@
+* UpdateWorkflow: cert-manager
+** helmRelease
+=KUBE/definition/structural/certs/certmanager/certmanager.go=
+#+BEGIN_SRC go
+  certManager, err := helm.NewRelease(ctx, "cert-manager", &helm.ReleaseArgs{
+          Version:   pulumi.String("1.11.0"),
+          //                        ^^^^^^
+          // ...
+  })
+  // ...
+#+END_SRC
+** CRDs
+*** k8s
+**** cert-manager
+updated automatically via helm-chart
+**** gatewayAPI
+cf. [[file:~/KUBE/RESOURCES/definition/structural/ingress/traefik/WORKFLOW-update.org::*gatewayAPI][traefik-gatewayAPI]]
+*** pulumi
+**** cert-manager
+***** update helmRepo
+#+BEGIN_EXAMPLE shell
+# helm repo add jetstack https://charts.jetstack.io
+helm repo update
+#+END_EXAMPLE
+****** get available version
+#+BEGIN_EXAMPLE shell
+helm search repo cert-manager
+#+END_EXAMPLE
+***** update the yaml under =RESOURCES=
+=RESOURCES/definition/structural/certs/cert-manager=
+#+BEGIN_EXAMPLE shell
+helm template jetstack/cert-manager --validate --version 1.11.0 --set "installCRDs=true" --output-dir $(git root)/RESOURCES/definition/structural/certs/cert-manager/crds
+#+END_EXAMPLE
+***** cleanup
+=RESOURCES/definition/structural/certs/cert-manager=
+remove all unnecessary files
+#+BEGIN_EXAMPLE shell
+fd --base-directory $(git root)/RESOURCES/definition/structural/certs/cert-manager/crds -E crds.yaml -X rm
+#+END_EXAMPLE
+***** update the crds
+=RESOURCES/definition/structural/certs/cert-manager=
+#+BEGIN_EXAMPLE shell
+crd2pulumi --force --goPath $(git root)/KUBE/crds/kubernetes $(git root)/RESOURCES/definition/structural/certs/cert-manager/crds/cert-manager/templates/crds.yaml
+#+END_EXAMPLE
+**** gatewayAPI
+cf. [[file:~/KUBE/RESOURCES/definition/structural/ingress/traefik/WORKFLOW-update.org::*gatewayAPI][traefik-gatewayAPI]]
+

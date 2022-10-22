@@ -8,7 +8,7 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	certv1 "thesym.site/kube/crds/cert-manager/certmanager/v1"
+	certv1 "thesym.site/kube/crds/kubernetes/certmanager/v1"
 	"thesym.site/kube/lib/kubeConfig"
 	"thesym.site/kube/lib/types"
 )

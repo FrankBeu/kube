@@ -20,12 +20,13 @@ func _() {
 	_ = x[NamespaceTierProjectManagement-9]
 	_ = x[NamespaceTierSecurity-10]
 	_ = x[NamespaceTierStorage-11]
-	_ = x[NamespaceTierTesting-12]
+	_ = x[NamespaceTierStructural-12]
+	_ = x[NamespaceTierTesting-13]
 }
 
-const _NamespaceTier_name = "apiappauthcommunicationdatabasedevOpsdnsedgemonitoringprojectManagementsecuritystoragetesting"
+const _NamespaceTier_name = "apiappauthcommunicationdatabasedevOpsdnsedgemonitoringprojectManagementsecuritystoragestructuraltesting"
 
-var _NamespaceTier_index = [...]uint8{0, 3, 6, 10, 23, 31, 37, 40, 44, 54, 71, 79, 86, 93}
+var _NamespaceTier_index = [...]uint8{0, 3, 6, 10, 23, 31, 37, 40, 44, 54, 71, 79, 86, 96, 103}
 
 func (i NamespaceTier) String() string {
 	if i < 0 || i >= NamespaceTier(len(_NamespaceTier_index)-1) {
