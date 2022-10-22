@@ -7,10 +7,13 @@ import (
 	// "thesym.site/kube/definition/testing/testnamespace"
 
 	"thesym.site/kube/definition/structural/certs/certmanager"
-	"thesym.site/kube/definition/structural/ingress/nginx"
+	"thesym.site/kube/definition/structural/ingress/traefik"
 
 	// "thesym.site/kube/definition/testing/testingress"
+
+	"thesym.site/kube/definition/testing/testcert"
 	"thesym.site/kube/definition/testing/testnamespace"
+	"thesym.site/kube/definition/testing/whoami"
 	"thesym.site/kube/lib/kubeConfig"
 )
 
@@ -23,14 +26,7 @@ var Kube = kubeConfig.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// Ingress
 	////
-	"nginxIngress": nginx.CreateNginxIngressController,
-
-	//// installation working; crd-usage not
-	// "emmissary": emmissary.CreateEmmissary,
-
-	// NOTREADY gloo
-
-	// "tykGateway": tyk.CreateTykGateway,
+	"traefikIngress": traefik.CreateTraefikIngressController,
 
 	//////////////////////// ////////////////////////
 	//// certificates
@@ -69,12 +65,13 @@ var Kube = kubeConfig.KubeConfig{
 	//// NAMESPACE
 	////
 	"testNamestpace": testnamespace.CreateTestNamespace,
-
 	//////////////////////// ////////////////////////
 	//// TESTS, PROTOS, ...
 	////
-	// "testCert": testcert.CreateTestCert,
+	"testCert": testcert.CreateTestCert,
 	// "testIngress": testingress.CreateTestIngress,
+	// "testHelmRelease": testhelmrelease.CreateHelmRelease,
+	"whoami": whoami.CreateWhoAmI,
 
 	// "glooPetstore": petstore.CreateGlooPetstore,
 

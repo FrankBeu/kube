@@ -7,13 +7,13 @@ import (
 	"thesym.site/kube/definition/app/observer/jaeger"
 	"thesym.site/kube/definition/app/vcs/gitea"
 	"thesym.site/kube/definition/structural/certs/certmanager"
-	"thesym.site/kube/definition/structural/ingress/nginx"
-	"thesym.site/kube/definition/structural/monitoring/loki"
+	"thesym.site/kube/definition/structural/ingress/traefik"
 
 	// "thesym.site/kube/definition/structural/monitoring/prometheus"
 	// "thesym.site/kube/definition/testing/gloo/petstore"
 	// "thesym.site/kube/definition/testing/testingress"
 	"thesym.site/kube/definition/testing/testnamespace"
+	"thesym.site/kube/definition/testing/whoami"
 	"thesym.site/kube/lib/kubeConfig"
 )
 
@@ -25,14 +25,7 @@ var Kube = kubeConfig.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// Ingress
 	////
-	"nginxIngress": nginx.CreateNginxIngressController,
-
-	//// installation working; crd-usage not
-	// "emmissary": emmissary.CreateEmmissary,
-
-	// NOTREADY gloo
-
-	// "tykGateway": tyk.CreateTykGateway,
+	"traefikIngress": traefik.CreateTraefikIngressController,
 
 	//////////////////////// ////////////////////////
 	//// certificates
@@ -43,7 +36,7 @@ var Kube = kubeConfig.KubeConfig{
 	//// MONITORING
 	////
 	// "prometheus": prometheus.CreatePrometheus,
-	"loki": loki.CreateLoki,
+	// "loki": loki.CreateLoki,
 
 	//////////////////////// //////////////////////// ////////////////////////
 	//// APPS
@@ -72,12 +65,13 @@ var Kube = kubeConfig.KubeConfig{
 	//// NAMESPACE
 	////
 	"testNamestpace": testnamespace.CreateTestNamespace,
-
 	//////////////////////// ////////////////////////
 	//// TESTS, PROTOS, ...
 	////
 	// "testCert": testcert.CreateTestCert,
 	// "testIngress": testingress.CreateTestIngress,
+	// "testHelmRelease": testhelmrelease.CreateHelmRelease,
+	"whoami": whoami.CreateWhoAmI,
 
 	// "glooPetstore": petstore.CreateGlooPetstore,
 
