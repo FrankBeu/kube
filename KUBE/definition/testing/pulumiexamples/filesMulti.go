@@ -10,7 +10,7 @@ import (
 
 func CreateFromFilesMulti(ctx *pulumi.Context) error {
 	guestbook, err := yaml.NewConfigGroup(ctx, "guestbook", &yaml.ConfigGroupArgs{
-		Files: []string{filepath.Join("definition/testing/pulumiexamples/fileSingle", "*.yaml")},
+		Files: []string{filepath.Join("definition/testing/pulumiexamples/fileSingle", "*.yaml")}, //nolint:gocritic
 	})
 	if err != nil {
 		return err

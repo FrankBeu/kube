@@ -1,4 +1,4 @@
-// Package pulumiexamples contains all the introductury examples for references
+// Package pulumiexamples contains all the introductory examples for references
 package pulumiexamples
 
 import (
@@ -10,6 +10,7 @@ import (
 func CreateFromFileSingle(ctx *pulumi.Context) error {
 	guestbook, err := yaml.NewConfigFile(ctx, "guestbook", &yaml.ConfigFileArgs{
 		// _, err := yaml.NewConfigFile(ctx, "guestbook", &yaml.ConfigFileArgs{
+		//nolint:lll
 		// File: "fileSingle/guestbook-all-in-one.yaml",                                //// will only create  └─ kubernetes:yaml:ConfigFile guestbook
 		File: "definition/testing/pulumiexamples/fileSingle/guestbook-all-in-one.yaml", //// will create the ConfigFile + the Resources
 
@@ -20,7 +21,7 @@ func CreateFromFileSingle(ctx *pulumi.Context) error {
 
 	// // Export the private cluster IP address of the frontend.
 	frontend := guestbook.GetResource("v1/Service", "frontend", "").(*corev1.Service)
-	ctx.Export("fileSingle.privateIP:", frontend.Spec.ClusterIP()) //// retrievable with `p stack output fileMulti.privateIP`
+	ctx.Export("fileSingle.privateIP:", frontend.Spec.ClusterIP()) //// retrievable with `p stack output fileSingle.privateIP`
 
 	return nil
 }

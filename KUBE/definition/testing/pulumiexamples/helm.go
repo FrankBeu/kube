@@ -2,12 +2,11 @@ package pulumiexamples
 
 import (
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
-	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
+	helm "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
 func CreateFromHelmChart(ctx *pulumi.Context) error {
-
 	// Deploy the latest version of the stable/wordpress chart.
 	wordpress, err := helm.NewChart(ctx, "wpdev", helm.ChartArgs{
 		Repo:    pulumi.String("stable"),
