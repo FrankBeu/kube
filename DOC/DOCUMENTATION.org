@@ -1,0 +1,273 @@
+* kube
+** DEPENDENCIES
+*** required
+**** *pulumi*
+https://www.pulumi.com/
+**** *kubectl*
+**** *gojsontoyaml*
+prometheus is defined in jsonnet
+*** convenience
+**** *summon + gopass*
+providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
+*** DEVEL
+**** *k3d*
+***** used to create k8s-cluster for
+****** dev
+****** stage
+**** *yaml-Splitting*
+~kube2pulumi~ works better with single files.
+#+begin_example shell
+k8split -o $(git root)TMP cert-manager.yaml
+#+end_example
+**** *kube2pulumi*
+generate a =main.go= which must be processed further
+#+begin_example shell
+  kube2pulumi go -d $(git root)/TMP
+#+end_example
+**** *crd2pulumi*
+***** output to KUBE/crds
+#+begin_example shell
+crd2pulumi --force --goPath $(git root)/KUBE/crds/kubernetes $(git root)/RESOURCES/definition/structural/certs/cert-manager/crds/cert-manager/templates/crds.yaml
+#+end_example
+
+*** proxy
+The Ingresscontroller is  used in  ~NodePort~ Mode.
+Only ports 30000 - 32767 can be use.
+So a reverse proxy on the host is needed.
+The k3d-server-layer must be traversed by portMapping, too.
+*** persistence
+***** dev / staging k3d
+#+begin_src shell :results drawer
+ mkdir -p $XDG_STATE_HOME/kube/development
+ mkdir -p $XDG_STATE_HOME/kube/staging
+#+end_src
+***** stage k3s
+#+begin_src shell :results drawer
+ sudo mkdir -p /srv/kube/staging
+#+end_src
+***** prod k3s
+#+begin_src shell :results drawer
+sudo mkdir -p /srv/kube/production
+#+end_src
+** INFO
+[[https://www.pulumi.com/registry/packages/kubernetes/#configuration][Kubernetes | Pulumi Registry]]
+*** configuration
+**** changes to config must be applied with ~pulumi up~ in order to be effective
+**** think of ENV - not of config - *.go is your config* now
+**** RESIST
+***** the urge to write a config.yaml
+****** never import viper or packagesSimilar
+****** again: golang is the config
+pulumi the app
+**** settings
+****** do not show deprecation warnings
+#+begin_example shell
+pulumi config set kubernetes:suppressDeprecationWarnings true
+#+end_example
+****** constraint stack to cluster
+#+begin_example shell
+pulumi config set kubernetes:context "k3d-kube-dev"
+#+end_example
+#+begin_example shell
+pulumi config set kubernetes:context "k3d-kube-stage"
+#+end_example
+#+begin_example shell
+pulumi config set kubernetes:context "k3d-kube-prod"
+#+end_example
+***** environment
+#+begin_example shell
+pulumi config set domain "{{DOMAIN}}"
+#+end_example
+#+begin_example shell
+pulumi config set env "stage"
+#+end_example
+**** secrets
+***** password
+****** set
+#+begin_src shell :results drawer
+p config set --secret --path secTest.password qwer
+#+end_src
+****** get
+#+begin_src shell :results drawer
+p config get --path secTest.password
+#+end_src
+***** passphrases
+can not be entered via aliases
+#+begin_src shell :results drawer
+summon -e dev zsh -c 'pulumi config set --secret --path secTest.passphrase "a secret passphrase"'
+#+end_src
+****** move to subkey indented
+***** arrays
+can not be entered via aliases
+#+begin_src shell :results drawer
+summon -e dev bash -c 'pulumi config set --secret --path secTest.array[0] qwer'
+#+end_src
+***** remove
+#+begin_src shell :results drawer
+p config rm secTest
+#+end_src
+*** development
+**** transformations
+[[https://www.pulumi.com/registry/packages/kubernetes/api-docs/yaml/configfile/#yaml-with-transformations][kubernetes.yaml.ConfigFile | Pulumi Registry]]
+[[https://github.com/search?q=extension%3Ago+yaml.Transformation][github-Search · extension:go yaml.Transformation]]
+*** safety / security
+in order to prevent an unauthorized or accidental deploy to the wrong cluster
+*gopass* and *summon* are used to wrapp calls to *pulumi*.
+**** command ~pulumi~
+***** usage
+****** deploy
+if the *deployCommand* and the *stack* do not match
+the following message is printed:
+#+begin_quote
+error: decrypting secret value: failed to decrypt:
+incorrect passphrase, please set PULUMI_CONFIG_PASSPHRASE to the correct passphrase or set PULUMI_CONFIG_PASSPHRASE_FILE to a file containing the passphrase
+#+end_quote
+****** choose your target stack
+#+begin_src shell :results drawer
+  p{,S,PROD} stack select kube-{dev,stage,prod}
+#+end_src
+****** deploy
+***** shell-setup
+The ~pulumi~ command is only used via calls to stack-dependent aliases
+#+begin_example shell
+alias     p="summonPulumi dev"
+alias    pS="summonPulumi stage"
+alias pPROD="summonPulumi prod"
+#+end_example
+#+begin_example shell
+function summonPulumi() {
+    ENV=${1}
+    PULUMI_ARGS=${@:2}
+    summon --up -e ${ENV} zsh -c "pulumi ${PULUMI_ARGS}"
+}
+#+end_example
+***** summon
+chooses the env defined in [[../KUBE/secrets.yml]]
+calls gopass to retrieve the value
+and sets the PULUMI_CONFIG_PASSPHRASE accordingly
+***** gopass
+protects a password for each env
+=k8s/misc/pulumiDev=
+=k8s/misc/pulumiStage=
+=k8s/misc/pulumiProd=
+**** secrets in environment
+-> [[*secrets][kube/environments/secrets]]
+*** env
+**** stacks
+each env needs an stack initialized using the right aliases
+#+BEGIN_EXAMPLE shell
+git root
+task pulumiStackInitDev
+#+END_EXAMPLE
+**** dev
+**** staging
+***** should match production
+****** k3s needs swap disabled -> use k3d
+**** production
+***** TODO k3s
+** TODO TODOS
+*** TODO generate flake
+- with all dependencies
+- with multiEnv-Kube_proxy
+- gopassConvenience
+- aliases
+
+*** PROBLEMS
+**** TODO traefik nodeport - ingress
+workaround: skipAwait
+https://github.com/nginxinc/kubernetes-ingress/blob/5847d1f3906287d2771f3767d61c15ac02522caa/docs/report-ingress-status.md
+https://github.com/pulumi/pulumi-kubernetes/blob/920ed437139b877588e36fc7c5f7392470ea6368/provider/pkg/await/ingress.go#L365-L369
+https://github.com/pulumi/pulumi-kubernetes/issues/1812
+https://github.com/pulumi/pulumi-kubernetes/issues/1810
+*** TODO create/automate update cycle
+**** pull changes
+**** transformations
+***** update namespace
+***** other valid changes??
+****** nodePort??
+**** import into ~execK2pGenerated()~
+function which is called by MODULE.CreateNAME()~C
+#+begin_src go
+  package PACKAGE
+
+  config = CONFIG
+
+  func CreatePACKAGE() {
+          lib.CreateNamespaces()
+          otherPackageSpecificFunc()
+          execK2pGenerated()
+  }
+
+  func otherPackageSpecificFunc () {
+  }
+
+  func execK2pGenerated() {
+          // exec generated code
+  }
+#+end_src
+
+***** should be solved upstream
+api-deprecations
+
+****** contribute
+*** TODO repoStructure
+**** projectile needs git + gomod in same dir
+**** pulumi  needs git + gomod in same dir
+**** gopls should not read RESOURCES/*.go
+**** TODO try buildtags
+gopls respects them
+#+begin_src go
+ // +build never
+#+end_src
+**** Environments
+***** prod
+****** k3s
+******* on nuc
+***** stage
+should mimic prod as closly as possible
+****** TODO k3s
+******* on mac
+****** currently k3d
+***** dev
+****** k3d
+******* on mac
+******* on nuc
+for multi node experiments
+*** TODO create keynote
+*** TODO testing, testing, testing
+**** after coms + vcs
+**** !!!
+**** DONE unit tests
+***** only for lib
+**** "integrationTests"
+***** goldenFiles
+****** needs optional providerArguments
+******* renderProviderExample
+******** definition
+[[./KUBE/definition/testing/pulumiexamples/renderYaml/renderYaml.go::13]]
+******** usage
+[[./KUBE/definition/testing/pulumiexamples/renderYaml/renderYaml.go::38]]
+***** pulumi
+****** envExamples
+**** end2end
+***** check if definedServices are available
+*** TODO architecture
+**** all function should be pure
+***** except Create.....()
+***** TODO package config???
+****** package-local
+******* readable++
+****** Create...()-local
+******* forces pure lib~,package-functions
+***** implement with testing
+*** TODO persistence
+*** TODO create defaultBackend
+**** thesymsite
+*** TODO loki
+**** colorize logs
+#+begin_src shell :results drawer
+helm show values grafana/promtail
+#+end_src
+**** systemdScraper
+***** nuc
+***** mac

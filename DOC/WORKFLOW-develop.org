@@ -1,0 +1,15 @@
+* workflow: develop
+** FEATURE
+*** on cluster
+**** create yaml-files manually
+*** on other cluster
+implement yamls in pulumi via ~yaml.NewConfigFile~
+*** on public cluster
+test pulumiConfiguration
+*** on cluster
+**** functionalize new configuration
+***** tests
+*** on other cluster
+**** rollout
+*** on public cluster
+**** rollout

@@ -1,0 +1,79 @@
+* workflow: debug
+** infos about pulumi, versions, ...
+#+BEGIN_SRC shell :results drawer
+p about
+#+END_SRC
+** debugging with delve
+*** TODO check
+*** workflow
+**** check =Task.yaml=
+**** manual
+***** build without stripping dwarfSymbols
+****** debug
+#+begin_src shell :results drawer
+go build -gcflags '-N -l' -o pulumi-main main.go
+#+end_src
+******* if delving deeper is required
+do not build only toplevel packages - build all packages without stripping
+#+begin_src shell :results drawer
+go build -gcflags "all=-N -l" -o pulumi-main main.go
+#+end_src
+***** prepare =Pulumi.yaml= for debugging
+#+begin_src yaml
+  ### ...
+  runtime:
+      name: go
+      options:
+          binary: pulumi-main
+  ### ...
+#+end_src
+***** start
+#+begin_src shell :results drawer
+pS up -c debugMode=true
+#+end_src
+***** get pid
+#+begin_src shell :results drawer
+  ps pulumi-main
+#+end_src
+***** connect
+****** XOR
+******* insert pid into =launch.json=
+******* via template
+=SPC d d d=
+~Go Attach Executable Configuration~
+enter pid
+***** change ~debugReady~
+****** workflow
+1. after starting session continue till ~debugReady~ is available in locals-window
+2. quit hydra =q=
+3. change to locals-window =C-w C-w=
+4. navigate cursor to ~debugReady~
+5. =M-x= ~dap-ui-set-variable-value~ *true* =ENTER=
+6. back to man-window =C-w C-W=
+7. open hydra =SPC d .=
+8. start debugging
+****** TODO find/create *easier* workflow
+*** INFO
+https://github.com/pulumi/pulumi/issues/1372
+https://code.visualstudio.com/docs/
+https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#attach-to-a-process-on-a-remote-machine
+**** dap
+https://microsoft.github.io/debug-adapter-protocol/overview
+**** debugging a provider (other useCase)
+https://gist.github.com/lblackstone/e91e841cf022e67586aa98fb2c5025fe
+*** DONE implementation
+**** use channels??
+***** cleaner implementation but change~/callable  from emacs??
+NO
+**** debug debugging
+eval:
+#+begin_src elisp
+(setq dap-print-io t)
+#+end_src
+and check messages buffer
+**** proto for testing integration
+=~/SRC/GITEA/PROTO/GOLANG/delveTestAttach/main.go=
+**** schedule
+***** proto working
+****** attaching
+***** tdd with bool

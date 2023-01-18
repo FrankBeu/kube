@@ -29,7 +29,7 @@ func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		conf := pulumiConfig.New(ctx, "")
 
-		//// DebugMode cf. [[file:../README.org::*debugging with delve]]
+		//// DebugMode cf. [[file:../DOC/WORKFLOW-debug.org::*debugging with delve]]
 		debugMode, _ := strconv.ParseBool(conf.Get("debugMode"))
 		timeOutDuration := 120 * time.Second
 		debugReady := false

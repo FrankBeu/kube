@@ -1,0 +1,21 @@
+* kube
+** outputs
+*** show available fields
+#+BEGIN_SRC go
+	ctx.Export("testIngress.URL:", testIng.Spec) //// retrievable with `p stack output tesIngress.URL`
+#+END_SRC
+** timeout
+[[https://www.pulumi.com/docs/intro/concepts/resources/options/customtimeouts/][CustomTimeouts | Pulumi]]
+#+BEGIN_SRC go
+  ingress, err := networkingv1.NewIngress(ctx, ing.Name, &networkingv1.IngressArgs{//...
+  //////////////////////////////////////////////////////////////////////////////// XOR 
+  ////////////////////////////////////////////////////////////////////// w/o timeout
+  // })
+  ////////////////////////////////////////////////////////////////////// w/timeout
+  },
+  // pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "1m"}))
+  pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "30s"}))
+  //////////////////////////////////////////////////////////////////////
+#+END_SRC
+** dependencies
+[[https://www.pulumi.com/docs/intro/concepts/resources/options/dependson/][DependsOn | Pulumi]]
