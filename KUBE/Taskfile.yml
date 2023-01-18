@@ -1,8 +1,5 @@
-###
-##
-# * TASKFILE
-#   https://taskfile.dev
-#
+### TASKFILE
+### https://taskfile.dev
 version: 3
 
 
@@ -57,11 +54,7 @@ tasks:
     silent: true
 
 
-###
-##
-# ** SEQUENCE
-#
-#
+### SEQUENCE
   0:
     desc: ( pulumiLogin )
     cmds:
@@ -69,71 +62,75 @@ tasks:
     silent: true
 
 
-  1d:
-    desc: ( clusterCreateDev )
+  d1:
+    desc: ( clusterCreateDev     )
     cmds:
       - task: clusterCreateDev
     silent: true
 
 
-  2d:
-    desc: ( pulumiStackInitDev )
+  d2:
+    desc: ( pulumiStackInitDev   )
     cmds:
       - task: pulumiStackInitDev
     silent: true
 
 
-  3d:
-    desc: ( pulumiUpDev )
+  d3:
+    desc: ( pulumiUpDev          )
     cmds:
       - task: pulumiUpDev
     silent: true
 
 
-  4d:
-    desc: ( pulumiStackDeleteDev   - {{.red}}ATTENTION{{.reset}} {{.blue}}Pulumi.kube-dev.yaml{{.reset}}   has to be restored with {{.yellow}}git{{.reset}} )
+  d4:
+          # ( pulumiStackDeleteDev   - {{.red}}ATTENTION{{.reset}}: {{.blue}}Pulumi.kube-dev.yaml{{.reset}}   has to be restored with {{.yellow}}git{{.reset}} )
+    desc: |-
+          ( pulumiStackDeleteDev )
     cmds:
       - task: pulumiStackDeleteDev
     silent: true
 
 
-  5d:
-    desc: ( clusterDeleteDev )
+  d5:
+    desc: ( clusterDeleteDev     )
     cmds:
       - task: clusterDeleteDev
     silent: true
 
 
-  1s:
-    desc: ( clusterCreateStage )
+  s1:
+    desc: ( clusterCreateStage     )
     cmds:
       - task: clusterCreateStage
     silent: true
 
 
-  2s:
-    desc: ( pulumiStackInitStage )
+  s2:
+    desc: ( pulumiStackInitStage   )
     cmds:
       - task: pulumiStackInitStage
     silent: true
 
 
-  3s:
-    desc: ( pulumiUpStage )
+  s3:
+    desc: ( pulumiUpStage          )
     cmds:
       - task: pulumiUpStage
     silent: true
 
 
-  4s:
-    desc: ( pulumiStackDeleteStage - {{.red}}ATTENTION{{.reset}} {{.blue}}Pulumi.kube-stage.yaml{{.reset}} has to be restored with {{.yellow}}git{{.reset}} )
+  s4:
+          # ( pulumiStackDeleteStage - {{.red}}ATTENTION{{.reset}}: {{.blue}}Pulumi.kube-stage.yaml{{.reset}} has to be restored with {{.yellow}}git{{.reset}} )
+    desc: |-
+          ( pulumiStackDeleteStage )
     cmds:
       - task: pulumiStackDeleteStage
     silent: true
 
 
-  5s:
-    desc: ( clusterDeleteStage )
+  s5:
+    desc: ( clusterDeleteStage     )
     cmds:
       - task: clusterDeleteStage
     silent: true
@@ -147,10 +144,7 @@ tasks:
 
 
 
-###
-##
-# ** ALPHABETICAL
-#
+### ALPHABETICAL
   clusterCreateDev:
     desc: create a dev-cluster     for {{.domain}}
     cmds:
@@ -276,6 +270,34 @@ tasks:
     silent: true
 
 
+  pulumiCrdUpdateCertManger:
+    vars:
+      TARGET:    "certmanager"
+      YAML_PATH: "../RESOURCES/definition/apps/observer/jaeger/DOWNLOADS/crds/jaegertracing.io_jaegers_crd.yaml"
+    desc: |-
+          regenerate crds for {{.blue}}{{.TARGET}}{{.reset}}
+    cmds:
+      - task: templatePulumiCrdUpdateTask
+        vars:
+          TARGET:    "{{.TARGET}}"
+          YAML_PATH: "{{.YAML_PATH}}"
+    silent: true
+
+
+  pulumiCrdUpdateTraefik:
+    vars:
+      TARGET:    "traefik"
+      YAML_PATH: "../RESOURCES/definition/structural/ingress/traefik/traefik-helm-chart/traefik/crds/*"
+    desc: |-
+          regenerate crds for {{.blue}}{{.TARGET}}{{.reset}}
+    cmds:
+      - task: templatePulumiCrdUpdateTask
+        vars:
+          TARGET:    "{{.TARGET}}"
+          YAML_PATH: "{{.YAML_PATH}}"
+    silent: true
+
+
   pulumiStackInitDev:
     desc: create a pulumi-stack for the dev-cluster     for {{.domain}}
     cmds:
@@ -301,35 +323,69 @@ tasks:
 
 
   pulumiStackDeleteDev:
-    desc: delete the pulumi-stack for the dev-cluster     for {{.domain}}. {{.red}}ATTENTION{{.reset}} deletes {{.blue}}Pulumi.kube-dev.yaml{{.reset}}
+          # delete the pulumi-stack for the dev-cluster     for {{.domain}}.  {{.red}}ATTENTION{{.reset}}: deletes {{.blue}}Pulumi.kube-dev.yaml{{.reset}}
+    desc: |-
+          delete the pulumi-stack for the dev-cluster     for {{.domain}}.
     cmds:
       - |
+        cp ./Pulumi.kube-dev.yaml ./Pulumi.kube-dev.yamlBAK
         summonPulumi dev stack rm --emoji kube-dev
+        mv ./Pulumi.kube-dev.yamlBAK ./Pulumi.kube-dev.yaml
     silent: true
 
 
   pulumiStackDeleteStage:
-    desc: delete the pulumi-stack for the staging-cluster for {{.domain}}. {{.red}}ATTENTION{{.reset}} deletes {{.blue}}Pulumi.kube-stage.yaml{{.reset}}
+          # delete the pulumi-stack for the staging-cluster for {{.domain}}.  {{.red}}ATTENTION{{.reset}}: deletes {{.blue}}Pulumi.kube-stage.yaml{{.reset}}
+    desc: |-
+          delete the pulumi-stack for the staging-cluster for {{.domain}}.
     cmds:
       - |
-        summonPulumi stage stack rm --secrets-provider=passphrase --emoji kube-stage
+        cp ./Pulumi.kube-stage.yaml ./Pulumi.kube-stage.yamlBAK
+        summonPulumi stage stack rm --emoji kube-stage
+        mv ./Pulumi.kube-stage.yamlBAK ./Pulumi.kube-stage.yaml
     silent: true
+        # summonPulumi stage stack rm --secrets-provider=passphrase --emoji kube-stage
 
 
   pulumiStackDeleteProd:
-    desc: delete the pulumi-stack for the prod-cluster    for {{.domain}}. {{.red}}ATTENTION{{.reset}} deletes {{.blue}}Pulumi.kube-prod.yaml{{.reset}}
-
+          # delete the pulumi-stack for the prod-cluster    for {{.domain}}.  {{.red}}ATTENTION{{.reset}}: deletes {{.blue}}Pulumi.kube-prod.yaml{{.reset}}
+    desc: |-
+          delete the pulumi-stack for the prod-cluster    for {{.domain}}.
     cmds:
       - |
+        cp ./Pulumi.kube-prod.yaml ./Pulumi.kube-prod.yamlBAK
         summonPulumi prod stack rm --emoji kube-prod
+        mv ./Pulumi.kube-prod.yamlBAK ./Pulumi.kube-prod.yaml
     silent: true
 
 
-###
-##
-# ** colorDisplay
-#
-#
+### TEMPLATES
+  templatePulumiCrdUpdateTask:
+    vars:
+      TARGET:    '{{default "UNDEFINED" .TARGET}}'
+      YAML_PATH: '{{default "UNDEFINED" .YAML_PATH}}'
+    desc: |-
+          {{.grayDark}}TEMPLATE: Do not call directly{{.reset}}
+    cmds:
+      - rm -r ./crd/kubernetes/{{.TARGET}}
+      - crd2pulumi --goPath ./crds/kubernetes {{.YAML_PATH}} --force
+    silent: true
+
+
+### WORKFLOWS
+  workflowUpdateCRDs:
+    desc: |-
+          print a workflow to update CRDs
+    cmds:
+      - echo '  • run {{.yellow}}git submodule update --remote {{.magenta}}<PATH-TO-THE-SUBMODULE>{{.reset}}'
+      - echo '  • run {{.yellow}}task pulumiCrdUpdate{{.magenta}}<CRD>{{.reset}}'
+      - echo '  • run {{.yellow}}go test{{.reset}}'
+      - echo '  • run {{.yellow}}p{,S,PROD} up{{.reset}}'
+    silent: true
+
+
+
+### COLORDISPLAY
   colorDisplay:
     desc: show all defined colors and their emacs-register
     cmds:
