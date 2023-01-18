@@ -9,15 +9,14 @@ import (
 
 var (
 	name          = "test"
-	namespaceTest = &namespace.Namespace{
+	NamespaceTest = &namespace.Namespace{
 		Name: name,
 		Tier: namespace.NamespaceTierTesting,
-		// GlooDiscovery: true,
 	}
 )
 
 func CreateTestNamespace(ctx *pulumi.Context) error {
-	_, err := namespace.CreateNamespace(ctx, namespaceTest)
+	_, err := namespace.CreateNamespace(ctx, NamespaceTest)
 	if err != nil {
 		return err
 	}
