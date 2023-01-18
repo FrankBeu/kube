@@ -1,3 +1,6 @@
+# yaml-language-server: $schema=https://json.schemastore.org/pulumi.json
+name: kube
+runtime: go
 encryptionsalt: v1:YJCrLoNp8LE=:v1:d8zNbcxVP8MP8x4u:6LsHK89Najr3u6YntJAxphnL86u/fg==
 config:
   kube:certManager:
@@ -9,6 +12,7 @@ config:
   kube:debugMode: "false"
   kube:domain:
     clusterIssuer: ca-local
+    # clusterIssuer: letsencrypt-staging
   kube:domainSecret:
     adminEmail:
       secure: v1:pXR3eDtNCNSGG1ei:hxYfeAaammXTEsLelrD6W97GiNNYb+GaasyqIHfFkivTHcUYani6kg==

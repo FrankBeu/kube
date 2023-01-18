@@ -1,3 +1,6 @@
+# yaml-language-server: $schema=https://json.schemastore.org/pulumi.json
+name: kube
+runtime: go
 encryptionsalt: v1:dBXj+CINlTQ=:v1:MDgTXJeUnY60vu4R:eiijh/b5QmVljmeOrfGfLeWHFUzWAg==
 config:
   kube:certManager:
@@ -23,3 +26,4 @@ config:
   kube:grafanaSecret:
     adminPassword:
       secure: v1:I8G/1YFaVvn2/A7I:mymZFA/HXeUeNIE11kkzWUajRfrqV1aoXIiaIw0DwtUz5yn1Wabi6g==
+  kubernetes:context: k3d-nuc-prod
