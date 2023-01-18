@@ -8,7 +8,7 @@ const (
 	ClusterIssuerTypeLetsEncryptStaging                          // letsencrypt-staging
 	ClusterIssuerTypeLetsEncryptProd                             // letsencrypt-prod
 
-	DefaultDurationInDays = 90
+	DefaultDurationInDays = 99
 )
 
 var AllClusterIssuerTypes = []ClusterIssuerType{
