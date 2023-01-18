@@ -5,19 +5,19 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-//nolint:golint
 // IngressClassName specifies the ingressController which implements the ingress
 type IngressClassName int
 
 //go:generate stringer -type=IngressClassName -linecomment
 const (
-	IngressClassNameNginx IngressClassName = iota // nginx
-	// IngressClassNameTest // test
+	IngressClassNameTraefik IngressClassName = iota //// traefik
+	IngressClassNameNginx                           //// nginx
+	// IngressClassNameTest                         //// test
 
 	IngressAPIVersion string = "networking.k8s.io/v1"
 	IngressKind       string = "Ingress"
-	TlsAnnotationKey  string = "cert-manager.io/cluster-issuer"
-	TlsSecretSuffix   string = "-tls"
+	TLSAnnotationKey  string = "cert-manager.io/cluster-issuer"
+	TLSSecretSuffix   string = "-tls"
 )
 
 type Host struct {
@@ -26,7 +26,7 @@ type Host struct {
 	ServicePort int
 }
 
-type Config struct {
+type IngressConfig struct {
 	Annotations       pulumi.StringMap
 	ClusterIssuerType ClusterIssuerType
 	Hosts             []Host

@@ -1,3 +1,4 @@
+//nolint:lll
 package ingress
 
 import (
@@ -18,7 +19,7 @@ import (
 //nolint:funlen
 func Test_createIngress(t *testing.T) {
 	type args struct {
-		ing              types.Config
+		ing              types.IngressConfig
 		domainNameSuffix string
 	}
 	tests := []struct {
@@ -28,10 +29,10 @@ func Test_createIngress(t *testing.T) {
 		{
 			name: "test a ingress with defaults",
 			args: args{
-				ing: types.Config{
+				ing: types.IngressConfig{
 					Name:             "testingress",
 					NamespaceName:    "test",
-					IngressClassName: types.IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameTraefik,
 					Hosts: []types.Host{
 						{
 							Name:        "test",
@@ -46,11 +47,10 @@ func Test_createIngress(t *testing.T) {
 		{
 			name: "test an ingress with two hosts",
 			args: args{
-				ing: types.Config{
+				ing: types.IngressConfig{
 					Name:             "otheringress",
 					NamespaceName:    "other",
-					IngressClassName: types.IngressClassNameNginx,
-
+					IngressClassName: types.IngressClassNameTraefik,
 					Hosts: []types.Host{
 						{
 							Name:        "test",
@@ -69,10 +69,10 @@ func Test_createIngress(t *testing.T) {
 		{
 			name: "test an ingress with multiple hosts",
 			args: args{
-				ing: types.Config{
+				ing: types.IngressConfig{
 					Name:             "another",
 					NamespaceName:    "test",
-					IngressClassName: types.IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameTraefik,
 					Hosts: []types.Host{
 						{
 							Name:        "test",
@@ -97,10 +97,10 @@ func Test_createIngress(t *testing.T) {
 		{
 			name: "test an ingress with annotations",
 			args: args{
-				ing: types.Config{
+				ing: types.IngressConfig{
 					Name:             "annotationingress",
 					NamespaceName:    "other",
-					IngressClassName: types.IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameTraefik,
 					Annotations: pulumi.StringMap{
 						"nginx.ingress.kubernetes.io/ssl-redirect":       pulumi.String("false"),
 						"nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("false"),
@@ -119,10 +119,10 @@ func Test_createIngress(t *testing.T) {
 		{
 			name: "test an ingress with tls activated",
 			args: args{
-				ing: types.Config{
+				ing: types.IngressConfig{
 					Name:             "tlsingress",
 					NamespaceName:    "other",
-					IngressClassName: types.IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameTraefik,
 					Hosts: []types.Host{
 						{
 							Name:        "test",
@@ -138,10 +138,10 @@ func Test_createIngress(t *testing.T) {
 		{
 			name: "test an ingress with tls activated and additional annotations",
 			args: args{
-				ing: types.Config{
+				ing: types.IngressConfig{
 					Name:             "otheringress",
 					NamespaceName:    "other",
-					IngressClassName: types.IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameTraefik,
 					Annotations: pulumi.StringMap{
 						"nginx.ingress.kubernetes.io/force-ssl-redirect": pulumi.String("true"),
 					},
@@ -160,10 +160,10 @@ func Test_createIngress(t *testing.T) {
 		{
 			name: "test an ingress with tls activated and multiple hosts",
 			args: args{
-				ing: types.Config{
+				ing: types.IngressConfig{
 					Name:             "othertlsingress",
 					NamespaceName:    "other",
-					IngressClassName: types.IngressClassNameNginx,
+					IngressClassName: types.IngressClassNameTraefik,
 					Hosts: []types.Host{
 						{
 							Name:        "test",
@@ -202,12 +202,12 @@ func Test_createIngress(t *testing.T) {
 					testutil.Equalf(t, "Ingress", "Namespace", *metaActual.Namespace, tt.args.ing.NamespaceName)
 					testutil.Equalf(t, "Ingress", "IngressClassName", *specActual.IngressClassName, tt.args.ing.IngressClassName.String())
 
-					assertSpecRules(t, ctx, specActual.Rules, tt.args.ing.Hosts, tt.args.domainNameSuffix)
+					assertSpecRules(t, specActual.Rules, tt.args.ing.Hosts, tt.args.domainNameSuffix)
 
 					assertAnnotations(t, tt.args.ing.TLS, metaActual.Annotations, tt.args.ing.Annotations)
 
 					if tt.args.ing.TLS {
-						assertSpecTLS(t, ctx, specActual.Tls, tt.args.ing.Hosts, tt.args.ing.Name+types.TlsSecretSuffix, tt.args.domainNameSuffix)
+						assertSpecTLS(t, specActual.Tls, tt.args.ing.Hosts, tt.args.ing.Name+types.TLSSecretSuffix, tt.args.domainNameSuffix)
 					} else {
 						assert.Emptyf(t, specActual.Tls, "TLS: specTls is not empty despite tls NOT being activated: actual: %+v", specActual.Tls)
 					}
@@ -223,7 +223,7 @@ func Test_createIngress(t *testing.T) {
 	}
 }
 
-func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.IngressRule, hostsTarget []types.Host, domainNameSuffix string) {
+func assertSpecRules(t *testing.T, rules []networkingv1.IngressRule, hostsTarget []types.Host, domainNameSuffix string) {
 	//// extract the necessary data
 	var hostsActual []types.Host
 	for _, rule := range rules {
@@ -257,14 +257,14 @@ func assertSpecRules(t *testing.T, ctx *pulumi.Context, rules []networkingv1.Ing
 func assertAnnotations(t *testing.T, tlsEnabled bool, annotationsActual map[string]string, annotationsTarget pulumi.StringMap) {
 	if tlsEnabled {
 		containsMsg := "TLS: annotation %q is not set"
-		testutil.AssertAnnotation(t, annotationsActual, types.TlsAnnotationKey, pulumi.String(types.ClusterIssuerTypeCALocal.String()), containsMsg)
+		testutil.AssertAnnotation(t, annotationsActual, types.TLSAnnotationKey, pulumi.String(types.ClusterIssuerTypeCALocal.String()), containsMsg)
 	} else {
 		assert.NotContainsf(
 			t,
 			annotationsActual,
-			types.TlsAnnotationKey,
+			types.TLSAnnotationKey,
 			"TLS: label %q is set despite TLS not being activated",
-			types.TlsAnnotationKey,
+			types.TLSAnnotationKey,
 		)
 	}
 
@@ -274,7 +274,7 @@ func assertAnnotations(t *testing.T, tlsEnabled bool, annotationsActual map[stri
 	}
 }
 
-func assertSpecTLS(t *testing.T, ctx *pulumi.Context, tlsActual []networkingv1.IngressTLS, hostsTarget []types.Host, secretName, domainNameSuffix string) {
+func assertSpecTLS(t *testing.T, tlsActual []networkingv1.IngressTLS, hostsTarget []types.Host, secretName, domainNameSuffix string) {
 	for _, ht := range hostsTarget {
 		hostDomainNameTarget := ht.Name + domainNameSuffix
 

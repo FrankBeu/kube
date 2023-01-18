@@ -8,12 +8,12 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[IngressClassNameNginx-0]
+	_ = x[IngressClassNameTraefik-0]
 }
 
-const _IngressClassName_name = "nginx"
+const _IngressClassName_name = "traefik"
 
-var _IngressClassName_index = [...]uint8{0, 5}
+var _IngressClassName_index = [...]uint8{0, 7}
 
 func (i IngressClassName) String() string {
 	if i < 0 || i >= IngressClassName(len(_IngressClassName_index)-1) {

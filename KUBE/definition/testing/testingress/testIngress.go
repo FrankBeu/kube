@@ -23,8 +23,11 @@ func CreateTestIngress(ctx *pulumi.Context) error {
 		return err
 	}
 
-	ing := types.Config{
-		// Annotations:       map[string]pulumi.StringInput{},
+	ingConf := types.IngressConfig{
+		Annotations: map[string]pulumi.StringInput{
+			"traefik.ingress.kubernetes.io/router.entrypoints": pulumi.String("websecure"),
+			"pulumi.com/skipAwait":                             pulumi.String("true"),
+		},
 		ClusterIssuerType: types.ClusterIssuerTypeCALocal,
 		Hosts: []types.Host{
 			{
@@ -33,17 +36,18 @@ func CreateTestIngress(ctx *pulumi.Context) error {
 				ServicePort: servicePort,
 			},
 		},
-		IngressClassName: types.IngressClassNameNginx,
+		IngressClassName: types.IngressClassNameTraefik,
 		Name:             name,
 		NamespaceName:    namespace,
 		TLS:              true,
 	}
-	testIng, err := ingress.CreateIngress(ctx, &ing)
+	testIng, err := ingress.CreateIngress(ctx, &ingConf)
 	if err != nil {
 		return err
 	}
-
-	ctx.Export("testIngressUrl", testIng.Spec.Rules().Index(pulumi.Int(0)).Host()) //// retrievable with `p stack output tesIngressUrl`
+	// _ = ingConf
+	_ = testIng
+	// ctx.Export("testIngressUrl", testIng.Spec.Rules().Index(pulumi.Int(0)).Host()) //// retrievable with `p stack output tesIngressUrl`
 
 	return nil
 }

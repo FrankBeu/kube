@@ -26,7 +26,7 @@ func CreateGlooPetstore(ctx *pulumi.Context) error {
 		return err
 	}
 
-	ing := types.Config{
+	ing := types.IngressConfig{
 		// Annotations:       map[string]pulumi.StringInput{},
 		ClusterIssuerType: types.ClusterIssuerTypeCALocal,
 		Hosts: []types.Host{

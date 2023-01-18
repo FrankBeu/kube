@@ -9,7 +9,7 @@ import (
 	"thesym.site/kube/lib/types"
 )
 
-func CreateIngress(ctx *pulumi.Context, ing *types.Config) (*networkingv1.Ingress, error) {
+func CreateIngress(ctx *pulumi.Context, ing *types.IngressConfig) (*networkingv1.Ingress, error) {
 	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
 	ingress, err := createIngress(ctx, ing, domainNameSuffix)
 	if err != nil {
@@ -18,7 +18,7 @@ func CreateIngress(ctx *pulumi.Context, ing *types.Config) (*networkingv1.Ingres
 	return ingress, nil
 }
 
-func createIngress(ctx *pulumi.Context, ing *types.Config, domainNameSuffix string) (*networkingv1.Ingress, error) {
+func createIngress(ctx *pulumi.Context, ing *types.IngressConfig, domainNameSuffix string) (*networkingv1.Ingress, error) {
 	//// TLS annotation
 	annotations := pulumi.StringMap{}
 	if ing.TLS {
@@ -37,7 +37,7 @@ func createIngress(ctx *pulumi.Context, ing *types.Config, domainNameSuffix stri
 		tls = networkingv1.IngressTLSArray{
 			&networkingv1.IngressTLSArgs{
 				Hosts:      tlsHosts,
-				SecretName: pulumi.String(ing.Name + types.TlsSecretSuffix),
+				SecretName: pulumi.String(ing.Name + types.TLSSecretSuffix),
 			},
 		}
 	}
