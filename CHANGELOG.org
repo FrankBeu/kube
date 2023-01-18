@@ -6,8 +6,20 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 - ci/cd: gitea with tekton and argoCD
 - communication: matrix
 - monitoring: prometheus, graphana
-- security: ory
 - domain: landing
+- security: ory
+- gitlab with ci
+- communication: nextcloud
+- integrationTests for
+  - auxiliary
+  - examples
+  - dev
+    - with ca-local
+  - stage
+    - with letsencrypt-staging
+  - prod
+    - with letsencrypt-staging
+**** fdk
 **** ~Changed~
 **** ~Deprecated~
 **** ~Removed~
@@ -16,13 +28,15 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a Changelog]
 *** 1.0.0
 **** ~Added~
 - traefik as ingressController
-- gitlab with ci
+- gatewayApi
+- ingressRoutes
 **** ~Changed~
 - update =go.mod=
+- cert-manager helm-chart: 1.11.0
 **** ~Deprecated~
 **** ~Removed~
 - cleanup: remove unnec code
-- different unused ingressController
+- different unused ingressControllers
 **** ~Fixed~
 **** ~Security~
 ** 0.0.0 
