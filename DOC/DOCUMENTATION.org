@@ -271,3 +271,7 @@ helm show values grafana/promtail
 **** systemdScraper
 ***** nuc
 ***** mac
+*** TODO goldenTests ??
+- render cluster definition
+    cf.: =./examples/pulumiexamples/renderYaml/main.go=
+- compare to goldenYamls

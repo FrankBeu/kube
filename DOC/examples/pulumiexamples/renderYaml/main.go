@@ -43,7 +43,7 @@ func main() {
 			Spec: &corev1.ServiceSpecArgs{
 				Type:     pulumi.String("LoadBalancer"),
 				Selector: labels,
-				Ports:    corev1.ServicePortArray{corev1.ServicePortArgs{Port: pulumi.Int(80)}},
+				Ports:    corev1.ServicePortArray{corev1.ServicePortArgs{Port: pulumi.Int(80)}}, //nolint:gomnd
 			},
 		}, pulumi.Provider(renderProvider))
 		if err != nil {
