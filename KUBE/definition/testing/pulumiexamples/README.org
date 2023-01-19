@@ -1,5 +1,4 @@
 * pulumiExamples
-examples are *not* importable - just for reference
 ** SOURCE
 https://www.pulumi.com/docs/guides/adopting/from_kubernetes/
 ** =fileSingle.go=
@@ -18,6 +17,7 @@ pushd filesMulti && \
 curl -L --remote-name "https://raw.githubusercontent.com/kubernetes/examples/master/guestbook/{frontend-deployment,frontend-service,redis-master-deployment,redis-master-service,redis-slave-deployment,redis-slave-service}.yaml" && \
 popd
 #+end_src
+*all resources have been transfered to ns: test*
 ** =helm.go=
 *** prerequisites
 #+begin_src shell :results drawer
@@ -29,5 +29,6 @@ pulumi can be used to output yaml instead of provisioning a cube
 #+BEGIN_SRC shell :results drawer
 p up
 #+END_SRC
+check =$(git root)/yaml=
 ** Configuration Transformations
 

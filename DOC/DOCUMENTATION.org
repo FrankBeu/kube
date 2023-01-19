@@ -240,9 +240,9 @@ for multi node experiments
 ****** needs optional providerArguments
 ******* renderProviderExample
 ******** definition
-[[./KUBE/definition/testing/pulumiexamples/renderYaml/renderYaml.go::13]]
+[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::13]]
 ******** usage
-[[./KUBE/definition/testing/pulumiexamples/renderYaml/renderYaml.go::38]]
+[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::38]]
 ***** pulumi
 ****** envExamples
 **** end2end
@@ -272,5 +272,5 @@ helm show values grafana/promtail
 ***** mac
 *** TODO goldenTests ??
 - render cluster definition
-    cf.: =./examples/pulumiexamples/renderYaml/main.go=
-- compare to goldenYamls
+    cf.: =../KUBE/definition/testing/pulumiexamples/renderYaml/main.go=
+- compare output to goldenYamls
