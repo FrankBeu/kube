@@ -2,40 +2,35 @@
 package development
 
 import (
-	// "thesym.site/kube/definition/app/communication/matrix"
-	// "thesym.site/kube/definition/structural/monitoring/prometheus"
-	// "thesym.site/kube/definition/testing/testnamespace"
-
 	"thesym.site/kube/definition/structural/certs/certmanager"
 	"thesym.site/kube/definition/structural/ingress/traefik"
-
-	// "thesym.site/kube/definition/testing/testingress"
-
 	"thesym.site/kube/definition/testing/testnamespace"
 	"thesym.site/kube/definition/testing/whoami"
 	"thesym.site/kube/lib/kubeConfig"
 )
 
 // Kube is the configuration for the developmentEnvironment
-// var Kube = map[string]func(*pulumi.Context) error{
 var Kube = kubeConfig.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// STRUCTURAL
 	////
 	//////////////////////// ////////////////////////
-	//// Ingress
+	//// INGRESS
 	////
 	"traefikIngress": traefik.CreateTraefikIngressController,
 
 	//////////////////////// ////////////////////////
-	//// certificates
+	//// CERTIFICATES
 	////
 	"certmanager": certmanager.CreateCertmanager,
 
 	//////////////////////// ////////////////////////
 	//// MONITORING
 	////
-	// "prometheus": prometheus.CreatePrometheus,
+
+	//////////////////////// ////////////////////////
+	//// OBSERVING
+	////
 
 	//////////////////////// //////////////////////// ////////////////////////
 	//// APPS
@@ -44,18 +39,10 @@ var Kube = kubeConfig.KubeConfig{
 	//////////////////////// ////////////////////////
 	//// COMMUNICATION
 	////
-	// "jitsi": jitsi.CreateJitsi,
-	// "matrix": matrix.CreateMatrix,
-
-	////////////////////////
-	//// OBSERVING
-	////
-	// "jaeger": jaeger.CreateJaegerOperator,
 
 	//////////////////////// ////////////////////////
 	//// VCS
 	////
-	// "gitea": gitea.CreateGitea,
 
 	//////////////////////// //////////////////////// ////////////////////////
 	//// TESTING
