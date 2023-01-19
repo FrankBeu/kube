@@ -20,16 +20,17 @@ providing the ~PULUMI_CONFIG_PASSPHRASE~ in a easy and secure way
 k8split -o $(git root)TMP cert-manager.yaml
 #+end_example
 **** *kube2pulumi*
-generate a =main.go= which must be processed further
+generate go-code from yaml
+generate a =main.go= from yaml for further processing
 #+begin_example shell
   kube2pulumi go -d $(git root)/TMP
 #+end_example
 **** *crd2pulumi*
+generate pulumi-crd from yaml
 ***** output to KUBE/crds
 #+begin_example shell
 crd2pulumi --force --goPath $(git root)/KUBE/crds/kubernetes $(git root)/RESOURCES/definition/structural/certs/cert-manager/crds/cert-manager/templates/crds.yaml
 #+end_example
-
 *** proxy
 The Ingresscontroller is  used in  ~NodePort~ Mode.
 Only ports 30000 - 32767 can be use.
@@ -106,10 +107,6 @@ summon -e dev bash -c 'pulumi config set --secret --path secTest.array[0] qwer'
 #+begin_src shell :results drawer
 p config rm secTest
 #+end_src
-*** development
-**** transformations
-[[https://www.pulumi.com/registry/packages/kubernetes/api-docs/yaml/configfile/#yaml-with-transformations][kubernetes.yaml.ConfigFile | Pulumi Registry]]
-[[https://github.com/search?q=extension%3Ago+yaml.Transformation][github-Search · extension:go yaml.Transformation]]
 *** safety / security
 in order to prevent an unauthorized or accidental deploy to the wrong cluster
 *gopass* and *summon* are used to wrapp calls to *pulumi*.
@@ -166,12 +163,6 @@ task pulumiStackInitDev
 **** production
 ***** TODO k3s
 ** TODO TODOS
-*** TODO generate flake
-- with all dependencies
-- with multiEnv-Kube_proxy
-- gopassConvenience
-- aliases
-
 *** PROBLEMS
 **** TODO traefik nodeport - ingress
 workaround: skipAwait
@@ -179,6 +170,11 @@ https://github.com/nginxinc/kubernetes-ingress/blob/5847d1f3906287d2771f3767d61c
 https://github.com/pulumi/pulumi-kubernetes/blob/920ed437139b877588e36fc7c5f7392470ea6368/provider/pkg/await/ingress.go#L365-L369
 https://github.com/pulumi/pulumi-kubernetes/issues/1812
 https://github.com/pulumi/pulumi-kubernetes/issues/1810
+*** TODO generate flake
+- with all dependencies
+- with multiEnv-Kube_proxy
+- gopassConvenience
+- aliases
 *** TODO create/automate update cycle
 **** pull changes
 **** transformations
@@ -263,6 +259,9 @@ for multi node experiments
 *** TODO persistence
 *** TODO create defaultBackend
 **** thesymsite
+*** TODO depends
+an empty cluster has currently to be populated twice
+add dependencies
 *** TODO loki
 **** colorize logs
 #+begin_src shell :results drawer
