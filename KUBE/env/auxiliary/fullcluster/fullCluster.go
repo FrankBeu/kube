@@ -16,7 +16,6 @@ import (
 	// "thesym.site/kube/definition/structural/ingress/traefik"
 	// "thesym.site/kube/definition/structural/monitoring/loki"
 	// "thesym.site/kube/definition/structural/monitoring/prometheus"
-	// "thesym.site/kube/definition/testing/gloo/petstore"
 	// "thesym.site/kube/definition/testing/pulumiexamples"
 	// "thesym.site/kube/definition/testing/testcert"
 	// "thesym.site/kube/definition/testing/testhelmrelease"
@@ -83,8 +82,6 @@ var Kube = kubeConfig.KubeConfig{
 	// "testHelmRelease": testhelmrelease.CreateHelmRelease,
 	// "testIngress":     testingress.CreateTestIngress,
 	// "whoami":          whoami.CreateWhoAmI,
-
-	// "glooPetstore": petstore.CreateGlooPetstore,
 
 	// "fileSingle":   pulumiexamples.CreateFromFileSingle,
 	// "filesMulti":   pulumiexamples.CreateFromFilesMulti,

@@ -59,8 +59,6 @@ var Kube = kubeConfig.KubeConfig{
 	// "testHelmRelease": testhelmrelease.CreateHelmRelease,
 	"whoami": whoami.CreateWhoAmI,
 
-	// "glooPetstore": petstore.CreateGlooPetstore,
-
 	// "fileSingle": pulumiexamples.CreateFromFileSingle,
 	// "filesMulti": pulumiexamples.CreateFromFilesMulti,
 	// "helmChart": pulumiexamples.CreateFromHelmChart,
