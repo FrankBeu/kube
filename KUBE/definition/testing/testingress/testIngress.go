@@ -45,9 +45,10 @@ func CreateTestIngress(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
+	//nolint:gocritic
 	// _ = ingConf
-	_ = testIng
-	// ctx.Export("testIngressUrl", testIng.Spec.Rules().Index(pulumi.Int(0)).Host()) //// retrievable with `p stack output tesIngressUrl`
+	// _ = testIng
+	ctx.Export("testIngressUrl", testIng.Spec.Rules().Index(pulumi.Int(0)).Host()) //// retrievable with `p stack output tesIngressUrl`
 
 	return nil
 }

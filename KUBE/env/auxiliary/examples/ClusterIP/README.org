@@ -1,25 +1,38 @@
-* FromFilesMulti
-** copy =development.go= to =../../development/development.go=
-** deploy
-*** env
+* ClusterIP / FromFilesMulti
+** backup
 #+BEGIN_SRC shell :results none
-cp ./development.go ../../../development/development.go
+mv ../../../development/development.go{,BAK}
+mv ../../../../Pulumi.kube-dev.yaml{,BAK}
 #+END_SRC
+** prepare
 *** stack
 #+BEGIN_SRC shell :results none
 cp ./Pulumi.kube-dev.yaml ../../../../Pulumi.kube-dev.yaml
 #+END_SRC
-*** apply
+*** env
 #+BEGIN_SRC shell :results none
-pulumi up
+cp ./development.go ../../../development/development.go
 #+END_SRC
+** deploy
+#+BEGIN_EXAMPLE shell
+pulumi up
+#+END_EXAMPLE
 ** check
 FromFilesMulti is exposed using ClusterIP. \\
 Traffic has to be forwarded into the cluster.
 *** enable the proxy
 #+BEGIN_EXAMPLE shell
-kube proxy
+kubectl proxy
 #+END_EXAMPLE
 *** navigate to 
 http://127.0.0.1:8001/api/v1/namespaces/test/services/frontend/proxy/
+** revert
+#+BEGIN_SRC shell :results none
+rm ../../../development/development.go
+rm ../../../../Pulumi.kube-dev.yaml
+#+END_SRC
 
+#+BEGIN_SRC shell :results none
+mv ../../../development/development.go{BAK,}
+mv ../../../../Pulumi.kube-dev.yaml{BAK,}
+#+END_SRC

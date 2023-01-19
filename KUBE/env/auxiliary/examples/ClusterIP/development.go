@@ -2,8 +2,7 @@
 package development
 
 import (
-	"thesym.site/kube/definition/structural/ingress/nginx"
-
+	"thesym.site/kube/definition/structural/ingress/traefik"
 	"thesym.site/kube/definition/testing/pulumiexamples"
 	"thesym.site/kube/definition/testing/testnamespace"
 	"thesym.site/kube/lib/kubeConfig"
@@ -15,9 +14,9 @@ var Kube = kubeConfig.KubeConfig{
 	//// STRUCTURAL
 	////
 	//////////////////////// ////////////////////////
-	//// Ingress
+	//// INGRESS
 	////
-	"nginxIngress": nginx.CreateNginxIngressController,
+	"traefikIngress": traefik.CreateTraefikIngressController,
 
 	//////////////////////// //////////////////////// ////////////////////////
 	//// TESTING

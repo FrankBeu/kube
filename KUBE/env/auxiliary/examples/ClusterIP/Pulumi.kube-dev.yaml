@@ -3,6 +3,9 @@ config:
   kube:debugMode: "false"
   kube:domain:
     clusterIssuer: ca-local
+  kube:domainSecret:
+    domain:
+      secure: v1:DmUzB2dABDH/6hem:A+T9frmKZBUp/MXllX/DJVYmTMrRHx9uPAPPbKsAfQ==
   kube:env: dev
   kubernetes:context: k3d-kube-dev
   kubernetes:suppressDeprecationWarnings: "true"

@@ -270,6 +270,10 @@ helm show values grafana/promtail
 **** systemdScraper
 ***** nuc
 ***** mac
+*** TODO generate examples
+- SubDomainViaIngress
+- testhelmrelease
+**** as integrationTest
 *** TODO goldenTests ??
 - render cluster definition
     cf.: =../KUBE/definition/testing/pulumiexamples/renderYaml/main.go=
