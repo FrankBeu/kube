@@ -1,0 +1,69 @@
+* traefik
+** directories
+*** =PROTO/manual=
+deploy with helm
+https://github.com/traefik/traefik-helm-chart
+**** Installation
+#+BEGIN_SRC shell :results silent
+helm repo add traefik https://helm.traefik.io/traefik
+helm repo update
+helm install traefik traefik/traefik
+#+END_SRC
+**** Dashboard
+***** forward
+#+BEGIN_SRC shell :results silent
+kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/name=traefik" --output=name) 9000:9000
+#+END_SRC
+****** access
+#+BEGIN_SRC shell :results silent
+curl http://127.0.0.1:9000/dashboard/#/
+#+END_SRC
+#+BEGIN_SRC shell :results silent
+curl http://traefik.stage.domain.test/dashboard/#/
+#+END_SRC
+****** get pod
+#+BEGIN_SRC shell :results silent
+kubectl get pods --selector "app.kubernetes.io/name=traefik" --output=name
+#+END_SRC
+***** direct
+#+BEGIN_SRC shell :results silent
+kubectl apply -f ./PROTO/manual/dashboard.yaml
+#+END_SRC
+#+BEGIN_SRC shell :results silent
+curl http://traefik.dev.domain.test/dashboard/#/
+#+END_SRC
+**** upgrade
+#+BEGIN_SRC shell :results silent
+  helm upgrade traefik traefik/traefik -f ./PROTO/manual/values.yaml
+#+END_SRC
+**** payload
+https://github.com/traefik/whoami
+https://hub.docker.com/r/containous/whoami
+#+BEGIN_SRC shell :results silent
+kubectl apply -f ./PROTO/manual/whoami.yaml
+#+END_SRC
+#+BEGIN_SRC shell :results silent
+kubectl delete -f ./PROTO/manual/whoami.yaml
+#+END_SRC
+***** access
+#+BEGIN_SRC shell :results silent
+kubectl proxy
+#+END_SRC
+http://127.0.0.1:8001/api/v1/namespaces/default/services/whoami-service:80/proxy/
+http://127.0.0.1:8001/api/v1/namespaces/default/pods/whoami-deployment-85bfbd48f-zjflc/proxy/
+http://whoami.dev.domain.test
+*** =traefik/=
+is only used to generate the actual pulumiCrdDefinitions
+the chart is not needed for the ~helm.Resource~
+** INFO
+*** CRDs
+**** k8s
+***** traefik
+ingressRoute, ...
+crds are installed automatically via helm-chart
+cf.: https://traefik.DOMAIN/dashboard/#/ Providers::KubernetesCRD 
+***** TODO gatewayAPI
+**** pulumi
+***** traefik
+cf.: [[file:WORKFLOW-update.org::*CRDs][./WORKFLOW-update.org::*CRDs]]
+***** TODO gatewayAPI

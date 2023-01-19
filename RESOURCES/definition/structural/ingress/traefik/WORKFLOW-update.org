@@ -1,0 +1,52 @@
+* UpdateWorkflow: traefik
+** helmRelease
+=KUBE/definition/structural/ingress/traefik/traefik.go=
+#+BEGIN_SRC go
+  Version:   pulumi.String("10.24.3"),
+  //                        ^^^^^^^
+#+END_SRC
+** CRDs
+*** k8s
+**** traefik
+updated automatically via helm-chart
+**** TODO gatewayAPI
+=KUBE/definition/structural/ingress/traefik/traefik.go=
+#+BEGIN_SRC go
+File: "https://github.com/kubernetes-sigs/gateway-api/releases/download/v0.6.0/experimental-install.yaml",
+////                                                                    ^^^^^^ ^^^^^^^^^^^^
+#+END_SRC
+*** pulumi
+**** traefik
+***** update helmRepo
+#+BEGIN_EXAMPLE shell
+# helm repo add traefik https://helm.traefik.io/traefik
+helm repo update
+#+END_EXAMPLE
+****** get available version
+#+BEGIN_EXAMPLE shell
+helm search repo traefik
+#+END_EXAMPLE
+***** update the helm-chart-files under =RESOURCES=
+=RESOURCES/definition/structural/ingress/traefik/traefik=
+****** clean directory
+#+BEGIN_EXAMPLE shell
+rm -r $(git root)/RESOURCES/definition/structural/ingress/traefik/traefik
+#+END_EXAMPLE
+****** pull
+#+BEGIN_EXAMPLE shell
+# helm pull traefik/traefik --untar                     --untardir $(git root)/RESOURCES/definition/structural/ingress/traefik #### newest
+  helm pull traefik/traefik --untar --version "10.24.3" --untardir $(git root)/RESOURCES/definition/structural/ingress/traefik
+#                                              ^^^^^^^
+#+END_EXAMPLE
+***** cleanup
+=RESOURCES/definition/structural/ingress/traefik/traefik=
+remove all unnecessary files
+#+BEGIN_EXAMPLE shell
+fd --hidden --base-directory $(git root)/RESOURCES/definition/structural/ingress/traefik/traefik -E crds -X rm -r
+#+END_EXAMPLE
+***** update the crds
+=RESOURCES/definition/structural/certs/cert-manager=
+#+BEGIN_EXAMPLE shell
+crd2pulumi --force --goPath $(git root)/KUBE/crds/kubernetes $(git root)/RESOURCES/definition/structural/ingress/traefik/traefik/crds/*
+#+END_EXAMPLE
+**** TODO gatewayAPI

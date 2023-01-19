@@ -230,23 +230,6 @@ should mimic prod as closly as possible
 ******* on nuc
 for multi node experiments
 *** TODO create keynote
-*** TODO testing, testing, testing
-**** after coms + vcs
-**** !!!
-**** DONE unit tests
-***** only for lib
-**** "integrationTests"
-***** goldenFiles
-****** needs optional providerArguments
-******* renderProviderExample
-******** definition
-[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::13]]
-******** usage
-[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::38]]
-***** pulumi
-****** envExamples
-**** end2end
-***** check if definedServices are available
 *** TODO architecture
 **** all function should be pure
 ***** except Create.....()
@@ -270,11 +253,40 @@ helm show values grafana/promtail
 **** systemdScraper
 ***** nuc
 ***** mac
-*** TODO generate examples
-- SubDomainViaIngress
-- testhelmrelease
-**** as integrationTest
 *** TODO goldenTests ??
 - render cluster definition
     cf.: =../KUBE/definition/testing/pulumiexamples/renderYaml/main.go=
 - compare output to goldenYamls
+
+*** TODO testing, testing, testing
+**** after coms + vcs
+**** !!!
+**** DONE unit tests
+***** only for lib
+**** "integrationTests"
+***** goldenFiles
+****** needs optional providerArguments
+******* renderProviderExample
+******** definition
+[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::13]]
+******** usage
+[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::38]]
+***** pulumi
+****** envExamples
+**** end2end
+***** check if definedServices are available
+*** TODO patch pulumi keybindings
+- =C-k=
+- =C-l=
+- =C-;=
+*** TODO substitute ingress with ingressRoute clusterwide
+*** TODO generate examples
+- SubDomainViaIngress
+- testhelmrelease
+**** as integrationTest
+*** TODO modular whoami
+**** base == whoami
+**** ingress
+- ingress
+- ingressRoute
+- gateway
