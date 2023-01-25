@@ -1,3 +1,4 @@
+#+STARTUP: show2levels
 * workflow: develop
 ** FEATURE
 *** on cluster

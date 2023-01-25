@@ -1,3 +1,4 @@
+#+STARTUP: show2levels
 * workflow: debug
 ** infos about pulumi, versions, ...
 #+BEGIN_SRC shell :results drawer

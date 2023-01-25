@@ -1,3 +1,4 @@
+#+STARTUP: show3levels
 * cert-manager
 ** directories
 *** =ca-local=

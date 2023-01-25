@@ -1,3 +1,4 @@
+#+STARTUP: show3levels
 * workflow: devCluster-setup
 ** manually
 *** log-in to pulumi
@@ -80,9 +81,9 @@ task d1 ### clusterCreateDev
 task d2 ### pulumiStackInitDev
 task d3 ### pulumiUpDev
 #+END_EXAMPLE
-* TODO TODOS
-** TODO create cluster declaratively
-*** on DEVOS: systemd-one-shots
+** TODO TODOS
+*** TODO create cluster declaratively
+**** on DEVOS: systemd-one-shots
 - clusterCreate: k3d
   - if not exists
 - clusterProvisioning: pulumi

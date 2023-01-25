@@ -1,3 +1,4 @@
+#+STARTUP: show3levels
 * kube
 multienv k8s-cluster built with pulumi on nixos
 ** structure
@@ -5,15 +6,15 @@ multienv k8s-cluster built with pulumi on nixos
 **** =crds=
 - golang representation of k8s-crds 
 - used in =definition=
-- not for installation into k8s
+- not for installation into the cluster
 **** =definition=
-- golang declaration cluster-resources
+- golang declaration of cluster-resources
 **** =env=
 - highest level of configuration
 - each env can be configured independently
 - switches for =definition=-declarations
 **** =lib=
-functions, types used to configure the KUBE
+functions, types used to configure the kube
 *** =RESOURCES=
 In order to create the pulumiConfig, charts, yamls and other resources are needed.
 Those resources are kept under =RESOURCES/= mirroring =KUBE/= for reference.

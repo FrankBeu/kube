@@ -1,3 +1,4 @@
+#+STARTUP: show2levels
 * workflow: update
 ** [[file:../RESOURCES/definition/structural/certs/WORKFLOW-update.org::*UpdateWorkflow: cert-manager][cert-manager]]
 ** [[file:../RESOURCES/definition/structural/ingress/traefik/WORKFLOW-update.org::*UpdateWorkflow: traefik][traefik]]

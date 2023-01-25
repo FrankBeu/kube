@@ -1,3 +1,4 @@
+#+STARTUP: show2levels
 * UpdateWorkflow: cert-manager
 ** helmRelease
 =KUBE/definition/structural/certs/certmanager/certmanager.go=

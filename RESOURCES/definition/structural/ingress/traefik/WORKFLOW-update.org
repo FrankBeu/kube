@@ -1,3 +1,4 @@
+#+STARTUP: show2levels
 * UpdateWorkflow: traefik
 ** helmRelease
 =KUBE/definition/structural/ingress/traefik/traefik.go=

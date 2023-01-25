@@ -1,3 +1,4 @@
+#+STARTUP: show2levels
 * kube
 ** outputs
 *** show available fields

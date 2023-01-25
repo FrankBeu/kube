@@ -1,3 +1,4 @@
+#+STARTUP: show3levels
 * traefik
 ** directories
 *** =PROTO/manual=

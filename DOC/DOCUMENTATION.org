@@ -1,3 +1,4 @@
+#+STARTUP: show2levels
 * kube
 ** DEPENDENCIES
 *** required
