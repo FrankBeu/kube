@@ -13,23 +13,28 @@ import (
 	"thesym.site/kube/lib/types"
 )
 
-func CreateCert(ctx *pulumi.Context, cert *types.Cert) error {
+func CreateCert(ctx *pulumi.Context, cert *types.Cert) (*certv1.Certificate, error) {
 	if cert.Duration == "" {
-		//nolint:gomnd
-		cert.Duration = strconv.Itoa(types.DefaultDurationInDays*24) + "h"
+		cert.Duration = strconv.Itoa(types.CertificateDefaultDurationInDays*24) + "h" //nolint:gomnd
 	}
 
-	domainName := cert.Name + domainNameSuffix
 	domainNameSuffix := kubeconfig.DomainNameSuffix(ctx)
 
+	commonName := ""
+	if cert.CommonNameSegment == "" {
+		commonName = cert.Name + domainNameSuffix
+	} else {
+		commonName = cert.CommonNameSegment + domainNameSuffix
+	}
+
 	dnsNames := pulumi.StringArray{
-		pulumi.String(domainName),
+		pulumi.String(commonName),
 	}
 	for _, subdomainName := range cert.AdditionalSubdomainNames {
 		dnsNames = append(dnsNames, pulumi.String(subdomainName+domainNameSuffix))
 	}
 
-	_, err := certv1.NewCertificate(ctx, cert.Name, &certv1.CertificateArgs{
+	certificate, err := certv1.NewCertificate(ctx, cert.Name, &certv1.CertificateArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String(cert.Name),
 			Namespace: pulumi.String(cert.Namespace),
@@ -38,7 +43,7 @@ func CreateCert(ctx *pulumi.Context, cert *types.Cert) error {
 			SecretName:  pulumi.String(cert.Name + "-tls"),
 			Duration:    pulumi.String(cert.Duration),
 			RenewBefore: pulumi.String("360h"),
-			CommonName:  pulumi.String(domainName),
+			CommonName:  pulumi.String(commonName),
 			DnsNames:    dnsNames,
 			IssuerRef: certv1.CertificateSpecIssuerRefArgs{
 				Name: pulumi.String(cert.ClusterIssuerType.String()),
@@ -48,15 +53,13 @@ func CreateCert(ctx *pulumi.Context, cert *types.Cert) error {
 		},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return certificate, nil
 }
 
-// createClusterIssuer creates an internal clusterIssuer with a local CA or an letsencrypt based issuer
-//nolint:lll
-// func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass string) (*certv1.ClusterIssuer, error) {
+// CreateClusterIssuer creates an internal clusterIssuer with a localCA~ or an letsencrypt~based issuer.
 func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIssuerType) (*certv1.ClusterIssuer, error) {
 	adminEmail := kubeconfig.AdminEmail(ctx)
 
@@ -67,7 +70,6 @@ func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIss
 		}
 	}
 
-	// clusterIssuer, err := createClusterIssuer(ctx, clusterIssuerType, solverIngressClass, adminEmail)
 	clusterIssuer, err := createClusterIssuer(ctx, clusterIssuerType, adminEmail)
 	if err != nil {
 		return nil, err
@@ -75,8 +77,6 @@ func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIss
 	return clusterIssuer, nil
 }
 
-//nolint:lll
-// func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass, adminEmail string) (*certv1.ClusterIssuer, error) {
 func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIssuerType, adminEmail string) (*certv1.ClusterIssuer, error) {
 	var clusterIssuerSpec *certv1.ClusterIssuerSpecArgs
 
@@ -94,7 +94,6 @@ func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIss
 		}
 
 		clusterIssuerSpec = &certv1.ClusterIssuerSpecArgs{
-
 			Acme: &certv1.ClusterIssuerSpecAcmeArgs{
 				Email: pulumi.String(adminEmail),
 				PrivateKeySecretRef: certv1.ClusterIssuerSpecAcmePrivateKeySecretRefArgs{
@@ -105,8 +104,15 @@ func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIss
 					&certv1.ClusterIssuerSpecAcmeSolversArgs{
 						Http01: certv1.ClusterIssuerSpecAcmeSolversHttp01Args{
 							Ingress: &certv1.ClusterIssuerSpecAcmeSolversHttp01IngressArgs{
-								// Class: pulumi.String(solverIngressClass),
-								Class: pulumi.String(types.IngressClassNameNginx.String()),
+								Class: pulumi.String(types.IngressClassNameTraefik.String()),
+								IngressTemplate: certv1.ClusterIssuerSpecAcmeSolversHttp01IngressIngressTemplateArgs{
+									Metadata: certv1.ClusterIssuerSpecAcmeSolversHttp01IngressIngressTemplateMetadataArgs{
+										Annotations: pulumi.StringMap{
+											//// needed for acmeCert with httpsRedirection
+											"traefik.ingress.kubernetes.io/router.tls": pulumi.String("true"),
+										},
+									},
+								},
 							},
 						},
 					},
@@ -127,6 +133,7 @@ func createClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIss
 
 	return clusterIssuer, nil
 }
+
 func createCALocalSecret(ctx *pulumi.Context, clusterIssuerType types.ClusterIssuerType) error {
 	conf := config.New(ctx, "")
 	var ca types.CaSecret
@@ -152,7 +159,7 @@ func createCALocalSecret(ctx *pulumi.Context, clusterIssuerType types.ClusterIss
 func acmeServerURL(clusterIssuerType types.ClusterIssuerType) (string, error) {
 	switch clusterIssuerType {
 	case types.ClusterIssuerTypeCALocal:
-		return "", errors.New("cannot assign acmeServerUrl to ca-local")
+		return "", errors.New("cannot assign acmeServerUrl to the ca-local-clusterissuer")
 	case types.ClusterIssuerTypeLetsEncryptStaging:
 		return "https://acme-staging-v02.api.letsencrypt.org/directory", nil
 	case types.ClusterIssuerTypeLetsEncryptProd:

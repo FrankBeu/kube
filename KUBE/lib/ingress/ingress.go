@@ -22,7 +22,7 @@ func createIngress(ctx *pulumi.Context, ing *types.IngressConfig, domainNameSuff
 	//// TLS annotation
 	annotations := pulumi.StringMap{}
 	if ing.TLS {
-		annotations["cert-manager.io/cluster-issuer"] = pulumi.String(types.ClusterIssuerTypeCALocal.String())
+		annotations["cert-manager.io/cluster-issuer"] = pulumi.String(kubeconfig.DomainClusterIssuer(ctx).String())
 	}
 	for k, v := range ing.Annotations {
 		annotations[k] = v
@@ -37,7 +37,7 @@ func createIngress(ctx *pulumi.Context, ing *types.IngressConfig, domainNameSuff
 		tls = networkingv1.IngressTLSArray{
 			&networkingv1.IngressTLSArgs{
 				Hosts:      tlsHosts,
-				SecretName: pulumi.String(ing.Name + types.TLSSecretSuffix),
+				SecretName: pulumi.String(ing.Name + types.IngressTLSSecretSuffix),
 			},
 		}
 	}

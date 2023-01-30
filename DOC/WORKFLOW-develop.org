@@ -14,3 +14,19 @@ test pulumiConfiguration
 **** rollout
 *** on public cluster
 **** rollout
+** Values
+*** optional - default
+#+BEGIN_SRC go
+if cert.Duration == "" {
+	cert.Duration = strconv.Itoa(types.CertificateDefaultDurationInDays*24) + "h" //nolint:gomnd
+}
+#+END_SRC
+*** override
+#+BEGIN_SRC go
+commonName := ""
+if cert.CommonNameSegment == "" {
+	commonName = cert.Name + domainNameSuffix
+} else {
+	commonName = cert.CommonNameSegment + domainNameSuffix
+}
+#+END_SRC

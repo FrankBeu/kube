@@ -10,10 +10,8 @@ import (
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
-	"thesym.site/kube/lib/types"
-
-	// "thesym.site/kube/lib/kubeConfig"
 	"thesym.site/kube/lib/testutil"
+	"thesym.site/kube/lib/types"
 )
 
 //nolint:funlen
@@ -27,7 +25,7 @@ func Test_createIngress(t *testing.T) {
 		args args
 	}{
 		{
-			name: "test a ingress with defaults",
+			name: "test an ingress with defaults",
 			args: args{
 				ing: types.IngressConfig{
 					Name:             "testingress",
@@ -207,7 +205,7 @@ func Test_createIngress(t *testing.T) {
 					assertAnnotations(t, tt.args.ing.TLS, metaActual.Annotations, tt.args.ing.Annotations)
 
 					if tt.args.ing.TLS {
-						assertSpecTLS(t, specActual.Tls, tt.args.ing.Hosts, tt.args.ing.Name+types.TLSSecretSuffix, tt.args.domainNameSuffix)
+						assertSpecTLS(t, specActual.Tls, tt.args.ing.Hosts, tt.args.ing.Name+types.IngressTLSSecretSuffix, tt.args.domainNameSuffix)
 					} else {
 						assert.Emptyf(t, specActual.Tls, "TLS: specTls is not empty despite tls NOT being activated: actual: %+v", specActual.Tls)
 					}
@@ -257,14 +255,14 @@ func assertSpecRules(t *testing.T, rules []networkingv1.IngressRule, hostsTarget
 func assertAnnotations(t *testing.T, tlsEnabled bool, annotationsActual map[string]string, annotationsTarget pulumi.StringMap) {
 	if tlsEnabled {
 		containsMsg := "TLS: annotation %q is not set"
-		testutil.AssertAnnotation(t, annotationsActual, types.TLSAnnotationKey, pulumi.String(types.ClusterIssuerTypeCALocal.String()), containsMsg)
+		testutil.AssertAnnotation(t, annotationsActual, types.IngressTLSAnnotationKey, pulumi.String(types.ClusterIssuerTypeCALocal.String()), containsMsg)
 	} else {
 		assert.NotContainsf(
 			t,
 			annotationsActual,
-			types.TLSAnnotationKey,
+			types.IngressTLSAnnotationKey,
 			"TLS: label %q is set despite TLS not being activated",
-			types.TLSAnnotationKey,
+			types.IngressTLSAnnotationKey,
 		)
 	}
 

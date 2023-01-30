@@ -1,4 +1,4 @@
-// Package ingress is responsible for creation of ingress-related resources
+// TODO ingress is not currently not working with traefik as ingress controller
 package types
 
 import (
@@ -7,21 +7,22 @@ import (
 
 // IngressClassName specifies the ingressController which implements the ingress
 type IngressClassName int
+type IngressProperty string
 
 //go:generate stringer -type=IngressClassName -linecomment
 const (
-	IngressClassNameTraefik IngressClassName = iota //// traefik
-	IngressClassNameNginx                           //// nginx
-	// IngressClassNameTest                         //// test
+	IngressClassNameTraefik IngressClassName = iota // traefik
+	IngressClassNameNginx                           // nginx
+	// IngressClassNameTest                         // test
 
-	IngressAPIVersion string = "networking.k8s.io/v1"
-	IngressKind       string = "Ingress"
-	TLSAnnotationKey  string = "cert-manager.io/cluster-issuer"
-	TLSSecretSuffix   string = "-tls"
+	IngressAPIVersion       string = "networking.k8s.io/v1"
+	IngressKind             string = "Ingress"
+	IngressTLSAnnotationKey string = "cert-manager.io/cluster-issuer"
+	IngressTLSSecretSuffix  string = "-tls"
 )
 
 type Host struct {
-	Name        string
+	Name        string // used as DomainName
 	ServiceName string
 	ServicePort int
 }

@@ -9,11 +9,12 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[IngressClassNameTraefik-0]
+	_ = x[IngressClassNameNginx-1]
 }
 
-const _IngressClassName_name = "traefik"
+const _IngressClassName_name = "traefiknginx"
 
-var _IngressClassName_index = [...]uint8{0, 7}
+var _IngressClassName_index = [...]uint8{0, 7, 12}
 
 func (i IngressClassName) String() string {
 	if i < 0 || i >= IngressClassName(len(_IngressClassName_index)-1) {

@@ -1,15 +1,64 @@
 #+STARTUP: show2levels
-* kube
+* recipes
+** misc
+*** string
+a ~pulumi.String~ can be converted to ~string: ~string(pulumi.String)~
 ** outputs
 *** show available fields
 #+BEGIN_SRC go
 	ctx.Export("testIngress.URL:", testIng.Spec) //// retrievable with `p stack output tesIngress.URL`
 #+END_SRC
+*** StringOutput
+**** equivalents
+#+BEGIN_SRC go
+  url := ingressRoute.Spec.Routes().Index(pulumi.Int(0)).Match().ApplyT(func(match string) string {
+          url := strings.ReplaceAll(match, "Host(`", "")
+          return url
+  }).(pulumi.StringOutput)
+#+END_SRC
+#+BEGIN_SRC go
+  url := ingressRoute.Spec.Routes().Index(pulumi.Int(0)).Match().ApplyT(func(match string) pulumi.StringOutput {
+          url := strings.ReplaceAll(match, "Host(`", "")
+          return pulumi.String(url).ToStringOutput()
+  })
+#+END_SRC
+*** apply
+**** refactor
+***** equivalent
+prefer 1a
+****** 1
+#+BEGIN_SRC go
+func extractURLFromMatch(match string) pulumi.String {
+	re := regexp.MustCompile(`^Host\(.(.*?).\)`)
+	url := re.FindStringSubmatch(match)[1]
+	return pulumi.String(url)
+}
+#+END_SRC
+******* a
+#+BEGIN_SRC go
+	url := ingressRoute.Spec.Routes().Index(pulumi.Int(0)).Match().ApplyT(extractURLFromMatch)
+#+END_SRC
+******* b
+#+BEGIN_SRC go
+  url := ingressRoute.Spec.Routes().Index(pulumi.Int(0)).Match().ApplyT(func(match string) pulumi.String {
+          return extractURLFromMatch(match)
+  })
+#+END_SRC
+****** 2
+#+BEGIN_SRC go
+	url := ingressRoute.Spec.Routes().Index(pulumi.Int(0)).Match().ApplyT(func(match string) pulumi.String {
+		re := regexp.MustCompile(`^Host\(.(.*?).\)`)
+		url := re.FindStringSubmatch(match)[1]
+		return pulumi.String(url)
+	})
+#+END_SRC
+
+
 ** timeout
 [[https://www.pulumi.com/docs/intro/concepts/resources/options/customtimeouts/][CustomTimeouts | Pulumi]]
 #+BEGIN_SRC go
   ingress, err := networkingv1.NewIngress(ctx, ing.Name, &networkingv1.IngressArgs{//...
-  //////////////////////////////////////////////////////////////////////////////// XOR 
+  //////////////////////////////////////////////////////////////////////////////// XOR
   ////////////////////////////////////////////////////////////////////// w/o timeout
   // })
   ////////////////////////////////////////////////////////////////////// w/timeout
@@ -44,3 +93,56 @@ pulumi stack
     ├─ kubernetes:yaml:ConfigFile                                                     certmanager-certificate-definition
 #+END_EXAMPLE
 
+** stackConfiguration
+*** inspecting
+#+BEGIN_SRC go
+spew.Dump(ctx)
+#+END_SRC
+*** testing
+**** configurationMock
+the default configuration is defined in =KUBE/lib/testutil/mocks.go=
+***** change
+#+BEGIN_SRC go
+  // ...
+  t.Run(tt.name, func(t *testing.T) {
+          // var testConfig = testutil.TestConfig
+          var testConfig = map[string]string{
+                  "project:domain": ` { "clusterIssuer": "letsencrypt-staging" }`,
+                  "project:domainSecret": ` {"domain": "` + tt.args.domainNameSuffix + `"}`,
+                  // "project:domainSecret": ` { "domain": "` + "domain.test" + `" }`,
+
+          err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+
+          // ...
+
+          }, testutil.WithMocksAndConfig("project", "stack", testConfig, testutil.Mocks(0)))             //// use localConfig
+          // }, testutil.WithMocksAndConfig("project", "stack", testutil.TestConfig, testutil.Mocks(0))) //// use defaultConfig
+          }
+  })
+  // ...
+#+END_SRC
+
+*** log config
+#+BEGIN_SRC go
+  var d domain
+  conf := config.New(ctx, "")
+  conf.RequireObject("domain", &d)
+  ctx.Log.Info(spew.Sdump(&d), nil)
+#+END_SRC
+** testing
+*** debugging
+only displayed if test fails or called with ~-v~
+#+BEGIN_SRC shell :results drawer
+fmt.Println(spew.Sdump(ctx))
+spew.Dump(ctx)
+#+END_SRC
+** logging
+[[https://www.pulumi.com/docs/intro/concepts/logging/][Intro to Pulumi: Logging | Pulumi Docs]]
+[[https://www.pulumi.com/docs/support/troubleshooting/#diagnosing-issues][Troubleshooting Guide | Pulumi Docs]]
+*** levels
+#+BEGIN_SRC go
+ctx.Log.Debug("Debug",  nil)  //// only shown if cli is run with --debug
+ctx.Log.Info("Info",    nil)
+ctx.Log.Warn("Warning", nil)
+ctx.Log.Error("Error",  nil)
+#+END_SRC

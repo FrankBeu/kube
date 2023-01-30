@@ -17,7 +17,8 @@ func (Mocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
 
 // TestConfig ist the default stackConfiguration used in tests
 var TestConfig = map[string]string{
-	"project:domain": "test.domain",
+	"project:domain":       ` { "clusterIssuer": "ca-local" }`,
+	"project:domainSecret": ` { "domain": "` + "domain.test" + `" }`,
 }
 
 // WithMocksAndConfig enables running unit tests with a test-stackConfiguration (Pulumi.kube-….yaml)

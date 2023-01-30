@@ -57,7 +57,10 @@ var Kube = kubeconfig.KubeConfig{
 	// "testCert": testcert.CreateTestCert,
 	// "testIngress": testingress.CreateTestIngress,
 	// "testHelmRelease": testhelmrelease.CreateHelmRelease,
-	"whoami": whoami.CreateWhoAmI,
+
+	"whoami":             whoami.CreateWhoAmI, //// whoami does not create a way to ingress; choose one:
+	"whoamiGateway":      whoami.CreateGateway,
+	"whoamiIngressRoute": whoami.CreateIngressRoute,
 
 	// "fileSingle": pulumiexamples.CreateFromFileSingle,
 	// "filesMulti": pulumiexamples.CreateFromFilesMulti,

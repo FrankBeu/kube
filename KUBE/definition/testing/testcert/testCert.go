@@ -14,7 +14,7 @@ var (
 		ClusterIssuerType: types.ClusterIssuerTypeCALocal,
 		Namespace:         "test",
 		Name:              "testing",
-		Duration:          strconv.Itoa(99*24) + "h",
+		Duration:          strconv.Itoa(types.CertificateDefaultDurationInDays*24) + "h", //nolint:gomnd
 		AdditionalSubdomainNames: []string{
 			"tests",
 			"test",
@@ -24,7 +24,7 @@ var (
 
 // CreateTestCert creates an exampleCertificate
 func CreateTestCert(ctx *pulumi.Context) error {
-	err := certificate.CreateCert(ctx, &exampleCert)
+	_, err := certificate.CreateCert(ctx, &exampleCert)
 	if err != nil {
 		return err
 	}

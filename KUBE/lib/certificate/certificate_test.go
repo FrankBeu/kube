@@ -7,12 +7,12 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
-	certv1 "thesym.site/kube/crds/cert-manager/certmanager/v1"
+	certv1 "thesym.site/kube/crds/kubernetes/certmanager/v1"
 	"thesym.site/kube/lib/testutil"
 	"thesym.site/kube/lib/types"
 )
 
-//// TODO
+// TODO write tests
 func TestCreateCert(t *testing.T) {
 	type args struct {
 		ctx  *pulumi.Context
@@ -27,7 +27,7 @@ func TestCreateCert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := CreateCert(tt.args.ctx, tt.args.cert); (err != nil) != tt.wantErr {
+			if _, err := CreateCert(tt.args.ctx, tt.args.cert); (err != nil) != tt.wantErr {
 				t.Errorf("CreateCert() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -104,7 +104,7 @@ func Test_createClusterIssuer(t *testing.T) {
 						testutil.Equalf(t, "ClusterIssuer-ACME", "acmeServerUrl", specActual.Acme.Server, acmeServerURL)
 
 						//// currently only one Solver is used per clusterIssuer
-						testutil.Equalf(t, "ClusterIssuer-ACME", "solverIngressClass", *specActual.Acme.Solvers[0].Http01.Ingress.Class, types.IngressClassNameNginx.String())
+						testutil.Equalf(t, "ClusterIssuer-ACME", "solverIngressClass", *specActual.Acme.Solvers[0].Http01.Ingress.Class, types.IngressClassNameTraefik.String())
 					}
 
 					wg.Done()

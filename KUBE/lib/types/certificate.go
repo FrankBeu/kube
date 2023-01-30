@@ -8,7 +8,7 @@ const (
 	ClusterIssuerTypeLetsEncryptStaging                          // letsencrypt-staging
 	ClusterIssuerTypeLetsEncryptProd                             // letsencrypt-prod
 
-	DefaultDurationInDays = 99
+	CertificateDefaultDurationInDays = 99
 )
 
 var AllClusterIssuerTypes = []ClusterIssuerType{
@@ -18,14 +18,12 @@ var AllClusterIssuerTypes = []ClusterIssuerType{
 }
 
 type Cert struct {
-	ClusterIssuerType ClusterIssuerType
-	Namespace         string
-	// name is also used as subdomainName
-	Name string
-	// optional: default Duration is set to 90d
-	Duration string
-	// optional:
-	AdditionalSubdomainNames []string
+	ClusterIssuerType        ClusterIssuerType
+	Namespace                string
+	Name                     string   // metadata.name
+	Duration                 string   // optional: spec.duration; default Duration is set to 90d
+	CommonNameSegment        string   // spec.commonName - subdomain (the domain is concated automatically)
+	AdditionalSubdomainNames []string // optional
 }
 
 type CaSecret struct {

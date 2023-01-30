@@ -163,6 +163,13 @@ task pulumiStackInitDev
 ****** k3s needs swap disabled -> use k3d
 **** production
 ***** TODO k3s
+*** crds
+**** must be made available to the cluster
+- helmChart
+- apply
+- ...
+**** must be made available to the pulumiGolangSourceCode
+- ~crd2pulumi~
 ** TODO TODOS
 *** PROBLEMS
 **** TODO traefik nodeport - ingress
@@ -254,24 +261,23 @@ helm show values grafana/promtail
 **** systemdScraper
 ***** nuc
 ***** mac
-*** TODO goldenTests ??
-- render cluster definition
-    cf.: =../KUBE/definition/testing/pulumiexamples/renderYaml/main.go=
-- compare output to goldenYamls
-
 *** TODO testing, testing, testing
 **** after coms + vcs
 **** !!!
 **** DONE unit tests
 ***** only for lib
 **** "integrationTests"
+***** integrationTests
+***** examples
 ***** goldenFiles
 ****** needs optional providerArguments
 ******* renderProviderExample
 ******** definition
-[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::13]]
+=../KUBE/definition/testing/pulumiexamples/renderYaml/main.go:13:16=
 ******** usage
-[[../KUBE/definition/testing/pulumiexamples/renderYaml/main.go::38]]
+=../KUBE/definition/testing/pulumiexamples/renderYaml/main.go:38:26=
+****** render cluster definition
+****** compare output to goldenYamls
 ***** pulumi
 ****** envExamples
 **** end2end
@@ -291,3 +297,4 @@ helm show values grafana/promtail
 - ingress
 - ingressRoute
 - gateway
+*** TODO fix all errors found with ~golangci-lint run~
