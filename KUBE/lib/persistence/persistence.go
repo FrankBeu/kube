@@ -8,7 +8,7 @@ import (
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 )
 
 //go:generate stringer -type=StorageClass -linecomment
@@ -70,7 +70,7 @@ func CreatePersistentVolume(ctx *pulumi.Context, pc *Config) (*corev1.Persistent
 				pulumi.String(pc.AccessMode.String()),
 			},
 			HostPath: &corev1.HostPathVolumeSourceArgs{
-				Path: pulumi.String(persistentPathPrefix + "/" + kubeConfig.Env(ctx) + "/" + pc.PersistencePathSuffix),
+				Path: pulumi.String(persistentPathPrefix + "/" + kubeconfig.Env(ctx) + "/" + pc.PersistencePathSuffix),
 			},
 		},
 	})

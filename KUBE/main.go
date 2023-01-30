@@ -13,7 +13,7 @@ import (
 	prod "thesym.site/kube/env/production"
 	stage "thesym.site/kube/env/staging"
 	"thesym.site/kube/lib/debug"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 )
 
 // for convenience - preUse all environments
@@ -39,11 +39,12 @@ func main() {
 			return err
 		}
 
-		var kube kubeConfig.KubeConfig
+		var kube kubeconfig.KubeConfig
 
 		//// Load the configuration for the current stack
 		switch env := conf.Require("env"); env {
 		case "dev":
+			//nolint:gocritic
 			// kube = empty.Kube
 			// kube = full.Kube
 			kube = dev.Kube

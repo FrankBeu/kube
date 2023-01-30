@@ -5,7 +5,7 @@ import (
 	helm "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"thesym.site/kube/lib/certificate"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 	"thesym.site/kube/lib/namespace"
 )
 
@@ -26,7 +26,7 @@ func CreateCertmanager(ctx *pulumi.Context) error {
 		return err
 	}
 
-	_, err = certificate.CreateClusterIssuer(ctx, kubeConfig.DomainClusterIssuer(ctx))
+	_, err = certificate.CreateClusterIssuer(ctx, kubeconfig.DomainClusterIssuer(ctx))
 	if err != nil {
 		return err
 	}

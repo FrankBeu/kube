@@ -5,12 +5,12 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 	"thesym.site/kube/lib/types"
 )
 
 func CreateIngress(ctx *pulumi.Context, ing *types.IngressConfig) (*networkingv1.Ingress, error) {
-	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
+	domainNameSuffix := kubeconfig.DomainNameSuffix(ctx)
 	ingress, err := createIngress(ctx, ing, domainNameSuffix)
 	if err != nil {
 		return nil, err

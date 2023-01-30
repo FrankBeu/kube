@@ -1,8 +1,9 @@
-// Package config contains stackConfiguration-related helpers
-package kubeConfig
+// Package kubeconfig contains stackConfiguration-related helpers
+package kubeconfig
 
 import (
 	"errors"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"thesym.site/kube/lib/types"

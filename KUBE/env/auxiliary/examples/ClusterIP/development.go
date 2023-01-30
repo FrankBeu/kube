@@ -5,11 +5,11 @@ import (
 	"thesym.site/kube/definition/structural/ingress/traefik"
 	"thesym.site/kube/definition/testing/pulumiexamples"
 	"thesym.site/kube/definition/testing/testnamespace"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 )
 
 // Kube is the configuration for the developmentEnvironment
-var Kube = kubeConfig.KubeConfig{
+var Kube = kubeconfig.KubeConfig{
 	//////////////////////// //////////////////////// ////////////////////////
 	//// STRUCTURAL
 	////

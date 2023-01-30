@@ -4,12 +4,11 @@ package loki
 import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 	"thesym.site/kube/lib/namespace"
 	"thesym.site/kube/lib/types"
 )
 
-//nolint:funlen
 func CreateLoki(ctx *pulumi.Context) error {
 	name := "loki"
 
@@ -18,7 +17,7 @@ func CreateLoki(ctx *pulumi.Context) error {
 		Tier: namespace.NamespaceTierMonitoring,
 	}
 
-	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
+	domainNameSuffix := kubeconfig.DomainNameSuffix(ctx)
 
 	_, err := namespace.CreateNamespace(ctx, namespaceLoki)
 	if err != nil {
@@ -34,7 +33,7 @@ func CreateLoki(ctx *pulumi.Context) error {
 		Values: pulumi.Map{
 			"grafana": pulumi.Map{
 				"enabled":       pulumi.Bool(true),
-				"adminPassword": pulumi.String(kubeConfig.GrafanaAdminPassword(ctx)),
+				"adminPassword": pulumi.String(kubeconfig.GrafanaAdminPassword(ctx)),
 				"ingress": pulumi.Map{
 					"enabled": pulumi.Bool(true),
 					"annotations": pulumi.Map{

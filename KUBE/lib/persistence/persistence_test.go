@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 	"thesym.site/kube/lib/testutil"
 )
 
@@ -98,7 +98,7 @@ func TestCreatePersistentVolume(t *testing.T) {
 					testutil.Equalf(t, "PersistentVolume", "Spec.StorageCapacity", specActual.Capacity["storage"], tt.args.persistenceConfig.Capacity)
 					testutil.Containsf(t, "PersistentVolume", "Spec.AccessMode", specActual.AccessModes, tt.args.persistenceConfig.AccessMode.String())
 
-					env := kubeConfig.Env(ctx)
+					env := kubeconfig.Env(ctx)
 					persistencePathTarget := persistentPathPrefix + "/" + env + "/" + tt.args.persistenceConfig.PersistencePathSuffix
 					testutil.Equalf(t, "PersistentVolume", "Spec.HostPath.Path/PersistencePath", specActual.HostPath.Path, persistencePathTarget)
 

@@ -9,7 +9,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	certv1 "thesym.site/kube/crds/kubernetes/certmanager/v1"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 	"thesym.site/kube/lib/types"
 )
 
@@ -19,8 +19,8 @@ func CreateCert(ctx *pulumi.Context, cert *types.Cert) error {
 		cert.Duration = strconv.Itoa(types.DefaultDurationInDays*24) + "h"
 	}
 
-	domainNameSuffix := kubeConfig.DomainNameSuffix(ctx)
 	domainName := cert.Name + domainNameSuffix
+	domainNameSuffix := kubeconfig.DomainNameSuffix(ctx)
 
 	dnsNames := pulumi.StringArray{
 		pulumi.String(domainName),
@@ -58,7 +58,7 @@ func CreateCert(ctx *pulumi.Context, cert *types.Cert) error {
 //nolint:lll
 // func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType ClusterIssuerType, solverIngressClass string) (*certv1.ClusterIssuer, error) {
 func CreateClusterIssuer(ctx *pulumi.Context, clusterIssuerType types.ClusterIssuerType) (*certv1.ClusterIssuer, error) {
-	adminEmail := kubeConfig.AdminEmail(ctx)
+	adminEmail := kubeconfig.AdminEmail(ctx)
 
 	if clusterIssuerType == types.ClusterIssuerTypeCALocal {
 		err := createCALocalSecret(ctx, clusterIssuerType)

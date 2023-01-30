@@ -8,7 +8,7 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"thesym.site/kube/lib/kubeConfig"
+	"thesym.site/kube/lib/kubeconfig"
 	"thesym.site/kube/lib/namespace"
 	"thesym.site/kube/lib/persistence"
 	"thesym.site/kube/lib/types"
@@ -48,12 +48,13 @@ var (
 	}
 )
 
-//nolint:funlen
 // CreateGitea creates a gitea instance via helm
+//
+//nolint:funlen
 func CreateGitea(ctx *pulumi.Context) error {
 	conf := config.New(ctx, "")
 	// domainName := subDomainName + "." + conf.Require("domain")
-	domainName := subDomainName + kubeConfig.DomainNameSuffix(ctx)
+	domainName := subDomainName + kubeconfig.DomainNameSuffix(ctx)
 
 	_, err := namespace.CreateNamespace(ctx, namespaceGitea)
 	if err != nil {
