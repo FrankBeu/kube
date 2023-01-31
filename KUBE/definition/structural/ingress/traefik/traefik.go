@@ -2,9 +2,12 @@
 package traefik
 
 import (
+	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	helm "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	traefikCRD "thesym.site/kube/crds/kubernetes/traefik/v1alpha1"
 	"thesym.site/kube/lib/ingressroute"
 	"thesym.site/kube/lib/kubeconfig"
@@ -31,11 +34,16 @@ func CreateTraefikIngressController(ctx *pulumi.Context) error {
 		return err
 	}
 
-	//// TODO functionalize
-	// _, err = createMiddleWares(ctx)
-	// if err != nil {
-	// 	return err
-	// }
+	//// TODO do not use local files
+	_, err = createGatewayCRD(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = createMiddleWares(ctx)
+	if err != nil {
+		return err
+	}
 
 	_, err = createTraefikRelease(ctx)
 	if err != nil {
@@ -50,29 +58,79 @@ func CreateTraefikIngressController(ctx *pulumi.Context) error {
 	return nil
 }
 
-// //TODO basicAuth
+type traefikSecret struct {
+	BasicAuth struct {
+		Plain struct {
+			Username string
+			Password string
+		}
+		Encrypted string
+	}
+}
+
+func getTraefikBasicAuthEncrypted(ctx *pulumi.Context) (encrypted string) {
+	var ts traefikSecret
+	conf := config.New(ctx, "")
+	conf.RequireSecretObject("traefikSecret", &ts)
+	encrypted = ts.BasicAuth.Encrypted
+	return
+}
+
 func createMiddleWares(ctx *pulumi.Context) ([]*traefikCRD.Middleware, error) {
 	middlewares := []*traefikCRD.Middleware{}
 
-	httpRedirect, err := traefikCRD.NewMiddleware(ctx, "httpredirect", &traefikCRD.MiddlewareArgs{
+	basicAuthSecretString := getTraefikBasicAuthEncrypted(ctx)
+
+	basicAuthSecret, err := corev1.NewSecret(ctx, types.MiddleWareNameBasicAuth.String(), &corev1.SecretArgs{
+		ApiVersion: pulumi.String("v1"),
+		Kind:       pulumi.String("Secret"),
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String(types.MiddleWareNameBasicAuth.String()),
+			Namespace: pulumi.String(NamespaceTraefikIngressController.Name),
+		},
+		// Immutable:  pulumi.Bool(true),
+		Data: pulumi.StringMap{
+			// "users": pulumi.String(b64.StdEncoding.EncodeToString([]byte(basicAuthSecretString))),
+			"users": pulumi.String(basicAuthSecretString),
+		},
+		//// basic-auth needs a different DataMap
+		//// https://doc.traefik.io/traefik/middlewares/http/basicauth/#users
+		//// https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
+		// Type: pulumi.String("kubernetes.io/basic-auth"),
+		// Data: pulumi.StringMap{
+		// "username": pulumi.String(b64.StdEncoding.EncodeToString([]byte("Username"))),
+		// "password": pulumi.String(b64.StdEncoding.EncodeToString([]byte("Password"))),
+		// },
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_ = basicAuthSecret
+
+	basicAuth, err := traefikCRD.NewMiddleware(ctx, types.MiddleWareNameBasicAuth.String(), &traefikCRD.MiddlewareArgs{
 		ApiVersion: pulumi.String("traefik.containo.us/v1alpha1"),
 		Kind:       pulumi.String("Middleware"),
 		Metadata: metav1.ObjectMetaArgs{
-			Name:      pulumi.String("redirectscheme"),
+			Name:      pulumi.String(types.MiddleWareNameBasicAuth.String()),
 			Namespace: pulumi.String(NamespaceTraefikIngressController.Name),
 		},
 		Spec: &traefikCRD.MiddlewareSpecArgs{
-			RedirectScheme: &traefikCRD.MiddlewareSpecRedirectSchemeArgs{
-				Permanent: pulumi.Bool(true),
-				Scheme:    pulumi.String("https"),
+			BasicAuth: traefikCRD.MiddlewareSpecBasicAuthArgs{
+				RemoveHeader: pulumi.Bool(true),
+				Secret:       pulumi.String(types.MiddleWareNameBasicAuth.String()),
 			},
+			// RedirectScheme: &traefikCRD.MiddlewareSpecRedirectSchemeArgs{
+			// Permanent: pulumi.Bool(true),
+			// Scheme:    pulumi.String("https"),
+			// },
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	middlewares = append(middlewares, httpRedirect)
+	middlewares = append(middlewares, basicAuth)
 
 	return middlewares, nil
 }
@@ -80,13 +138,18 @@ func createMiddleWares(ctx *pulumi.Context) ([]*traefikCRD.Middleware, error) {
 func createDashboardIngressRoute(ctx *pulumi.Context) error {
 	nameSpaceTraefik := NamespaceTraefikIngressController.Name
 	dashboardRouteConf := types.IngressRouteConfig{
+		Name:          "traefik",
+		NamespaceName: nameSpaceTraefik,
+		Match:         "Host(`traefik" + kubeconfig.DomainNameSuffix(ctx) + "`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))",
 		Service: types.Service{
 			Kind: types.ServiceKindTraefik,
 			Name: "api@internal",
 		},
-		Name:          "traefik",
-		NamespaceName: nameSpaceTraefik,
-		Match:         "Host(`traefik" + kubeconfig.DomainNameSuffix(ctx) + "`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))",
+		Middlewares: []types.Middleware{
+			{
+				Name: types.MiddleWareNameBasicAuth,
+			},
+		},
 	}
 
 	_, err := ingressroute.CreateIngressRoute(ctx, &dashboardRouteConf)
@@ -158,7 +221,7 @@ func createTraefikRelease(ctx *pulumi.Context) (*helm.Release, error) {
 				},
 			},
 			"experimental": pulumi.Map{
-				//// creats the gatewayclass and an unused gateway
+				//// creates the gatewayclass and an unused gateway
 				"kubernetesGateway": pulumi.Map{
 					"enabled": pulumi.Bool(true),
 				},
@@ -169,4 +232,16 @@ func createTraefikRelease(ctx *pulumi.Context) (*helm.Release, error) {
 		return nil, err
 	}
 	return traefikRelease, nil
+}
+
+func createGatewayCRD(ctx *pulumi.Context) (*yaml.ConfigFile, error) {
+	configFile, err := yaml.NewConfigFile(ctx, "gatewayCRD", &yaml.ConfigFileArgs{
+		File: "https://github.com/kubernetes-sigs/gateway-api/releases/download/v0.5.1/experimental-install.yaml",
+		// File: "https://github.com/kubernetes-sigs/gateway-api/releases/download/v0.6.0/experimental-install.yaml",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return configFile, nil
 }

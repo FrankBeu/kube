@@ -37,7 +37,7 @@ type MiddlewareName int
 //go:generate stringer -type=MiddlewareName -linecomment
 const (
 	MiddleWareNameTest      MiddlewareName = iota // test
-	MiddleWareNameBasicAuth                       // basicAuth
+	MiddleWareNameBasicAuth                       // basic-auth
 
 )
 

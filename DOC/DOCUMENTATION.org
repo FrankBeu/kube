@@ -298,3 +298,5 @@ helm show values grafana/promtail
 - ingressRoute
 - gateway
 *** TODO fix all errors found with ~golangci-lint run~
+*** TODO generate basicAuthSecret from user+password in pulumi
+remove manual step

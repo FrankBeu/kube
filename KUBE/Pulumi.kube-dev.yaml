@@ -1,6 +1,3 @@
-# yaml-language-server: $schema=https://json.schemastore.org/pulumi.json
-name: kube
-runtime: go
 encryptionsalt: v1:YJCrLoNp8LE=:v1:d8zNbcxVP8MP8x4u:6LsHK89Najr3u6YntJAxphnL86u/fg==
 config:
   kube:certManager:
@@ -12,7 +9,6 @@ config:
   kube:debugMode: "false"
   kube:domain:
     clusterIssuer: ca-local
-    # clusterIssuer: letsencrypt-staging
   kube:domainSecret:
     adminEmail:
       secure: v1:pXR3eDtNCNSGG1ei:hxYfeAaammXTEsLelrD6W97GiNNYb+GaasyqIHfFkivTHcUYani6kg==
@@ -27,5 +23,14 @@ config:
   kube:grafanaSecret:
     adminPassword:
       secure: v1:Xnzo8p4eXogrzOms:GGiUVBu/Rx4TZ/arNSN0ClDtzGL+goMeUCoH19kWH5Lx7swFGlG90Q==
+  kube:traefikSecret:
+    basicAuth:
+      encrypted:
+        secure: v1:7QAuQFpyZXTMMQZm:H/wtNeNmYaHDFRIWM9YArVb1jVrbKCeWheo0+QLb8gUZihX8iWt0nn25DWqduxxN1hDHvAI/hiNrR3BzfNwbljRNqCXBchEV701ofbaBujG3ZWrtrQTZxJbMYlr/vDjpfwPRy+CxsGFv7IAZ
+      plain:
+        password:
+          secure: v1:oCUf1JUFVidrecsF:gB3RWit00HKQLoleeokMyxAnNn9pMBkGmQSIg95ADHrVlhdYX6a9TJDg3Sqa
+        username:
+          secure: v1:gAArDCHsLhaxSypT:Z9Q1EeQSabrcDsu7XAnTmmfP+b53
   kubernetes:context: k3d-kube-dev
   kubernetes:suppressDeprecationWarnings: "true"

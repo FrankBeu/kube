@@ -12,9 +12,9 @@ func _() {
 	_ = x[MiddleWareNameBasicAuth-1]
 }
 
-const _MiddlewareName_name = "testbasicAuth"
+const _MiddlewareName_name = "testbasic-auth"
 
-var _MiddlewareName_index = [...]uint8{0, 4, 13}
+var _MiddlewareName_index = [...]uint8{0, 4, 14}
 
 func (i MiddlewareName) String() string {
 	if i < 0 || i >= MiddlewareName(len(_MiddlewareName_index)-1) {

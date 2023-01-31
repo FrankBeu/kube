@@ -62,9 +62,41 @@ the chart is not needed for the ~helm.Resource~
 ***** traefik
 ingressRoute, ...
 crds are installed automatically via helm-chart
-cf.: https://traefik.DOMAIN/dashboard/#/ Providers::KubernetesCRD 
+cf.: https://traefik.DOMAIN/dashboard/#/ Providers::KubernetesCRD
 ***** TODO gatewayAPI
 **** pulumi
 ***** traefik
 cf.: [[file:WORKFLOW-update.org::*CRDs][./WORKFLOW-update.org::*CRDs]]
 ***** TODO gatewayAPI
+*** basicAuth
+**** generate a base64 encoded htpasswdString and insert it into a =Pulumi.kube-{{env}}.yaml= file
+#+BEGIN_SRC shell :results drawer
+nix shell nixpkgs#apacheHttpd -c htpasswd -nBb USERNAME PASSWORD | openssl base64 -A
+#+END_SRC
+***** schema for the configFile
+#+BEGIN_EXAMPLE yaml
+  kube:traefikSecret
+    basicAuth:
+        plain:
+          user:
+          passwd:
+        encrypted:
+#+END_EXAMPLE
+***** store the UsernameUnEncrypted, the PasswordUnEncrypted and the ResultEncrypted
+#+BEGIN_EXAMPLE shell
+p config set --secret --path traefikSecret.basicAuth.plain.username USERNAME
+p config set --secret --path traefikSecret.basicAuth.plain.password PASSWORD
+p config set --secret --path traefikSecret.basicAuth.encrypted      ENCRYPTED
+
+echo -n "PASSPHRASE WITH SPACES" | p config set --secret --path traefikSecret.basicAuth.plain.password
+#+END_EXAMPLE
+***** add to ~gopass~ =k8sBasicAuth=
+***** check
+****** config
+#+BEGIN_EXAMPLE shell
+p config get --path traefikSecret.basicAuth.plain.username
+p config get --path traefikSecret.basicAuth.plain.password
+p config get --path traefikSecret.basicAuth.encrypted
+#+END_EXAMPLE
+****** browser
+open new private window

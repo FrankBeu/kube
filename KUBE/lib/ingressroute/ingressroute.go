@@ -77,7 +77,6 @@ func createIngressRoute(ctx *pulumi.Context, ingrtcnf *types.IngressRouteConfig,
 		}
 	}
 
-	////TODO test
 	////a traefikService does not need a port and a namespace
 	services := traefikCRD.IngressRouteSpecRoutesServicesArray{}
 	service := traefikCRD.IngressRouteSpecRoutesServicesArgs{

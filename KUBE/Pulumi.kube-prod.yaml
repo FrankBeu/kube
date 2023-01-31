@@ -1,6 +1,3 @@
-# yaml-language-server: $schema=https://json.schemastore.org/pulumi.json
-name: kube
-runtime: go
 encryptionsalt: v1:dBXj+CINlTQ=:v1:MDgTXJeUnY60vu4R:eiijh/b5QmVljmeOrfGfLeWHFUzWAg==
 config:
   kube:certManager:
@@ -26,4 +23,13 @@ config:
   kube:grafanaSecret:
     adminPassword:
       secure: v1:I8G/1YFaVvn2/A7I:mymZFA/HXeUeNIE11kkzWUajRfrqV1aoXIiaIw0DwtUz5yn1Wabi6g==
+  kube:traefikSecret:
+    basicAuth:
+      encrypted:
+        secure: v1:ue+WuDJ9S7MZIbKY:dJbkPfBsC/4BtEMvsuP4743FlrkAh3xzDqLS5qR1svMnkzNJJBuOxoC3bYxD62ZGy5xybgSN0nnJDCY2b0MAMxLYPQBSECGEVZSwVmqyLj7LC20O4yFwL84eXGhJKlrLfZZJQMYuh1zeQufe
+      plain:
+        password:
+          secure: v1:Iyzvdzh2KMPZ7iq8:qi3PvjVlQYBLHAkxIeyXfGlOw2YdYARKhTPmXOGNJRAUgFe+q20SyBbaPCX5
+        username:
+          secure: v1:uhPKXpIpix1HGWuU:NDHwg0AuGzVPZAPHb0aPJJMr9LtA
   kubernetes:context: k3d-nuc-prod
